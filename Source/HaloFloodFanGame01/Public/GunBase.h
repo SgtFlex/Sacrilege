@@ -3,13 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "InteractableInterface.h"
 #include "GameFramework/Actor.h"
 #include "GunBase.generated.h"
 
 UCLASS()
-class HALOFLOODFANGAME01_API AGunBase : public AActor
+class HALOFLOODFANGAME01_API AGunBase : public AActor, public IInteractableInterface
 {
 	GENERATED_BODY()
+public:
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Mesh)
+	USkeletalMeshComponent* Mesh;
 	
 public:	
 	// Sets default values for this actor's properties
@@ -24,19 +28,18 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(BlueprintNativeEvent)
-	virtual void PrimaryAttack();
+	void PrimaryAttack();
 
 	UFUNCTION(BlueprintNativeEvent)
-	virtual void SecondaryAttack();
+	void SecondaryAttack();
 
 	UFUNCTION(BlueprintNativeEvent)
-	virtual void TertiaryAttack();
+	void Fire();
 
 	UFUNCTION(BlueprintNativeEvent)
-	virtual void Fire();
-
-	UFUNCTION(BlueprintNativeEvent)
-	virtual void Reload();
+	void Reload();
+	
+	virtual void OnInteract_Implementation(AHaloFloodFanGame01Character* Character) override;
 
 public:
 	UPROPERTY(EditAnywhere)
@@ -44,8 +47,35 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		TSubclassOf<AActor> SecProj;
+	
+	UPROPERTY(EditAnywhere)
+	float FireRate = 10;
 
 	UPROPERTY(EditAnywhere)
-		TSubclassOf<AActor> TertProj;
+	float ReloadSpeed = 3;
 
+	UPROPERTY(EditAnywhere)
+	float HorizontalRecoil = 1;
+
+	UPROPERTY(EditAnywhere)
+	float VerticalRecoil = 1;
+
+	UPROPERTY(EditAnywhere)
+	float Accuracy = 100;
+
+	UPROPERTY(EditAnywhere)
+	int32 MaxMagazine = 32;
+
+	int32 CurMagazine;
+	UPROPERTY(EditAnywhere)
+	int32 MaxReserve = 160;
+
+	int32 CurReserve;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UUserWidget> BulletWidget;
+	
+	USceneComponent* Camera;
+
+	ACharacter* Wielder;
 };

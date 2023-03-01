@@ -2,7 +2,17 @@
 
 
 #include "HaloPlayerHUD.h"
+
+#include "HaloFloodFanGame01Character.h"
 #include "Components/ProgressBar.h"
+#include "Components/TextBlock.h"
+
+AHaloPlayerHUD::AHaloPlayerHUD()
+{
+
+}
+
+
 
 void AHaloPlayerHUD::SetHealth(float CurrentHealth, float MaxHealth)
 {
@@ -17,3 +27,4 @@ void AHaloPlayerHUD::SetShields(float CurrentShields, float MaxShields)
 		ShieldBar->SetPercent(CurrentShields / MaxShields);
 	}
 }
+

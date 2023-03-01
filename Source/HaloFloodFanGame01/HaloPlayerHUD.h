@@ -13,11 +13,13 @@ UCLASS()
 class HALOFLOODFANGAME01_API AHaloPlayerHUD : public AHUD
 {
 	GENERATED_BODY()
-
 public:
+	AHaloPlayerHUD();
+
 	void SetHealth(float CurrentHealth, float MaxHealth);
 
 	void SetShields(float CurrentShields, float MaxShields);
+
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 		class UProgressBar* HealthBar;
@@ -25,6 +27,6 @@ public:
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 		class UProgressBar* ShieldBar;
 
-
-	
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+		class UTextBlock* InteractText;
 };
