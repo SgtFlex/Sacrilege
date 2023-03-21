@@ -51,6 +51,9 @@ class AHaloFloodFanGame01Character : public ACharacter
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* SecondaryAttackAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* ReloadAction;
 	
 public:
 	AHaloFloodFanGame01Character();
@@ -87,6 +90,8 @@ public:
 	void PrimaryInput();
 
 	void SecondaryInput();
+
+	void ReloadInput();
 
 	void ThrowGrenade();
 
@@ -151,7 +156,8 @@ public:
 	float Shields = 100;
 	float MaxShields = 100;
 	float ShieldRegenDelay = 3;
-	float ShieldRegenRate = 10;
+	float ShieldRegenRatePerSecond = 30;
+	float ShieldRegenTickRate = 0.01;
 	float ShieldArmor = 0;
 	float MaxShieldArmor = 100;
 
@@ -161,5 +167,8 @@ public:
 	int32 IncenCount = 0;
 	
 	bool CanShieldsRecharge = false;
+
+private:
+	FTimerHandle ShieldDelayTimerHandle;
 };
 

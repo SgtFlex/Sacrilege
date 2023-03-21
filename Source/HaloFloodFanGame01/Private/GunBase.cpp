@@ -4,6 +4,7 @@
 #include "GunBase.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "HaloHUDWidget.h"
 #include "Kismet/KismetMathLibrary.h"
 
 
@@ -20,14 +21,16 @@ AGunBase::AGunBase()
 	Mesh->SetupAttachment(GetRootComponent());
 	Mesh->SetSimulatePhysics(true);
 
-	CurMagazine = MaxMagazine;
-	CurReserve = MaxReserve;
+	
 }
 
 // Called when the game starts or when spawned
 void AGunBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	CurMagazine = MaxMagazine;
+	CurReserve = MaxReserve;
 	
 }
 
@@ -50,6 +53,7 @@ void AGunBase::PrimaryAttack_Implementation()
 {
 	if (CurMagazine <= 0) return;
 	CurMagazine--;
+	if (HUDRef) HUDRef->SetBulletUsed(CurMagazine, false);
 	if (PrimProj && Camera)
 	{
 		FVector Location = (Camera->GetComponentLocation()) + Camera->GetForwardVector()*50.0f;
@@ -69,9 +73,10 @@ void AGunBase::Fire_Implementation()
 
 void AGunBase::Reload_Implementation()
 {
-	if (CurReserve <= 0) return;
+	if (CurReserve <= 0 || CurMagazine == MaxMagazine) return;
 	int32 AmountNeed = MaxMagazine - CurMagazine; //32 - 27 gives 5 for example
-	int32 AmountGrabbed = FMath::Max(CurReserve - AmountNeed, 0);
+	int32 AmountGrabbed = FMath::Min(AmountNeed, CurReserve);
 	CurMagazine = CurMagazine + AmountGrabbed;
+	CurReserve = CurReserve - AmountGrabbed;
 }
 

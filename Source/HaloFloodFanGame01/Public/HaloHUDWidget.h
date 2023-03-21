@@ -7,6 +7,7 @@
 #include "HaloHUDWidget.generated.h"
 
 
+class AHaloFloodFanGame01Character;
 /**
  * 
  */
@@ -16,6 +17,9 @@ class HALOFLOODFANGAME01_API UHaloHUDWidget : public UUserWidget
 	GENERATED_BODY()
 
 	virtual void NativeConstruct() override;
+
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+
 public:
 	UFUNCTION(BlueprintNativeEvent)
 	void SetHealth(float CurrentHealth, float MaxHealth);
@@ -47,6 +51,12 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	void SetAmmoReserveCounter(int32 AmmoReserve);
 
+	UFUNCTION(BlueprintNativeEvent)
+	void SetMagazineReserveCounter(int32 MagazineCount);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void SetBulletUsed(int32 NumSlot, bool bUsed);
+
 	virtual bool Initialize() override;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
@@ -76,9 +86,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UTextBlock* AmmoReserveCounter;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	class UTextBlock* MagazineCounter;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class UUserWidget> AmmoGridChildClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UImage* Compass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float CompassDirection;
+
+	TArray<UUserWidget*> BulletIcons;
+
+	class AHaloFloodFanGame01Character* Character;
 };

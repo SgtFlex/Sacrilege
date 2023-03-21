@@ -20,31 +20,50 @@ void UHaloHUDWidget::NativeConstruct()
 	
 }
 
+void UHaloHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+}
+
 void UHaloHUDWidget::SetCompassDirection_Implementation(float Yaw)
 {
-	const float CompassHalfWidth = (Compass->Brush.ImageSize.X)/2;
-	float x = (Yaw*-10);
+	CompassDirection = (Yaw+180);
+	float Offset = 45;
+	UE_LOG(LogTemp, Warning, TEXT("%f"), CompassDirection);
+	float x = ((Yaw+Offset)*-10);
 	UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Compass->Slot);
 	CanvasSlot->SetPosition(FVector2d(x, 0));
+	
 }
 
 
 void UHaloHUDWidget::ConstructAmmoGrid_Implementation(AGunBase* Gun)
 {
+	if (!Gun->BulletWidget) return;
+    AmmoGrid->ClearChildren();
+	BulletIcons.Empty();
 	int32 Columns = 15;
+	
 	for (int i = Columns; i > 0; i--)
 	{
-		if (Gun->MaxMagazine%i==0) Columns = i;
+		if ((Gun->MaxMagazine)%i==0)
+		{
+			Columns = i;
+			break;
+		}
 	}
-	
 	int32 Rows = Gun->MaxMagazine/Columns;
-	
+	int CurBullet = 0;
 	for (int i = 0; i < Rows; ++i)
 	{
 		for (int j = 0; j < Columns; ++j)
 		{
 			UUserWidget* BulletIcon = WidgetTree->ConstructWidget<UUserWidget>(Gun->BulletWidget);
 			UUniformGridSlot* UniSlot = AmmoGrid->AddChildToUniformGrid(BulletIcon, i, j);
+			UniSlot->SetHorizontalAlignment(EHorizontalAlignment::HAlign_Fill);
+			UniSlot->SetVerticalAlignment(EVerticalAlignment::VAlign_Fill);
+			BulletIcons.Add(BulletIcon);
+			CurBullet++;
 		}
 	}
 }
@@ -52,6 +71,17 @@ void UHaloHUDWidget::ConstructAmmoGrid_Implementation(AGunBase* Gun)
 void UHaloHUDWidget::SetAmmoReserveCounter_Implementation(int32 AmmoReserve)
 {
 	AmmoReserveCounter->SetText(FText::AsNumber(AmmoReserve));
+}
+
+void UHaloHUDWidget::SetBulletUsed_Implementation(int32 NumSlot, bool bUsed)
+{
+	if (!BulletIcons[NumSlot]) return;
+	BulletIcons[NumSlot]->SetVisibility(ESlateVisibility::Hidden);
+}
+
+void UHaloHUDWidget::SetMagazineReserveCounter_Implementation(int32 MagazineCount)
+{
+	MagazineCounter->SetText(FText::AsNumber(MagazineCount));
 }
 
 bool UHaloHUDWidget::Initialize()

@@ -12,6 +12,7 @@
 #include "InteractableInterface.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/TextBlock.h"
+#include "Components/UniformGridPanel.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -74,6 +75,7 @@ void AHaloFloodFanGame01Character::BeginPlay()
 		PlayerHUD->SetPlasmaCounter(PlasmaCount);
 		PlayerHUD->SetSpikeCounter(SpikeCount);
 		PlayerHUD->SetIncenCounter(IncenCount);
+		
 	}
 
 }
@@ -81,11 +83,6 @@ void AHaloFloodFanGame01Character::BeginPlay()
 void AHaloFloodFanGame01Character::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	
-	if (Shields < MaxShields && CanShieldsRecharge)
-	{
-		FMath::Clamp(Shields += ShieldRegenRate, 0, MaxShields);
-	}
 
 	FHitResult Hit;
 	FVector TraceStart = FirstPersonCameraComponent->GetComponentLocation();
@@ -100,7 +97,21 @@ void AHaloFloodFanGame01Character::Tick(float DeltaSeconds)
 		PlayerHUD->SetCanInteract(false);
 
 	PlayerHUD->SetCompassDirection(GetFirstPersonCameraComponent()->GetComponentRotation().Yaw);
-	if (EquippedWep) PlayerHUD->SetAmmoReserveCounter(EquippedWep->CurReserve);
+	PlayerHUD->SetShields(Shields, MaxShields);
+	PlayerHUD->SetHealth(Health, MaxHealth);
+	if (EquippedWep)
+	{
+		PlayerHUD->SetAmmoReserveCounter(EquippedWep->CurReserve);
+		PlayerHUD->SetMagazineReserveCounter(EquippedWep->CurMagazine);
+		PlayerHUD->MagazineCounter->SetVisibility(ESlateVisibility::Visible);
+		PlayerHUD->AmmoReserveCounter->SetVisibility(ESlateVisibility::Visible);
+		PlayerHUD->AmmoGrid->SetVisibility(ESlateVisibility::Visible);
+	} else
+	{
+		PlayerHUD->MagazineCounter->SetVisibility(ESlateVisibility::Hidden);
+		PlayerHUD->AmmoGrid->SetVisibility(ESlateVisibility::Hidden);
+		PlayerHUD->AmmoReserveCounter->SetVisibility(ESlateVisibility::Hidden);
+	}
 }
 
 
@@ -129,6 +140,9 @@ void AHaloFloodFanGame01Character::SetupPlayerInputComponent(class UInputCompone
 		EnhancedInputComponent->BindAction(SecondaryAttackAction, ETriggerEvent::Triggered, this, &AHaloFloodFanGame01Character::SecondaryInput);
 
 		EnhancedInputComponent->BindAction(SwitchWeaponAction, ETriggerEvent::Triggered, this, &AHaloFloodFanGame01Character::SwitchWeapon);
+
+		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &AHaloFloodFanGame01Character::ReloadInput);
+
 	}
 }
 
@@ -177,18 +191,21 @@ bool AHaloFloodFanGame01Character::GetHasRifle()
 
 void AHaloFloodFanGame01Character::PickupWeapon(AGunBase* Gun)
 {
+	SetHasRifle(true);
 	if (!EquippedWep)
 	{
 		EquippedWep = Gun;
 	} else if (!HolsteredWeapon)
 	{
 		HolsteredWeapon = Gun;
-		Gun->SetHidden(true);
+		UE_LOG(LogTemp, Warning, TEXT("Holster"));
+		Gun->SetActorHiddenInGame(true);
 	} else
 	{
 		DropWeapon();
 		EquippedWep = Gun;
 	}
+	Gun->HUDRef = PlayerHUD;
 	Gun->Mesh->SetSimulatePhysics(false);
 	Gun->SetActorEnableCollision(false);
 	Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
@@ -198,6 +215,8 @@ void AHaloFloodFanGame01Character::PickupWeapon(AGunBase* Gun)
 
 void AHaloFloodFanGame01Character::DropWeapon()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Dropped weapon"));
+	EquippedWep->HUDRef = nullptr;
 	EquippedWep->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	EquippedWep->SetActorLocation(this->Mesh1P->GetSocketLocation("GripPoint"));
 	EquippedWep->SetActorEnableCollision(true);
@@ -214,8 +233,13 @@ void AHaloFloodFanGame01Character::PrimaryInput()
 
 void AHaloFloodFanGame01Character::SecondaryInput()
 {
-	if (EquippedWep)
-		EquippedWep->SecondaryAttack();
+	if (EquippedWep) EquippedWep->SecondaryAttack();
+}
+
+void AHaloFloodFanGame01Character::ReloadInput()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Reload"));
+	if (EquippedWep) EquippedWep->Reload();
 }
 
 void AHaloFloodFanGame01Character::ThrowGrenade()
@@ -228,7 +252,6 @@ void AHaloFloodFanGame01Character::UseEquipment()
 
 void AHaloFloodFanGame01Character::SwitchWeapon()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Switched weapon"));
 	if (!EquippedWep || !HolsteredWeapon)
 		return;
 	AGunBase* TempGun = EquippedWep;
@@ -239,6 +262,7 @@ void AHaloFloodFanGame01Character::SwitchWeapon()
 	EquippedWep->SetActorHiddenInGame(false);
 	EquippedWep->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
 	PlayerHUD->ConstructAmmoGrid(EquippedWep);
+	
 }
 
 void AHaloFloodFanGame01Character::Death()
@@ -252,6 +276,8 @@ void AHaloFloodFanGame01Character::StartShieldRegen()
 
 void AHaloFloodFanGame01Character::RegenShield()
 {
+	Shields += (ShieldRegenRatePerSecond*ShieldRegenTickRate);
+	if (Shields >= MaxShields) GetWorldTimerManager().ClearTimer(ShieldDelayTimerHandle);
 }
 
 void AHaloFloodFanGame01Character::BreakShield()
@@ -281,12 +307,13 @@ void AHaloFloodFanGame01Character::Interact()
 float AHaloFloodFanGame01Character::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
                                                AController* EventInstigator, AActor* DamageCauser)
 {
+	
 	float DamageLeft = DamageAmount;
+	GetWorldTimerManager().SetTimer(ShieldDelayTimerHandle, this, &AHaloFloodFanGame01Character::RegenShield, ShieldRegenTickRate, true, ShieldRegenDelay);
 	if (Shields > 0)
 	{
 		DamageLeft = DamageAmount - Shields;
 		Shields -= DamageAmount;
-		PlayerHUD->SetShields(Shields, MaxShields);
 		UE_LOG(LogTemp, Warning, TEXT("Shields: %f"), Shields);
 		if (Shields <= 0)
 		{
@@ -296,7 +323,6 @@ float AHaloFloodFanGame01Character::TakeDamage(float DamageAmount, FDamageEvent 
 	if (Shields <= 0 && Health > 0)
 	{
 		Health -= DamageLeft;
-		PlayerHUD->SetHealth(Health, MaxHealth);
 		UE_LOG(LogTemp, Warning, TEXT("Health: %f"), Health);
 		if (Health <= 0)
 		{

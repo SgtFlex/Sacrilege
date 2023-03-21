@@ -73,9 +73,14 @@ public:
 	int32 CurReserve;
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<UUserWidget> BulletWidget;
-	
 	USceneComponent* Camera;
-
+	
+	UPROPERTY(EditAnywhere)
 	ACharacter* Wielder;
+	
+	UPROPERTY(EditAnywhere)
+	class UHaloHUDWidget* HUDRef;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UUserWidget> BulletWidget;
 };
