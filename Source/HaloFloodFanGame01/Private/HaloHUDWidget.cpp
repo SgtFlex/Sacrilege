@@ -29,7 +29,6 @@ void UHaloHUDWidget::SetCompassDirection_Implementation(float Yaw)
 {
 	CompassDirection = (Yaw+180);
 	float Offset = 45;
-	UE_LOG(LogTemp, Warning, TEXT("%f"), CompassDirection);
 	float x = ((Yaw+Offset)*-10);
 	UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Compass->Slot);
 	CanvasSlot->SetPosition(FVector2d(x, 0));
