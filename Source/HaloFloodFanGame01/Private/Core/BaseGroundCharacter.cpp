@@ -5,8 +5,10 @@
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/MovementComponent.h"
+#include "Components/CapsuleComponent.h"
 
 ABaseGroundCharacter::ABaseGroundCharacter()
 {
 	CharMoveComp = CreateDefaultSubobject<UCharacterMovementComponent>(TEXT("Character Movement"));
+	CharMoveComp->UpdatedComponent = CapsuleCollider;
 }

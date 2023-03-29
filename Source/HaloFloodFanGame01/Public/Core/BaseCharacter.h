@@ -3,11 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DamageableInterface.h"
+#include "GameFramework/Character.h"
 #include "GameFramework/Pawn.h"
 #include "BaseCharacter.generated.h"
 
+class UHealthComponent;
 UCLASS()
-class HALOFLOODFANGAME01_API ABaseCharacter : public APawn
+class HALOFLOODFANGAME01_API ABaseCharacter : public ACharacter, public IDamageableInterface
 {
 	GENERATED_BODY()
 
@@ -26,5 +29,14 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+
+	virtual void TakeDamage(float DamageAmount) override;
+	
+	virtual void HealthDepleted() override;
+
+
+public:
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere,Category="Stats", meta=(AllowPrivateAccess=true))
+	UHealthComponent* HealthComponent;
 
 };

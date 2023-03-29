@@ -5,6 +5,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "HaloHUDWidget.h"
+#include "HealthComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
 
@@ -54,13 +55,33 @@ void AGunBase::PrimaryAttack_Implementation()
 	if (CurMagazine <= 0) return;
 	CurMagazine--;
 	if (HUDRef) HUDRef->SetBulletUsed(CurMagazine, false);
-	if (PrimProj && Camera)
+	if (Camera)
 	{
-		FVector Location = (Camera->GetComponentLocation()) + Camera->GetForwardVector()*50.0f;
-		FRotator Rotation = (Camera->GetComponentRotation());
-		AActor* SpawnedProj = GetWorld()->SpawnActor(PrimProj, &Location, &Rotation);
-		//Cast<UPrimitiveComponent>(SpawnedProj->GetRootComponent())->AddImpulse(Camera->GetForwardVector()*1000.0f);
+		if (PrimProj)
+		{
+			FVector Location = (Camera->GetComponentLocation()) + Camera->GetForwardVector()*50.0f;
+			FRotator Rotation = (Camera->GetComponentRotation());
+			AActor* SpawnedProj = GetWorld()->SpawnActor(PrimProj, &Location, &Rotation);
+			//Cast<UPrimitiveComponent>(SpawnedProj->GetRootComponent())->AddImpulse(Camera->GetForwardVector()*1000.0f);
+		} else
+		{
+			FHitResult Hit;
+			FVector TraceStart = Camera->GetComponentLocation();
+			FVector TraceEnd = Camera->GetComponentLocation() + Camera->GetForwardVector()*1000.0f;
+			FCollisionQueryParams CollisionParameters;
+			CollisionParameters.AddIgnoredActor(this);
+			CollisionParameters.AddIgnoredActor(GetAttachParentActor());
+			GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECollisionChannel::ECC_WorldDynamic, CollisionParameters);
+			DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor(255, 0, 0), false, 3);
+			IDamageableInterface* HitActor = Cast<IDamageableInterface>(Hit.GetActor());
+			if (Hit.bBlockingHit && HitActor)
+			{
+				HitActor->TakeDamage(Damage);
+				UE_LOG(LogTemp, Warning, TEXT("%s"), *Hit.GetActor()->GetName());
+			}
+		}
 	}
+	
 }
 
 void AGunBase::SecondaryAttack_Implementation()

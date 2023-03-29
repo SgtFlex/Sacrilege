@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
+#include "Core/BaseCharacter.h"
+#include "Core/BaseGroundCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "HaloFloodFanGame01Character.generated.h"
 
@@ -16,7 +18,7 @@ class UAnimMontage;
 class USoundBase;
 
 UCLASS(config=Game)
-class AHaloFloodFanGame01Character : public ACharacter
+class AHaloFloodFanGame01Character : public ABaseCharacter
 {
 	GENERATED_BODY()
 

@@ -12,6 +12,7 @@ class HALOFLOODFANGAME01_API ABasePawn : public APawn
 {
 	GENERATED_BODY()
 
+protected:
 	UPROPERTY(Category=Character, VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* MainSkelMesh;
 

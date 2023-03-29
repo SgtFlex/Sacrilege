@@ -47,6 +47,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		TSubclassOf<AActor> SecProj;
+
+	UPROPERTY(EditAnywhere)
+	float Damage = 15;
 	
 	UPROPERTY(EditAnywhere)
 	float FireRate = 10;
@@ -72,15 +75,12 @@ public:
 
 	int32 CurReserve;
 
-	UPROPERTY(EditAnywhere)
 	USceneComponent* Camera;
 	
-	UPROPERTY(EditAnywhere)
 	ACharacter* Wielder;
 	
-	UPROPERTY(EditAnywhere)
 	class UHaloHUDWidget* HUDRef;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUserWidget> BulletWidget;
 };

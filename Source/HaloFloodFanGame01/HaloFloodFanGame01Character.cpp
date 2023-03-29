@@ -2,7 +2,6 @@
 
 #include "HaloFloodFanGame01Character.h"
 #include "GunBase.h"
-#include "HaloFloodFanGame01Projectile.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -26,7 +25,7 @@ AHaloFloodFanGame01Character::AHaloFloodFanGame01Character()
 	bHasRifle = false;
 	
 	// Set size for collision capsule
-	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
+	 //GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
 		
 	// Create a CameraComponent	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
@@ -83,7 +82,7 @@ void AHaloFloodFanGame01Character::BeginPlay()
 void AHaloFloodFanGame01Character::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
+	
 	FHitResult Hit;
 	FVector TraceStart = FirstPersonCameraComponent->GetComponentLocation();
 	FVector TraceEnd = FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector()*1000.0f;
@@ -91,26 +90,32 @@ void AHaloFloodFanGame01Character::Tick(float DeltaSeconds)
 	CollisionParameters.AddIgnoredActor(this);
 	GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECollisionChannel::ECC_WorldDynamic, CollisionParameters);
 
-	if (Hit.bBlockingHit && IsValid(Hit.GetActor()) && Cast<IInteractableInterface>(Hit.GetActor()))
-		PlayerHUD->SetCanInteract(true);
-	else 
-		PlayerHUD->SetCanInteract(false);
+	
 
-	PlayerHUD->SetCompassDirection(GetFirstPersonCameraComponent()->GetComponentRotation().Yaw);
-	PlayerHUD->SetShields(Shields, MaxShields);
-	PlayerHUD->SetHealth(Health, MaxHealth);
-	if (EquippedWep)
+	if (PlayerHUD)
 	{
-		PlayerHUD->SetAmmoReserveCounter(EquippedWep->CurReserve);
-		PlayerHUD->SetMagazineReserveCounter(EquippedWep->CurMagazine);
-		PlayerHUD->MagazineCounter->SetVisibility(ESlateVisibility::Visible);
-		PlayerHUD->AmmoReserveCounter->SetVisibility(ESlateVisibility::Visible);
-		PlayerHUD->AmmoGrid->SetVisibility(ESlateVisibility::Visible);
-	} else
-	{
-		PlayerHUD->MagazineCounter->SetVisibility(ESlateVisibility::Hidden);
-		PlayerHUD->AmmoGrid->SetVisibility(ESlateVisibility::Hidden);
-		PlayerHUD->AmmoReserveCounter->SetVisibility(ESlateVisibility::Hidden);
+		if (Hit.bBlockingHit && IsValid(Hit.GetActor()) && Cast<IInteractableInterface>(Hit.GetActor()))
+			PlayerHUD->SetCanInteract(true);
+		else 
+			PlayerHUD->SetCanInteract(false);
+		
+		PlayerHUD->SetCompassDirection(FirstPersonCameraComponent->GetComponentRotation().Yaw);
+		PlayerHUD->SetShields(Shields, MaxShields);
+		PlayerHUD->SetHealth(Health, MaxHealth);
+
+		if (EquippedWep)
+		{
+			PlayerHUD->SetAmmoReserveCounter(EquippedWep->CurReserve);
+			PlayerHUD->SetMagazineReserveCounter(EquippedWep->CurMagazine);
+			PlayerHUD->MagazineCounter->SetVisibility(ESlateVisibility::Visible);
+			PlayerHUD->AmmoReserveCounter->SetVisibility(ESlateVisibility::Visible);
+			PlayerHUD->AmmoGrid->SetVisibility(ESlateVisibility::Visible);
+		} else
+		{
+			PlayerHUD->MagazineCounter->SetVisibility(ESlateVisibility::Hidden);
+			PlayerHUD->AmmoGrid->SetVisibility(ESlateVisibility::Hidden);
+			PlayerHUD->AmmoReserveCounter->SetVisibility(ESlateVisibility::Hidden);
+		}
 	}
 }
 
@@ -151,7 +156,6 @@ void AHaloFloodFanGame01Character::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
-
 	if (Controller != nullptr)
 	{
 		// add movement 

@@ -3,11 +3,15 @@
 
 #include "Core/BaseCharacter.h"
 
+#include "HealthComponent.h"
+
 // Sets default values
 ABaseCharacter::ABaseCharacter()
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComp"));
 
 }
 
@@ -30,6 +34,18 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+void ABaseCharacter::TakeDamage(float DamageAmount)
+{
+	IDamageableInterface::TakeDamage(DamageAmount);
+	HealthComponent->TakeDamage(DamageAmount, false, false, false);
+}
+
+void ABaseCharacter::HealthDepleted()
+{
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	GetMesh()->SetSimulatePhysics(true);
 }
 
 
