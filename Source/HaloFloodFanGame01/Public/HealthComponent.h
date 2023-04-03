@@ -23,10 +23,10 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	
+	float TakeDamage(float Damage, FVector Force = FVector(0,0,0), FVector HitLocation = FVector(0,0,0), FName HitBoneName = "", AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr, bool bIgnoreShields = false, bool bIgnoreHealthArmor = false, bool bIgnoreShieldArmor = false);
 
-	float TakeDamage(float Damage, bool bIgnoreShields, bool bIgnoreHealthArmor, bool bIgnoreShieldArmor);
-
-	void HealthDepleted();
+	void HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName);
 
 public:
 	UPROPERTY(EditAnywhere, meta = (Category="Health"))
@@ -58,6 +58,10 @@ public:
 
 	float HealthRegenTickRate = 0.01;
 	float ShieldRegenTickRate = 0.01;
+
+private:
+	FTimerHandle ShieldDelayTimerHandle;
+	
 public:
 	float GetHealth() const;
 	void SetHealth(float Health);
@@ -79,4 +83,8 @@ public:
 	void SetShieldArmor(float ShieldArmor);
 	float GetMaxShieldArmor() const;
 	void SetMaxShieldArmor(float MaxShieldArmor);
+
+	void BreakShields();
+	void RegenShields();
+	
 };

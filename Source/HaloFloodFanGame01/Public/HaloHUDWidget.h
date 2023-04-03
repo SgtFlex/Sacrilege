@@ -57,7 +57,14 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	void SetBulletUsed(int32 NumSlot, bool bUsed);
 
+	void SetCrosshairType(int type);
+
+	void SetAmmoGridWeapon(AGunBase* Weapon = nullptr);
+
 	virtual bool Initialize() override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	class UImage* Crosshair;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 		class UProgressBar* HealthBar;
@@ -100,5 +107,18 @@ public:
 
 	TArray<UUserWidget*> BulletIcons;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Colors")
+	FLinearColor EnemyColor = FColor(255, 25, 25, 255);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Colors")
+	FLinearColor AllyColor = FColor(25, 255, 25, 255);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Colors")
+	FLinearColor InteractableColor = FColor(25, 25, 255, 255);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Colors")
+	FLinearColor HUDColor = FColor(255, 150, 50, 255);
+
+	UPROPERTY()
 	class AHaloFloodFanGame01Character* Character;
 };

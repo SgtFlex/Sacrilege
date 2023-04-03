@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
+#include "Components/TimelineComponent.h"
 #include "Core/BaseCharacter.h"
 #include "Core/BaseGroundCharacter.h"
 #include "Kismet/GameplayStatics.h"
@@ -52,7 +53,7 @@ class AHaloFloodFanGame01Character : public ABaseCharacter
 	class UInputAction* PrimaryAttackAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* SecondaryAttackAction;
+	class UInputAction* MeleeAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* ReloadAction;
@@ -82,17 +83,7 @@ public:
 	/** Getter for the bool */
 	UFUNCTION(BlueprintCallable, Category = Weapon)
 	bool GetHasRifle();
-
-	UFUNCTION(BlueprintCallable)
-	virtual void PickupWeapon(AGunBase* Gun);
-
-	UFUNCTION(BlueprintCallable)
-	virtual void DropWeapon();
-
-	void PrimaryInput();
-
-	void SecondaryInput();
-
+	
 	void ReloadInput();
 
 	void ThrowGrenade();
@@ -101,17 +92,15 @@ public:
 
 	virtual void Death();
 
-	virtual void StartShieldRegen();
-
-	virtual void RegenShield();
-
-	virtual void BreakShield();
-
 	void SwitchWeapon();
 
 	void Interact();
+
+	virtual void PickupWeapon(AGunBase* Gun) override;
+
+	virtual void DropWeapon() override;
 private:
-	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	// virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 protected:
 	/** Called for movement input */
@@ -121,6 +110,16 @@ protected:
 	void Look(const FInputActionValue& Value);
 
 	virtual void Attack();
+
+	virtual void Melee_Implementation() override;
+
+	UFUNCTION()
+	virtual void MeleeDamageCode();
+
+	UFUNCTION()
+	void MeleeUpdate(float Alpha);
+	
+	virtual void HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName) override;
 
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
@@ -136,41 +135,24 @@ public:
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
 	UPROPERTY(EditAnywhere)
-		TSubclassOf<class UHaloHUDWidget> PlayerHUDClass;
+	TSubclassOf<class UHaloHUDWidget> PlayerHUDClass;
 
 	UPROPERTY()
-		class UHaloHUDWidget* PlayerHUD;
-	
-
-	UPROPERTY(EditAnywhere)
-	AGunBase* EquippedWep;
-
-	UPROPERTY(EditAnywhere)
-	AGunBase* HolsteredWeapon;
+	class UHaloHUDWidget* PlayerHUD;
 
 	TArray<int> Guns;
-
-	float Health = 100;
-	float MaxHealth = 100;
-	float HealthArmor = 0;
-	float MaxHealthArmor = 100;
-
-	float Shields = 100;
-	float MaxShields = 100;
-	float ShieldRegenDelay = 3;
-	float ShieldRegenRatePerSecond = 30;
-	float ShieldRegenTickRate = 0.01;
-	float ShieldArmor = 0;
-	float MaxShieldArmor = 100;
-
+	
 	int32 FragCount = 0;
 	int32 PlasmaCount = 0;
 	int32 SpikeCount = 0;
 	int32 IncenCount = 0;
-	
-	bool CanShieldsRecharge = false;
 
 private:
 	FTimerHandle ShieldDelayTimerHandle;
+
+	FTimeline MeleeTimeline;
+
+	UPROPERTY(EditDefaultsOnly)
+	UCurveFloat* MeleeCurve;
 };
 

@@ -13,10 +13,16 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Components/UniformGridSlot.h"
+#include "HaloFloodFanGame01/HaloFloodFanGame01Character.h"
 
 void UHaloHUDWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+
+	SetFragCounter(Character->FragCount);
+	SetPlasmaCounter(Character->PlasmaCount);
+	SetSpikeCounter(Character->SpikeCount);
+	SetIncenCounter(Character->IncenCount);
 	
 }
 
@@ -81,6 +87,43 @@ void UHaloHUDWidget::SetBulletUsed_Implementation(int32 NumSlot, bool bUsed)
 void UHaloHUDWidget::SetMagazineReserveCounter_Implementation(int32 MagazineCount)
 {
 	MagazineCounter->SetText(FText::AsNumber(MagazineCount));
+}
+
+void UHaloHUDWidget::SetCrosshairType(int type)
+{
+	switch (type)
+	{
+	default:
+	case 1:
+		Crosshair->SetColorAndOpacity(HUDColor);
+		break;
+	case 2:
+		Crosshair->SetColorAndOpacity(InteractableColor);
+		break;
+	case 3:
+		Crosshair->SetColorAndOpacity(AllyColor);
+		break;
+	case 4:
+		Crosshair->SetColorAndOpacity(EnemyColor);
+		break;
+	}
+}
+
+void UHaloHUDWidget::SetAmmoGridWeapon(AGunBase* Weapon)
+{
+	if (Weapon)
+	{
+		SetAmmoReserveCounter(Weapon->CurReserve);
+		SetMagazineReserveCounter(Weapon->CurMagazine);
+		MagazineCounter->SetVisibility(ESlateVisibility::Visible);
+		AmmoReserveCounter->SetVisibility(ESlateVisibility::Visible);
+		AmmoGrid->SetVisibility(ESlateVisibility::Visible);
+	} else
+	{
+		MagazineCounter->SetVisibility(ESlateVisibility::Hidden);
+		AmmoGrid->SetVisibility(ESlateVisibility::Hidden);
+		AmmoReserveCounter->SetVisibility(ESlateVisibility::Hidden);
+	}
 }
 
 bool UHaloHUDWidget::Initialize()

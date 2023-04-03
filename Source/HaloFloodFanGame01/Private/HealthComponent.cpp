@@ -4,6 +4,8 @@
 #include "HealthComponent.h"
 
 #include "Core/BaseCharacter.h"
+#include "Engine/DamageEvents.h"
+#include "GameFramework/Actor.h"
 
 // Sets default values for this component's properties
 UHealthComponent::UHealthComponent()
@@ -34,30 +36,30 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	// ...
 }
 
-float UHealthComponent::TakeDamage(float Damage, bool bIgnoreShields, bool bIgnoreHealthArmor, bool bIgnoreShieldArmor)
+float UHealthComponent::TakeDamage(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser, bool bIgnoreShields, bool bIgnoreHealthArmor, bool bIgnoreShieldArmor)
 {
 	float DamageLeft = Damage;
-	//GetWorldTimerManager().SetTimer(ShieldDelayTimerHandle, this, &AHaloFloodFanGame01Character::RegenShield, ShieldRegenTickRate, true, ShieldRegenDelay);
+	GetOwner()->GetWorldTimerManager().SetTimer(ShieldDelayTimerHandle, this, &UHealthComponent::RegenShields, ShieldRegenTickRate, true, ShieldRegenDelay);
 	if (Shields > 0)
 	{
 		DamageLeft = Damage - Shields;
 		Shields -= Damage;
 	} 
-	if (Shields <= 0 && MaxHealth > 0)
+	if (Shields <= 0 && Health > 0)
 	{
-		MaxHealth -= DamageLeft;
-		if (MaxHealth <= 0)
+		Health -= DamageLeft;
+		if (Health <= 0)
 		{
-			this->HealthDepleted();
+			this->HealthDepleted(Damage, Force, HitLocation, HitBoneName);
 		}
 	}
 	return Damage;
 }
 
-void UHealthComponent::HealthDepleted()
+void UHealthComponent::HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName)
 {
 	IDamageableInterface* Owner = Cast<IDamageableInterface>(GetOwner());
-	Owner->HealthDepleted();
+	Owner->HealthDepleted(Damage, Force, HitLocation, HitBoneName);
 }
 
 float UHealthComponent::GetHealth() const
@@ -158,5 +160,17 @@ float UHealthComponent::GetMaxShieldArmor() const
 void UHealthComponent::SetMaxShieldArmor(float NewMaxShieldArmor)
 {
 	this->MaxShieldArmor = NewMaxShieldArmor;
+}
+
+void UHealthComponent::BreakShields()
+{
+	
+}
+
+void UHealthComponent::RegenShields()
+{
+	Shields += (ShieldRegenRatePerSecond*ShieldRegenTickRate);
+	if (Shields >= MaxShields) GetOwner()->GetWorldTimerManager().ClearTimer(ShieldDelayTimerHandle);
+	
 }
 
