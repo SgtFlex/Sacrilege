@@ -3,11 +3,14 @@
 
 #include "Core/BaseCharacter.h"
 
+#include "BaseGrenade.h"
 #include "GunBase.h"
 #include "HealthComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/DamageEvents.h"
 #include "Kismet/GameplayStatics.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 
 // Sets default values
 ABaseCharacter::ABaseCharacter()
@@ -55,8 +58,8 @@ float ABaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 float ABaseCharacter::TakePointDamage(float Damage, FVector Force, FPointDamageEvent const& PointDamageEvent,
 	AController* EventInstigator, AActor* DamageCauser)
 {
-	HealthComponent->TakeDamage(Damage, Force, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.BoneName, EventInstigator, DamageCauser);
-	//if (BloodPFX) UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BloodPFX, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.ImpactNormal.Rotation());
+	HealthComponent->TakeDamage(PointDamageEvent.Damage, Force, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.BoneName, EventInstigator, DamageCauser);
+	if (BloodPFX) UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), BloodPFX, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Normal.Rotation());
 	return Super::InternalTakePointDamage(Damage, PointDamageEvent, EventInstigator, DamageCauser);
 }
 
@@ -75,13 +78,25 @@ float ABaseCharacter::TakeRadialDamage(float Damage, FVector Force, FRadialDamag
 
 void ABaseCharacter::HealthDepleted(float Damage, FVector DamageForce, FVector HitLocation, FName HitBoneName)
 {
+	if (BloodDecalMaterial) UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(10, 10, 10), GetActorLocation(), FRotator(90,0,0));
 	GetCapsuleComponent()->DestroyComponent();
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->AddImpulseAtLocation(DamageForce, HitLocation, HitBoneName);
-	GetController()->UnPossess();
+	if (GetController()) GetController()->UnPossess();
 	if (EquippedWep)
 		DropWeapon();
+	
+}
+
+UHealthComponent* ABaseCharacter::GetHealthComponent()
+{
+	return HealthComponent;
+}
+
+void ABaseCharacter::EquipGrenadeType_Implementation(TSubclassOf<ABaseGrenade> Grenade)
+{
+	EquippedGrenadeClass = Grenade;
 }
 
 void ABaseCharacter::Melee_Implementation()
@@ -108,18 +123,38 @@ void ABaseCharacter::Melee_Implementation()
 	}
 }
 
+void ABaseCharacter::ThrowEquippedGrenade_Implementation()
+{
+	if (!EquippedGrenadeClass) return;
+	FVector EyesLoc;
+	FRotator EyesRot;
+	GetActorEyesViewPoint(EyesLoc, EyesRot);
+	ABaseGrenade* Grenade = Cast<ABaseGrenade>(GetWorld()->SpawnActor(EquippedGrenadeClass, &EyesLoc));
+	Grenade->SetArmed(true);
+	FVector Force = GetBaseAimRotation().Vector() + FVector(0,0,0.1);
+	Grenade->Mesh->AddImpulse(Force*20000);
+}
+
+void ABaseCharacter::UseEquipment()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Used Equipment"));
+}
+
 void ABaseCharacter::PrimaryAttack_Pull()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Pulled Trigger"));
 	if (EquippedWep)
 		EquippedWep->PullTrigger();
 }
 
 void ABaseCharacter::PrimaryAttack_Release()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Released Triggered"));
 	if (EquippedWep)
 		EquippedWep->ReleaseTrigger();
+}
+
+void ABaseCharacter::ReloadInput()
+{
+	if (EquippedWep) EquippedWep->Reload();
 }
 
 void ABaseCharacter::PickupWeapon(AGunBase* Gun)
@@ -130,27 +165,22 @@ void ABaseCharacter::PickupWeapon(AGunBase* Gun)
 	} else if (!HolsteredWeapon)
 	{
 		HolsteredWeapon = Gun;
-		UE_LOG(LogTemp, Warning, TEXT("Holster"));
 		Gun->SetActorHiddenInGame(true);
 	} else
 	{
 		DropWeapon();
 		EquippedWep = Gun;
 	}
-	//Gun->HUDRef = PlayerHUD;
 	Gun->Mesh->SetSimulatePhysics(false);
 	Gun->SetActorEnableCollision(false);
-	Gun->AttachToActor(this, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-	Gun->SetOwner(this);
-	//Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
-	//Gun->Camera = Cast<USceneComponent>(GetFirstPersonCameraComponent());
+	Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
+	Gun->Pickup(this);
 }
 
 void ABaseCharacter::DropWeapon()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Dropped weapon"));
-	EquippedWep->HUDRef = nullptr;
-	EquippedWep->SetOwner(nullptr);
+	EquippedWep->ReleaseTrigger();
+	EquippedWep->Drop();
 	EquippedWep->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	//EquippedWep->SetActorLocation(this->Mesh1P->GetSocketLocation("GripPoint"));
 	EquippedWep->SetActorEnableCollision(true);

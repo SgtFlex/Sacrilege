@@ -24,4 +24,7 @@ class HALOFLOODFANGAME01_API IInteractableInterface
 public:
 	UFUNCTION(BlueprintNativeEvent, Category = "Interact")
 	void OnInteract(AHaloFloodFanGame01Character* Character);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void GetInteractInfo(FText &Text, UTexture2D* &Icon);
 };

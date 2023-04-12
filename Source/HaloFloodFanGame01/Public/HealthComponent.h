@@ -51,10 +51,6 @@ public:
 	float ShieldRegenDelay = 3;
 	UPROPERTY(EditAnywhere, meta = (Category="Shields"))
 	float ShieldRegenRatePerSecond = 30;
-	UPROPERTY(EditAnywhere, meta = (Category="Shields"))
-	float ShieldArmor = 0;
-	UPROPERTY(EditAnywhere, meta = (Category="Shields"))
-	float MaxShieldArmor = 100;
 
 	float HealthRegenTickRate = 0.01;
 	float ShieldRegenTickRate = 0.01;
@@ -63,26 +59,37 @@ private:
 	FTimerHandle ShieldDelayTimerHandle;
 	
 public:
+	UFUNCTION(BlueprintCallable)
 	float GetHealth() const;
-	void SetHealth(float Health);
+	UFUNCTION(BlueprintCallable)
+	void SetHealth(float NewHealth);
+	UFUNCTION(BlueprintCallable)
 	float GetMaxHealth() const;
-	void SetMaxHealth(float MaxHealth);
+	UFUNCTION(BlueprintCallable)
+	void SetMaxHealth(float NewMaxHealth);
+	UFUNCTION(BlueprintCallable)
 	float GetHealthArmor() const;
-	void SetHealthArmor(float HealthArmor);
+	UFUNCTION(BlueprintCallable)
+	void SetHealthArmor(float NewHealthArmor);
+	UFUNCTION(BlueprintCallable)
 	float GetMaxHealthArmor() const;
-	void SetMaxHealthArmor(float MaxHealthArmor);
+	UFUNCTION(BlueprintCallable)
+	void SetMaxHealthArmor(float NewMaxHealthArmor);
+	UFUNCTION(BlueprintCallable)
 	float GetShields() const;
-	void SetShields(float Shields);
+	UFUNCTION(BlueprintCallable)
+	void SetShields(float NewShields);
+	UFUNCTION(BlueprintCallable)
 	float GetMaxShields() const;
-	void SetMaxShields(float MaxShields);
+	UFUNCTION(BlueprintCallable)
+	void SetMaxShields(float NewMaxShields);
+	UFUNCTION(BlueprintCallable)
 	float GetShieldRegenDelay() const;
-	void SetShieldRegenDelay(float ShieldRegenDelay);
+	UFUNCTION(BlueprintCallable)
+	void SetShieldRegenDelay(float NewShieldRegenDelay);
 	float GetShieldRegenRatePerSecond() const;
-	void SetShieldRegenRatePerSecond(float ShieldRegenRatePerSecond);
-	float GetShieldArmor() const;
-	void SetShieldArmor(float ShieldArmor);
-	float GetMaxShieldArmor() const;
-	void SetMaxShieldArmor(float MaxShieldArmor);
+	UFUNCTION(BlueprintCallable)
+	void SetShieldRegenRatePerSecond(float NewShieldRegenRatePerSecond);
 
 	void BreakShields();
 	void RegenShields();

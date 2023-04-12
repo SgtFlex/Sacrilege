@@ -142,31 +142,6 @@ void UHealthComponent::SetShieldRegenRatePerSecond(float NewShieldRegenRatePerSe
 	this->ShieldRegenRatePerSecond = NewShieldRegenRatePerSecond;
 }
 
-float UHealthComponent::GetShieldArmor() const
-{
-	return ShieldArmor;
-}
-
-void UHealthComponent::SetShieldArmor(float NewShieldArmor)
-{
-	this->ShieldArmor = NewShieldArmor;
-}
-
-float UHealthComponent::GetMaxShieldArmor() const
-{
-	return MaxShieldArmor;
-}
-
-void UHealthComponent::SetMaxShieldArmor(float NewMaxShieldArmor)
-{
-	this->MaxShieldArmor = NewMaxShieldArmor;
-}
-
-void UHealthComponent::BreakShields()
-{
-	
-}
-
 void UHealthComponent::RegenShields()
 {
 	Shields += (ShieldRegenRatePerSecond*ShieldRegenTickRate);

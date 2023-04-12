@@ -13,6 +13,7 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Components/UniformGridSlot.h"
+#include "Components/VerticalBox.h"
 #include "HaloFloodFanGame01/HaloFloodFanGame01Character.h"
 
 void UHaloHUDWidget::NativeConstruct()
@@ -29,7 +30,50 @@ void UHaloHUDWidget::NativeConstruct()
 void UHaloHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
+
+	FHitResult PlayerAim = Character->GetPlayerAim();
+	if (Cast<IDamageableInterface>(PlayerAim.GetActor()) && PlayerAim.Distance <= 2000)
+	{
+		SetCrosshairType(4);
+	} else if (Cast<IInteractableInterface>(PlayerAim.GetActor()) && PlayerAim.Distance <= 500)
+	{
+		SetCrosshairType(2);
+	} else
+	{
+		SetCrosshairType(1);
+	}
+
+	if (Character && Character->EquippedWep && Character->EquippedWep->CrosshairTex) Crosshair->SetBrushFromTexture(Character->EquippedWep->CrosshairTex);
+	SetFragCounter(Character->FragCount);
+	IInteractableInterface* IntActor = Cast<IInteractableInterface>(PlayerAim.GetActor());
+	if (PlayerAim.bBlockingHit && IsValid(PlayerAim.GetActor()) && IntActor)
+	{
+		FText IntText;
+		UTexture2D* IntIcon;
+		IntActor->Execute_GetInteractInfo(PlayerAim.GetActor(), IntText, IntIcon);
+		SetInteractInfo(IntText, IntIcon);
+		SetCanInteract(true);
+	}
+	else 
+		SetCanInteract(false);
 }
+
+void UHaloHUDWidget::SetInteractInfo(FText InfoText, UTexture2D* Icon)
+{
+	TestText = InfoText;
+	
+	
+	if (Icon)
+	{
+		InteractIcon->SetBrushFromTexture(Icon);
+		InteractIcon->SetVisibility(ESlateVisibility::Visible);
+	}
+	else
+	{
+		InteractIcon->SetVisibility(ESlateVisibility::Hidden);
+	}
+}
+
 
 void UHaloHUDWidget::SetCompassDirection_Implementation(float Yaw)
 {
@@ -78,16 +122,26 @@ void UHaloHUDWidget::SetAmmoReserveCounter_Implementation(int32 AmmoReserve)
 	AmmoReserveCounter->SetText(FText::AsNumber(AmmoReserve));
 }
 
-void UHaloHUDWidget::SetBulletUsed_Implementation(int32 NumSlot, bool bUsed)
+void UHaloHUDWidget::SetAmmoGridBullets_Implementation(int32 CurMagazine, int32 MaxMagazine)
 {
-	if (!BulletIcons[NumSlot]) return;
-	BulletIcons[NumSlot]->SetVisibility(ESlateVisibility::Hidden);
+	int i = 0;
+	for (auto BulletIcon : BulletIcons)
+	{
+		if (i < CurMagazine)
+			BulletIcon->SetColorAndOpacity(HUDColor-FLinearColor(0,0,0,.5));
+		else
+			BulletIcon->SetColorAndOpacity(FLinearColor(0,0,0, .25));
+		i++;
+	}
 }
 
 void UHaloHUDWidget::SetMagazineReserveCounter_Implementation(int32 MagazineCount)
 {
 	MagazineCounter->SetText(FText::AsNumber(MagazineCount));
+	InteractActionWidget->SetText(TestText);
 }
+
+
 
 void UHaloHUDWidget::SetCrosshairType(int type)
 {
@@ -109,20 +163,31 @@ void UHaloHUDWidget::SetCrosshairType(int type)
 	}
 }
 
-void UHaloHUDWidget::SetAmmoGridWeapon(AGunBase* Weapon)
+void UHaloHUDWidget::UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredGun)
 {
-	if (Weapon)
+	if (EquippedGun)
 	{
-		SetAmmoReserveCounter(Weapon->CurReserve);
-		SetMagazineReserveCounter(Weapon->CurMagazine);
 		MagazineCounter->SetVisibility(ESlateVisibility::Visible);
 		AmmoReserveCounter->SetVisibility(ESlateVisibility::Visible);
 		AmmoGrid->SetVisibility(ESlateVisibility::Visible);
+		SetMagazineReserveCounter(EquippedGun->CurMagazine);
+		SetAmmoReserveCounter(EquippedGun->CurReserve);
+		EquippedGunWidget->SetBrushFromTexture(EquippedGun->WeaponIcon);
+		ConstructAmmoGrid(EquippedGun);
+		SetAmmoGridBullets(EquippedGun->CurMagazine, EquippedGun->MaxReserve);
 	} else
 	{
 		MagazineCounter->SetVisibility(ESlateVisibility::Hidden);
 		AmmoGrid->SetVisibility(ESlateVisibility::Hidden);
 		AmmoReserveCounter->SetVisibility(ESlateVisibility::Hidden);
+	}
+	if (HolsteredGun)
+	{
+		HolsteredGunWidget->SetVisibility(ESlateVisibility::Visible);
+		HolsteredGunWidget->SetBrushFromTexture(HolsteredGun->WeaponIcon);
+	} else
+	{
+		HolsteredGunWidget->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
 
@@ -148,17 +213,15 @@ void UHaloHUDWidget::SetShields_Implementation(float CurrentShields, float MaxSh
 	}
 }
 
+
+
 void UHaloHUDWidget::SetCanInteract_Implementation(bool CanInteract)
 {
-	if (InteractText)
-	{
-		if (CanInteract)
-			InteractText->SetVisibility(ESlateVisibility::Visible);
-		else
-			InteractText->SetVisibility(ESlateVisibility::Hidden);
-	}
+	if (CanInteract)
+		InteractBoxWidget->SetVisibility(ESlateVisibility::Visible);
+	else
+		InteractBoxWidget->SetVisibility(ESlateVisibility::Hidden);
 }
-
 void UHaloHUDWidget::SetFragCounter_Implementation(int32 NewFragCount)
 {
 	if (FragCounter)

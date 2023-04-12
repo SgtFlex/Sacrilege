@@ -1,18 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "GunBase.h"
-#include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
 #include "HaloHUDWidget.h"
-#include "HealthComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "VectorTypes.h"
 #include "Engine/DamageEvents.h"
-#include "Kismet/KismetMathLibrary.h"
-
-
 #include "HaloFloodFanGame01/HaloFloodFanGame01Character.h"
-#include "NaniteUtilities/Public/Affine.h"
 
 
 // Sets default values
@@ -41,60 +34,92 @@ void AGunBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
-int32 BulletsFired;
-void AGunBase::PullTrigger()
+
+void AGunBase::Pickup(ABaseCharacter* Char)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Trigger pulled"));
-	BulletsFired = 0;
-	GetWorldTimerManager().SetTimer(FireHandle, this, &AGunBase::Fire, 60/FireRate, true, 0);
+	SetOwner(Char);
+	if (AHaloFloodFanGame01Character* PlayerChar = Cast<AHaloFloodFanGame01Character>(Char))
+		PlayerHUD = PlayerChar->GetPlayerHUD();
 }
 
-void AGunBase::ReleaseTrigger()
+void AGunBase::Drop()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Trigger released"));
-	GetWorldTimerManager().ClearTimer(FireHandle);
+	SetOwner(nullptr);
+	PlayerHUD = nullptr;
+}
+
+void AGunBase::PullTrigger_Implementation()
+{
+	if (GetWorldTimerManager().TimerExists(BurstRetriggerHandle))
+		return;
+	BulletsFired = 0;
+	GetWorldTimerManager().SetTimer(FireHandle, this, &AGunBase::Fire, 60/FireRate, true, 0);
+	GetWorldTimerManager().SetTimer(BurstRetriggerHandle, BurstRetriggerDelay, false);
+}
+
+void AGunBase::ReleaseTrigger_Implementation()
+{
+	if (BulletsFired >= BurstAmount)
+		GetWorldTimerManager().ClearTimer(FireHandle);
 }
 
 void AGunBase::OnInteract_Implementation(AHaloFloodFanGame01Character* Character)
 {
 	IInteractableInterface::OnInteract_Implementation(Character);
-
-	UE_LOG(LogTemp, Warning, TEXT("Implementation"));
-
+	
 	Character->PickupWeapon(this);
+}
+
+void AGunBase::GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon)
+{
+	IInteractableInterface::GetInteractInfo_Implementation(Text, Icon);
+
+	Text = InteractText;
+	Icon = InteractIcon;
 }
 
 void AGunBase::Fire_Implementation()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Gun firing"));
 	if (CurMagazine <= 0) return;
+	OnFire.Broadcast();
 	CurMagazine--;
-	if (HUDRef) HUDRef->SetBulletUsed(CurMagazine, false);
+	
+	if (PlayerHUD)
+	{
+		PlayerHUD->SetAmmoGridBullets(CurMagazine, MaxMagazine);
+		PlayerHUD->SetMagazineReserveCounter(CurMagazine);
+		
+	}
 	ABaseCharacter* OwningChar = Cast<ABaseCharacter>(GetOwner());
 	if (!OwningChar) return;
-	UGameplayStatics::PlaySoundAtLocation(GetWorld(), FiringSound, GetActorLocation());
+	if (OwningChar->FiringAnim) OwningChar->GetMesh()->GetAnimInstance()->Montage_Play(OwningChar->FiringAnim);
+	if (AHaloFloodFanGame01Character* Char = Cast<AHaloFloodFanGame01Character>(GetOwner()))
+	{
+		if (CamShake)
+			Cast<APlayerController>(Char->GetController())->PlayerCameraManager->StartCameraShake(CamShake, 1, ECameraShakePlaySpace::CameraLocal);
+	}
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), FiringSound, GetActorLocation(), 1, 1, 0, FiringAttenuation);
 	if (Mesh->DoesSocketExist("Muzzle") && MuzzlePFX)
 	{
-		UGameplayStatics::SpawnEmitterAttached(MuzzlePFX, GetRootComponent(), "Muzzle");
+		UNiagaraFunctionLibrary::SpawnSystemAttached(MuzzlePFX, Mesh, "Muzzle", FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
 	}
-	if (PrimProj)
+	if (Projectile)
 	{
 		FVector Location = GetActorLocation() + GetActorForwardVector()*50.0f;
 		FRotator Rotation = OwningChar->GetBaseAimRotation();
-		AActor* SpawnedProj = GetWorld()->SpawnActor(PrimProj, &Location, &Rotation);
-		//Cast<UPrimitiveComponent>(SpawnedProj->GetRootComponent())->AddImpulse(Camera->GetForwardVector()*1000.0f);
+		GetWorld()->SpawnActor(Projectile, &Location, &Rotation);
 	} else
 	{
 		FHitResult Hit;
-		FVector TraceStart = GetActorLocation();
-		FRotator Dir;
-		FVector TraceEnd = GetActorLocation() + OwningChar->GetBaseAimRotation().Vector()*500;
-		OwningChar->GetActorEyesViewPoint(TraceStart, Dir);
-		TraceEnd = TraceStart + Dir.Vector()*Range;
+		FVector TraceStart;
+		FVector TraceEnd;
+		FRotator EyeRotation;
+		OwningChar->GetActorEyesViewPoint(TraceStart, EyeRotation);
+		TraceEnd = TraceStart + EyeRotation.Vector()*Range;
 		FCollisionQueryParams CollisionParameters;
 		CollisionParameters.AddIgnoredActor(this);
 		CollisionParameters.AddIgnoredActor(GetAttachParentActor());
-		GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECollisionChannel::ECC_WorldDynamic, CollisionParameters);
+		GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParameters);
 		DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor(255, 0, 0), false, 3);
 		IDamageableInterface* HitActor = Cast<IDamageableInterface>(Hit.GetActor());
 		if (Hit.bBlockingHit)
@@ -126,9 +151,16 @@ void AGunBase::Fire_Implementation()
 void AGunBase::Reload_Implementation()
 {
 	if (CurReserve <= 0 || CurMagazine == MaxMagazine) return;
+
 	int32 AmountNeed = MaxMagazine - CurMagazine; //32 - 27 gives 5 for example
 	int32 AmountGrabbed = FMath::Min(AmountNeed, CurReserve);
 	CurMagazine = CurMagazine + AmountGrabbed;
 	CurReserve = CurReserve - AmountGrabbed;
+	if (PlayerHUD)
+	{
+		PlayerHUD->SetAmmoGridBullets(CurMagazine, MaxMagazine);
+		PlayerHUD->SetAmmoReserveCounter(CurReserve);
+		PlayerHUD->SetMagazineReserveCounter(CurMagazine);
+	}
 }
 

@@ -5,10 +5,10 @@
 #include "CoreMinimal.h"
 #include "DamageableInterface.h"
 #include "GameFramework/Character.h"
-#include "GameFramework/Pawn.h"
-#include "Particles/ParticleSystem.h"
 #include "BaseCharacter.generated.h"
 
+class ABaseGrenade;
+class ADecalActor;
 class AGunBase;
 class UHealthComponent;
 UCLASS()
@@ -37,18 +37,31 @@ public:
 
 	virtual float TakeRadialDamage(float Damage, FVector Force, FRadialDamageEvent const& RadialDamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 	
-	// virtual void TakeDamage(float DamageAmount) override;
-	
 	virtual void HealthDepleted(float Damage, FVector Force, FVector HitLocation = FVector(0,0,0), FName HitBoneName = "") override;
+
+	UFUNCTION(BlueprintCallable)
+	virtual UHealthComponent* GetHealthComponent() override;
 
 	UFUNCTION(BlueprintNativeEvent)
 	void Melee();
+
+	UFUNCTION(BlueprintNativeEvent)
+	void EquipGrenadeType(TSubclassOf<ABaseGrenade> Grenade);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void ThrowEquippedGrenade();
+
+	UFUNCTION(BlueprintCallable)
+	void UseEquipment();
 
 	UFUNCTION(BlueprintCallable)
 	virtual void PrimaryAttack_Pull();
 
 	UFUNCTION(BlueprintCallable)
 	virtual void PrimaryAttack_Release();
+	
+	UFUNCTION(BlueprintCallable)
+	virtual void ReloadInput();
 
 	UFUNCTION(BlueprintCallable)
 	virtual void PickupWeapon(AGunBase* Gun);
@@ -62,12 +75,24 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AGunBase> SpawnWeapon;
-	
-	AGunBase* EquippedWep;
+
+	UPROPERTY()
+	class AGunBase* EquippedWep;
+
+	UPROPERTY()
 	AGunBase* HolsteredWeapon;
 
-private:
-	
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* BloodPFX;
+
+	UPROPERTY(EditAnywhere)
+	UMaterial* BloodDecalMaterial;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<ABaseGrenade> EquippedGrenadeClass;
+
+	UPROPERTY(EditAnywhere)
+	UAnimMontage* FiringAnim;
 
 protected:
 	UPROPERTY(EditDefaultsOnly)
@@ -75,6 +100,7 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	float MeleeDamage = 30;
+	
 	UPROPERTY(EditAnywhere)
 	float MeleeForce = 100000;
 };

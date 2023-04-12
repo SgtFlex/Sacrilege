@@ -30,6 +30,9 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	void SetCanInteract(bool CanInteract);
 
+	UFUNCTION()
+	void SetInteractInfo(FText InfoText, UTexture2D* Icon = nullptr);
+
 	UFUNCTION(BlueprintNativeEvent)
 	void SetFragCounter(int32 NewFragCount);
 
@@ -55,11 +58,11 @@ public:
 	void SetMagazineReserveCounter(int32 MagazineCount);
 
 	UFUNCTION(BlueprintNativeEvent)
-	void SetBulletUsed(int32 NumSlot, bool bUsed);
-
+	void SetAmmoGridBullets(int32 CurMagazine, int32 MaxMagazine);
+	
 	void SetCrosshairType(int type);
-
-	void SetAmmoGridWeapon(AGunBase* Weapon = nullptr);
+	
+	void UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredGun);
 
 	virtual bool Initialize() override;
 
@@ -71,9 +74,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 		class UProgressBar* ShieldBar;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	class UTextBlock* InteractText;
+	class UVerticalBox* InteractBoxWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	class UTextBlock* InteractActionWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UUniformGridPanel* AmmoGrid;
@@ -100,8 +106,17 @@ public:
 	TSubclassOf<class UUserWidget> AmmoGridChildClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	class UImage* EquippedGunWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	class UImage* HolsteredGunWidget;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UImage* Compass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	class UImage* InteractIcon;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CompassDirection;
 
@@ -118,6 +133,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Colors")
 	FLinearColor HUDColor = FColor(255, 150, 50, 255);
+
+	FText TestText;
 
 	UPROPERTY()
 	class AHaloFloodFanGame01Character* Character;

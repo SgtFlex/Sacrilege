@@ -7,7 +7,7 @@
 #include "DamageableInterface.generated.h"
 
 // This class does not need to be modified.
-UINTERFACE(MinimalAPI)
+UINTERFACE(MinimalAPI, meta=(CannotImplementInterfaceInBlueprint))
 class UDamageableInterface : public UInterface
 {
 	GENERATED_BODY()
@@ -28,6 +28,9 @@ public:
 	virtual float TakeRadialDamage(float DamageAmount, FVector Force, FRadialDamageEvent const& RadialDamageEvent, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
 	virtual void HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName);
+
+	UFUNCTION(BlueprintCallable)
+	virtual UHealthComponent* GetHealthComponent();
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 };

@@ -7,10 +7,11 @@
 #include "InputActionValue.h"
 #include "Components/TimelineComponent.h"
 #include "Core/BaseCharacter.h"
-#include "Core/BaseGroundCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "HaloFloodFanGame01Character.generated.h"
 
+class UHaloHUDWidget;
+class ABaseGrenade;
 class UInputComponent;
 class USkeletalMeshComponent;
 class USceneComponent;
@@ -57,6 +58,12 @@ class AHaloFloodFanGame01Character : public ABaseCharacter
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* ReloadAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* ThrowGrenadeAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* UseEquipmentAction;
 	
 public:
 	AHaloFloodFanGame01Character();
@@ -66,42 +73,39 @@ protected:
 
 	virtual void Tick(float DeltaSeconds) override;
 
-public:
-		
+public:	
+	UFUNCTION(BlueprintGetter)
+	FHitResult GetPlayerAim();
+	
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LookAction;
-
-	/** Bool for AnimBP to switch to another animation set */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon)
-	bool bHasRifle;
-
-	/** Setter to set the bool */
-	UFUNCTION(BlueprintCallable, Category = Weapon)
-	void SetHasRifle(bool bNewHasRifle);
-
-	/** Getter for the bool */
-	UFUNCTION(BlueprintCallable, Category = Weapon)
-	bool GetHasRifle();
 	
-	void ReloadInput();
+	UFUNCTION()
+	virtual void ThrowEquippedGrenade_Implementation() override;
 
-	void ThrowGrenade();
-
-	void UseEquipment();
-
-	virtual void Death();
-
+	UFUNCTION(BlueprintCallable)
 	void SwitchWeapon();
 
+	UFUNCTION(BlueprintCallable)
 	void Interact();
-
+	
 	virtual void PickupWeapon(AGunBase* Gun) override;
-
+	
 	virtual void DropWeapon() override;
-private:
-	// virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
+	UFUNCTION()
+	void SetFragCount(int32 NewFragCount);
+
+	UFUNCTION()
+	virtual void BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+
+	/** Returns Mesh1P subobject **/
+	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
+	/** Returns FirstPersonCameraComponent subobject **/
+	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+
+	UHaloHUDWidget* GetPlayerHUD() const { return PlayerHUD; }
 protected:
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
@@ -109,8 +113,7 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
-	virtual void Attack();
-
+	UFUNCTION(BlueprintCallable)
 	virtual void Melee_Implementation() override;
 
 	UFUNCTION()
@@ -118,29 +121,22 @@ protected:
 
 	UFUNCTION()
 	void MeleeUpdate(float Alpha);
-	
+
+	UFUNCTION()
 	virtual void HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName) override;
 
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	// End of APawn interface
-
-	UPROPERTY(EditAnywhere, Category="Collision")
-	TEnumAsByte<ECollisionChannel> TraceChannelProperty = ECC_Pawn;
-
+	
 public:
-	/** Returns Mesh1P subobject **/
-	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
-	/** Returns FirstPersonCameraComponent subobject **/
-	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+	
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UHaloHUDWidget> PlayerHUDClass;
 
 	UPROPERTY()
 	class UHaloHUDWidget* PlayerHUD;
-
-	TArray<int> Guns;
 	
 	int32 FragCount = 0;
 	int32 PlasmaCount = 0;
@@ -154,5 +150,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	UCurveFloat* MeleeCurve;
+
+protected:
+	UPROPERTY(EditAnywhere, Category="Collision")
+	TEnumAsByte<ECollisionChannel> TraceChannelProperty = ECC_Pawn;
 };
 

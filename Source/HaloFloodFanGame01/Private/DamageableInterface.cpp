@@ -3,6 +3,8 @@
 
 #include "DamageableInterface.h"
 
+#include "HealthComponent.h"
+
 // Add default functionality here for any IDamageableInterface functions that are not pure virtual.
 
 float IDamageableInterface::TakeDamage(float DamageAmount, FVector Force, FDamageEvent const& DamageEvent,
@@ -25,4 +27,9 @@ float IDamageableInterface::TakeRadialDamage(float DamageAmount, FVector Force,
 
 void IDamageableInterface::HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName)
 {
+}
+
+UHealthComponent* IDamageableInterface::GetHealthComponent()
+{
+	return 0;
 }
