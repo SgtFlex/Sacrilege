@@ -19,6 +19,9 @@ class UCameraComponent;
 class UAnimMontage;
 class USoundBase;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSwitchWeapon);
+
+
 UCLASS(config=Game)
 class AHaloFloodFanGame01Character : public ABaseCharacter
 {
@@ -135,12 +138,19 @@ public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UHaloHUDWidget> PlayerHUDClass;
 
+	UPROPERTY(EditAnywhere, Category="Loadout")
+	TSubclassOf<class AGunBase> HolsteredGunClass;
+
 	UPROPERTY()
 	class UHaloHUDWidget* PlayerHUD;
-	
+
+	UPROPERTY(EditAnywhere, Category="Loadout")
 	int32 FragCount = 0;
+	UPROPERTY(EditAnywhere, Category="Loadout")
 	int32 PlasmaCount = 0;
+	UPROPERTY(EditAnywhere, Category="Loadout")
 	int32 SpikeCount = 0;
+	UPROPERTY(EditAnywhere, Category="Loadout")
 	int32 IncenCount = 0;
 
 private:

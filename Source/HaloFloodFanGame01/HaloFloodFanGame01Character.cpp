@@ -53,6 +53,9 @@ void AHaloFloodFanGame01Character::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 
+	if (HolsteredGunClass)
+		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(HolsteredGunClass)));
+
 	//Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
@@ -66,7 +69,7 @@ void AHaloFloodFanGame01Character::BeginPlay()
 		APlayerController* PC = GetController<APlayerController>();
 		check(PC);
 		PlayerHUD = CreateWidget<UHaloHUDWidget>(PC, PlayerHUDClass);
-		PlayerHUD->Character = this;
+		PlayerHUD->PlayerCharacter = this;
 		PlayerHUD->AddToPlayerScreen();
 	}
 }
@@ -178,8 +181,8 @@ void AHaloFloodFanGame01Character::Melee_Implementation()
 	
 	if (MeleeHit.GetActor())
 	{
-		
-		if (Cast<IDamageableInterface>(MeleeHit.GetActor()))
+		IDamageableInterface* DamageableActor = Cast<IDamageableInterface>(MeleeHit.GetActor());
+		if (DamageableActor && DamageableActor->GetHealthComponent()->GetHealth() > 0)
 		{
 			if (MeleeCurve)
 			{
@@ -288,7 +291,9 @@ void AHaloFloodFanGame01Character::Interact()
 void AHaloFloodFanGame01Character::PickupWeapon(AGunBase* Gun)
 {
 	Super::PickupWeapon(Gun);
-	PlayerHUD->UpdateHUDWeaponData(EquippedWep, HolsteredWeapon);
+	EquippedWep->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
+	if (PlayerHUD)
+		PlayerHUD->UpdateHUDWeaponData(EquippedWep, HolsteredWeapon);
 }
 
 void AHaloFloodFanGame01Character::DropWeapon()

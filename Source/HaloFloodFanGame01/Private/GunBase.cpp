@@ -66,7 +66,6 @@ void AGunBase::ReleaseTrigger_Implementation()
 void AGunBase::OnInteract_Implementation(AHaloFloodFanGame01Character* Character)
 {
 	IInteractableInterface::OnInteract_Implementation(Character);
-	
 	Character->PickupWeapon(this);
 }
 
@@ -80,64 +79,76 @@ void AGunBase::GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon)
 
 void AGunBase::Fire_Implementation()
 {
-	if (CurMagazine <= 0) return;
-	OnFire.Broadcast();
-	CurMagazine--;
-	
-	if (PlayerHUD)
+	if (CurMagazine <= 0)
 	{
-		PlayerHUD->SetAmmoGridBullets(CurMagazine, MaxMagazine);
-		PlayerHUD->SetMagazineReserveCounter(CurMagazine);
-		
+		ReleaseTrigger();
+		return;
 	}
+	CurMagazine--;
 	ABaseCharacter* OwningChar = Cast<ABaseCharacter>(GetOwner());
 	if (!OwningChar) return;
 	if (OwningChar->FiringAnim) OwningChar->GetMesh()->GetAnimInstance()->Montage_Play(OwningChar->FiringAnim);
 	if (AHaloFloodFanGame01Character* Char = Cast<AHaloFloodFanGame01Character>(GetOwner()))
 	{
-		if (CamShake)
-			Cast<APlayerController>(Char->GetController())->PlayerCameraManager->StartCameraShake(CamShake, 1, ECameraShakePlaySpace::CameraLocal);
+		if (FiringCameraShake)
+			Cast<APlayerController>(Char->GetController())->PlayerCameraManager->StartCameraShake(FiringCameraShake, 1, ECameraShakePlaySpace::CameraLocal);
 	}
-	UGameplayStatics::PlaySoundAtLocation(GetWorld(), FiringSound, GetActorLocation(), 1, 1, 0, FiringAttenuation);
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), FiringSound, GetActorLocation(), 1, 1, 0, FiringSoundAttenuation);
 	if (Mesh->DoesSocketExist("Muzzle") && MuzzlePFX)
 	{
 		UNiagaraFunctionLibrary::SpawnSystemAttached(MuzzlePFX, Mesh, "Muzzle", FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
 	}
-	if (Projectile)
+	for (int i = 0; i < Multishot; ++i)
 	{
-		FVector Location = GetActorLocation() + GetActorForwardVector()*50.0f;
-		FRotator Rotation = OwningChar->GetBaseAimRotation();
-		GetWorld()->SpawnActor(Projectile, &Location, &Rotation);
-	} else
-	{
-		FHitResult Hit;
-		FVector TraceStart;
-		FVector TraceEnd;
-		FRotator EyeRotation;
-		OwningChar->GetActorEyesViewPoint(TraceStart, EyeRotation);
-		TraceEnd = TraceStart + EyeRotation.Vector()*Range;
-		FCollisionQueryParams CollisionParameters;
-		CollisionParameters.AddIgnoredActor(this);
-		CollisionParameters.AddIgnoredActor(GetAttachParentActor());
-		GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParameters);
-		DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor(255, 0, 0), false, 3);
-		IDamageableInterface* HitActor = Cast<IDamageableInterface>(Hit.GetActor());
-		if (Hit.bBlockingHit)
+		if (ProjectileClass)
 		{
-			FVector ForceVector = (TraceEnd-TraceStart);
-			ForceVector.Normalize();
-			
-			if (Hit.GetComponent()->IsSimulatingPhysics())
-				Hit.GetComponent()->AddImpulse(ForceVector*Force);
-			
-			if (HitActor)
+			FVector Location = GetActorLocation() + GetActorForwardVector()*50.0f;
+			FRotator Rotation = OwningChar->GetBaseAimRotation();
+			GetWorld()->SpawnActor(ProjectileClass, &Location, &Rotation);
+		} else
+		{
+			FHitResult Hit;
+			FVector TraceStart;
+			FVector TraceEnd;
+			FRotator EyeRotation;
+			OwningChar->GetActorEyesViewPoint(TraceStart, EyeRotation);
+			EyeRotation = EyeRotation + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
+			TraceEnd = TraceStart + EyeRotation.Vector()*Range;
+			FCollisionQueryParams CollisionParameters;
+			CollisionParameters.AddIgnoredActor(this);
+			CollisionParameters.AddIgnoredActor(GetAttachParentActor());
+			GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParameters);
+			DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor(255, 0, 0), false, 3);
+			IDamageableInterface* HitActor = Cast<IDamageableInterface>(Hit.GetActor());
+			if (Hit.bBlockingHit)
 			{
-				FVector HitDir = Hit.Location - TraceStart;
-				HitDir.Normalize();
-				FPointDamageEvent PointDamageEvent;
-				PointDamageEvent.Damage = Damage;
-				PointDamageEvent.HitInfo = Hit;
-				HitActor->TakePointDamage(Damage, HitDir*Force, PointDamageEvent);
+				FVector ForceVector = (TraceEnd-TraceStart);
+				ForceVector.Normalize();
+			
+				if (Hit.GetComponent()->IsSimulatingPhysics())
+				{
+					Hit.GetComponent()->AddImpulse(ForceVector*Force);
+					
+					
+				}
+				if (BulletImpactActor && !HitActor)
+				{
+					FVector Location = Hit.Location;
+					FRotator Rotation = Hit.Normal.Rotation() + FRotator(-90, 0, 0);
+					AActor* Decal = GetWorld()->SpawnActor(BulletImpactActor, &Location, &Rotation);
+					Decal->AttachToComponent(Hit.GetComponent(), FAttachmentTransformRules::KeepWorldTransform);
+				}
+					
+			
+				if (HitActor)
+				{
+					FVector HitDir = Hit.Location - TraceStart;
+					HitDir.Normalize();
+					FPointDamageEvent PointDamageEvent;
+					PointDamageEvent.Damage = Damage * FalloffCurve->GetFloatValue(Hit.Distance/Range);
+					PointDamageEvent.HitInfo = Hit;
+					HitActor->TakePointDamage(Damage, HitDir*Force, PointDamageEvent);
+				}
 			}
 		}
 	}
@@ -146,6 +157,7 @@ void AGunBase::Fire_Implementation()
 	{
 		ReleaseTrigger();
 	}
+	OnFire.Broadcast();
 }
 
 void AGunBase::Reload_Implementation()
@@ -156,11 +168,6 @@ void AGunBase::Reload_Implementation()
 	int32 AmountGrabbed = FMath::Min(AmountNeed, CurReserve);
 	CurMagazine = CurMagazine + AmountGrabbed;
 	CurReserve = CurReserve - AmountGrabbed;
-	if (PlayerHUD)
-	{
-		PlayerHUD->SetAmmoGridBullets(CurMagazine, MaxMagazine);
-		PlayerHUD->SetAmmoReserveCounter(CurReserve);
-		PlayerHUD->SetMagazineReserveCounter(CurMagazine);
-	}
+	OnReload.Broadcast();
 }
 

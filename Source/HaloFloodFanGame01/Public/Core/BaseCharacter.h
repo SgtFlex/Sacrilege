@@ -11,6 +11,10 @@ class ABaseGrenade;
 class ADecalActor;
 class AGunBase;
 class UHealthComponent;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPickupWeapon);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDropWeapon);
+
 UCLASS()
 class HALOFLOODFANGAME01_API ABaseCharacter : public ACharacter, public IDamageableInterface
 {
@@ -30,15 +34,11 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
-
+	
 	virtual float TakePointDamage(float Damage, FVector Force, FPointDamageEvent const& PointDamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
-
-	virtual float TakeRadialDamage(float Damage, FVector Force, FRadialDamageEvent const& RadialDamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 	
 	virtual void HealthDepleted(float Damage, FVector Force, FVector HitLocation = FVector(0,0,0), FName HitBoneName = "") override;
-
+	
 	UFUNCTION(BlueprintCallable)
 	virtual UHealthComponent* GetHealthComponent() override;
 
@@ -70,16 +70,22 @@ public:
 	virtual void DropWeapon();
 
 public:
+	UPROPERTY(BlueprintAssignable)
+	FOnPickupWeapon OnPickupWeapon;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnDropWeapon OnDropWeapon;
+	
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere,Category="Stats", meta=(AllowPrivateAccess=true))
 	UHealthComponent* HealthComponent;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category="Loadout")
 	TSubclassOf<AGunBase> SpawnWeapon;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	class AGunBase* EquippedWep;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	AGunBase* HolsteredWeapon;
 
 	UPROPERTY(EditAnywhere)
@@ -88,11 +94,17 @@ public:
 	UPROPERTY(EditAnywhere)
 	UMaterial* BloodDecalMaterial;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category="Loadout")
 	TSubclassOf<ABaseGrenade> EquippedGrenadeClass;
 
 	UPROPERTY(EditAnywhere)
 	UAnimMontage* FiringAnim;
+
+	UPROPERTY(EditAnywhere)
+	UAnimMontage* HurtAnim;
+
+	UPROPERTY(EditAnywhere)
+	UAnimMontage* DeathAnim;
 
 protected:
 	UPROPERTY(EditDefaultsOnly)

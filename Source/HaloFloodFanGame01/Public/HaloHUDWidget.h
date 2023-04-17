@@ -48,11 +48,16 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	void SetCompassDirection(float Yaw);
 
+	
+
 	UFUNCTION(BlueprintNativeEvent)
 	void ConstructAmmoGrid(AGunBase* Gun);
 
 	UFUNCTION(BlueprintNativeEvent)
 	void SetAmmoReserveCounter(int32 AmmoReserve);
+
+	UFUNCTION()
+	void UpdateHUDMagazineElements(); //Maybe clean this up later
 
 	UFUNCTION(BlueprintNativeEvent)
 	void SetMagazineReserveCounter(int32 MagazineCount);
@@ -61,7 +66,8 @@ public:
 	void SetAmmoGridBullets(int32 CurMagazine, int32 MaxMagazine);
 	
 	void SetCrosshairType(int type);
-	
+
+	UFUNCTION()
 	void UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredGun);
 
 	virtual bool Initialize() override;
@@ -137,5 +143,5 @@ public:
 	FText TestText;
 
 	UPROPERTY()
-	class AHaloFloodFanGame01Character* Character;
+	class AHaloFloodFanGame01Character* PlayerCharacter;
 };

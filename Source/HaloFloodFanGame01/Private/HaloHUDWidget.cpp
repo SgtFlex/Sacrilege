@@ -20,10 +20,15 @@ void UHaloHUDWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	SetFragCounter(Character->FragCount);
-	SetPlasmaCounter(Character->PlasmaCount);
-	SetSpikeCounter(Character->SpikeCount);
-	SetIncenCounter(Character->IncenCount);
+	SetFragCounter(PlayerCharacter->FragCount);
+	SetPlasmaCounter(PlayerCharacter->PlasmaCount);
+	SetSpikeCounter(PlayerCharacter->SpikeCount);
+	SetIncenCounter(PlayerCharacter->IncenCount);
+	if (PlayerCharacter->EquippedWep)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Found Weapon"));
+		UpdateHUDWeaponData(PlayerCharacter->EquippedWep, PlayerCharacter->HolsteredWeapon);
+	}
 	
 }
 
@@ -31,7 +36,7 @@ void UHaloHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	FHitResult PlayerAim = Character->GetPlayerAim();
+	FHitResult PlayerAim = PlayerCharacter->GetPlayerAim();
 	if (Cast<IDamageableInterface>(PlayerAim.GetActor()) && PlayerAim.Distance <= 2000)
 	{
 		SetCrosshairType(4);
@@ -43,8 +48,8 @@ void UHaloHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		SetCrosshairType(1);
 	}
 
-	if (Character && Character->EquippedWep && Character->EquippedWep->CrosshairTex) Crosshair->SetBrushFromTexture(Character->EquippedWep->CrosshairTex);
-	SetFragCounter(Character->FragCount);
+	if (PlayerCharacter && PlayerCharacter->EquippedWep && PlayerCharacter->EquippedWep->CrosshairTexture) Crosshair->SetBrushFromTexture(PlayerCharacter->EquippedWep->CrosshairTexture);
+	SetFragCounter(PlayerCharacter->FragCount);
 	IInteractableInterface* IntActor = Cast<IInteractableInterface>(PlayerAim.GetActor());
 	if (PlayerAim.bBlockingHit && IsValid(PlayerAim.GetActor()) && IntActor)
 	{
@@ -142,6 +147,12 @@ void UHaloHUDWidget::SetMagazineReserveCounter_Implementation(int32 MagazineCoun
 }
 
 
+void UHaloHUDWidget::UpdateHUDMagazineElements()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Updated HUD Mag Elements"));
+	SetMagazineReserveCounter(PlayerCharacter->EquippedWep->CurMagazine);
+	SetAmmoGridBullets(PlayerCharacter->EquippedWep->CurMagazine, PlayerCharacter->EquippedWep->MaxMagazine);
+}
 
 void UHaloHUDWidget::SetCrosshairType(int type)
 {
@@ -170,11 +181,12 @@ void UHaloHUDWidget::UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* Holste
 		MagazineCounter->SetVisibility(ESlateVisibility::Visible);
 		AmmoReserveCounter->SetVisibility(ESlateVisibility::Visible);
 		AmmoGrid->SetVisibility(ESlateVisibility::Visible);
-		SetMagazineReserveCounter(EquippedGun->CurMagazine);
 		SetAmmoReserveCounter(EquippedGun->CurReserve);
 		EquippedGunWidget->SetBrushFromTexture(EquippedGun->WeaponIcon);
 		ConstructAmmoGrid(EquippedGun);
-		SetAmmoGridBullets(EquippedGun->CurMagazine, EquippedGun->MaxReserve);
+		UpdateHUDMagazineElements();
+		EquippedGun->OnFire.AddUniqueDynamic(this, &UHaloHUDWidget::UpdateHUDMagazineElements);
+		EquippedGun->OnReload.AddUniqueDynamic(this, &UHaloHUDWidget::UpdateHUDMagazineElements);
 	} else
 	{
 		MagazineCounter->SetVisibility(ESlateVisibility::Hidden);

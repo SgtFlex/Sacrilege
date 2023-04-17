@@ -29,8 +29,7 @@ void ABaseCharacter::BeginPlay()
 
 	if (SpawnWeapon)
 	{
-		AGunBase* Weapon = Cast<AGunBase>(GetWorld()->SpawnActor(SpawnWeapon));
-		PickupWeapon(Weapon);
+		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(SpawnWeapon)));
 	}
 }
 
@@ -48,26 +47,11 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 }
 
-float ABaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
-	AActor* DamageCauser)
-{
-	HealthComponent->TakeDamage(DamageAmount);
-	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-}
-
 float ABaseCharacter::TakePointDamage(float Damage, FVector Force, FPointDamageEvent const& PointDamageEvent,
 	AController* EventInstigator, AActor* DamageCauser)
 {
-	HealthComponent->TakeDamage(PointDamageEvent.Damage, Force, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.BoneName, EventInstigator, DamageCauser);
-	if (BloodPFX) UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), BloodPFX, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Normal.Rotation());
-	return Super::InternalTakePointDamage(Damage, PointDamageEvent, EventInstigator, DamageCauser);
-}
-
-float ABaseCharacter::TakeRadialDamage(float Damage, FVector Force, FRadialDamageEvent const& RadialDamageEvent,
-	AController* EventInstigator, AActor* DamageCauser)
-{
-	HealthComponent->TakeDamage(Damage, Force);
-	return Super::InternalTakeRadialDamage(Damage, RadialDamageEvent, EventInstigator, DamageCauser);
+	if (BloodPFX) UNiagaraFunctionLibrary::SpawnSystemAttached(BloodPFX, GetMesh(), PointDamageEvent.HitInfo.BoneName, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Normal.Rotation(), EAttachLocation::KeepWorldPosition, true);
+	return IDamageableInterface::TakePointDamage(Damage, Force, PointDamageEvent, EventInstigator, DamageCauser);
 }
 
 // void ABaseCharacter::TakeDamage(float DamageAmount)
@@ -78,7 +62,8 @@ float ABaseCharacter::TakeRadialDamage(float Damage, FVector Force, FRadialDamag
 
 void ABaseCharacter::HealthDepleted(float Damage, FVector DamageForce, FVector HitLocation, FName HitBoneName)
 {
-	if (BloodDecalMaterial) UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(10, 10, 10), GetActorLocation(), FRotator(90,0,0));
+	if (BloodDecalMaterial) UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(100, 100, 100), GetActorLocation(), FRotator(-90,0,0));
+	GetMesh()->GetAnimInstance()->Montage_Play(DeathAnim);
 	GetCapsuleComponent()->DestroyComponent();
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetMesh()->SetSimulatePhysics(true);
@@ -159,6 +144,10 @@ void ABaseCharacter::ReloadInput()
 
 void ABaseCharacter::PickupWeapon(AGunBase* Gun)
 {
+	Gun->Mesh->SetSimulatePhysics(false);
+	Gun->SetActorEnableCollision(false);
+	Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
+	Gun->Pickup(this);
 	if (!EquippedWep)
 	{
 		EquippedWep = Gun;
@@ -171,10 +160,7 @@ void ABaseCharacter::PickupWeapon(AGunBase* Gun)
 		DropWeapon();
 		EquippedWep = Gun;
 	}
-	Gun->Mesh->SetSimulatePhysics(false);
-	Gun->SetActorEnableCollision(false);
-	Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
-	Gun->Pickup(this);
+	
 }
 
 void ABaseCharacter::DropWeapon()
