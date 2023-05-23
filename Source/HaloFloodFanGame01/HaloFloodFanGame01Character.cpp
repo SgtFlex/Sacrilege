@@ -58,7 +58,6 @@ void AHaloFloodFanGame01Character::BeginPlay()
 	
 }
 
-FHitResult PlayerAim;
 void AHaloFloodFanGame01Character::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);

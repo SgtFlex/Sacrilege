@@ -165,6 +165,9 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	UCurveFloat* MeleeCurve;
 
+	FHitResult PlayerAim;
+
+
 protected:
 	UPROPERTY(EditAnywhere, Category="Collision")
 	TEnumAsByte<ECollisionChannel> TraceChannelProperty = ECC_Pawn;
