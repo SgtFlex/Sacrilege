@@ -67,19 +67,39 @@ public:
 	
 	void SetCrosshairType(int type);
 
+	void SetCrosshairTexture(UTexture2D* NewTexture);
+
+	UFUNCTION(BlueprintCallable)
+	void SetFragHUDEnabled(bool bDisplay);
+
+	UFUNCTION(BlueprintCallable)
+	void SetWeaponHUDEnabled(bool bDisplay);
+
 	UFUNCTION()
 	void UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredGun);
 
 	virtual bool Initialize() override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	UWidget* WeaponHUD;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	UWidget* FragHUD;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	UWidget* HealthHUD;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	UWidget* CompassHUD;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UImage* Crosshair;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-		class UProgressBar* HealthBar;
+	class UProgressBar* HealthBar;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-		class UProgressBar* ShieldBar;
+	class UProgressBar* ShieldBar;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UVerticalBox* InteractBoxWidget;

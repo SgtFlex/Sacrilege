@@ -40,6 +40,8 @@ public:
 
 	void Pickup(ABaseCharacter* Char);
 
+	void Equip();
+
 	void Drop();
 
 	UFUNCTION(BlueprintNativeEvent)
@@ -57,6 +59,10 @@ public:
 	virtual void OnInteract_Implementation(AHaloFloodFanGame01Character* Character) override;
 
 	virtual void GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon) override;
+
+	void OnPossessed(AController* Controller);
+	
+	void OnUnpossessed(AController* OldController);
 
 public:
 	UPROPERTY(EditAnywhere)
@@ -161,6 +167,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	class UNiagaraSystem* MuzzlePFX;
+
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* TrailPFX;
 	
 	UPROPERTY(EditDefaultsOnly, meta = (Category="HUD"))
 	TSubclassOf<UUserWidget> BulletWidget;

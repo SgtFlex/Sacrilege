@@ -19,7 +19,7 @@ class UCameraComponent;
 class UAnimMontage;
 class USoundBase;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSwitchWeapon);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponsUpdated, AGunBase*, NewGun, AGunBase*, OldGun);
 
 
 UCLASS(config=Game)
@@ -92,6 +92,10 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void Interact();
+
+	virtual void PossessedBy(AController* NewController) override;
+
+	virtual void UnPossessed() override;
 	
 	virtual void PickupWeapon(AGunBase* Gun) override;
 	
@@ -99,9 +103,6 @@ public:
 
 	UFUNCTION()
 	void SetFragCount(int32 NewFragCount);
-
-	UFUNCTION()
-	virtual void BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 
 	/** Returns Mesh1P subobject **/
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
@@ -125,7 +126,6 @@ protected:
 	UFUNCTION()
 	void MeleeUpdate(float Alpha);
 
-	UFUNCTION()
 	virtual void HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName) override;
 
 	// APawn interface
@@ -133,7 +133,11 @@ protected:
 	// End of APawn interface
 	
 public:
+	UPROPERTY()
+	APlayerController* PlayerController;
 	
+	UPROPERTY()
+	FWeaponsUpdated WeaponsUpdated;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UHaloHUDWidget> PlayerHUDClass;

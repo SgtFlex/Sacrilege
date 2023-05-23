@@ -21,12 +21,16 @@ class HALOFLOODFANGAME01_API IDamageableInterface
 	GENERATED_BODY()
 
 public:
+	UFUNCTION(BlueprintCallable)
 	virtual float TakeDamage(float DamageAmount, FVector Force, FDamageEvent const& DamageEvent, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
-	virtual float TakePointDamage(float DamageAmount, FVector Force, FPointDamageEvent const& PointDamageEvent, AController*  = nullptr, AActor* DamageCauser = nullptr);
+	UFUNCTION(BlueprintCallable)
+	virtual float TakePointDamage(float DamageAmount, FVector Force, FPointDamageEvent const& PointDamageEvent, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
+	UFUNCTION(BlueprintCallable)
 	virtual float TakeRadialDamage(float DamageAmount, FVector Force, FRadialDamageEvent const& RadialDamageEvent, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
+	UFUNCTION(BlueprintCallable)
 	virtual void HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName);
 
 	UFUNCTION(BlueprintCallable)

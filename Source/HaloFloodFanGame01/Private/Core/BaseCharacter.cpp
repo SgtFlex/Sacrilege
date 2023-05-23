@@ -11,6 +11,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
+#include "GameFramework/PawnMovementComponent.h"
 
 // Sets default values
 ABaseCharacter::ABaseCharacter()
@@ -19,6 +20,7 @@ ABaseCharacter::ABaseCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComp"));
+	GetCapsuleComponent()->SetNotifyRigidBodyCollision(true);
 	
 }
 
@@ -26,11 +28,12 @@ ABaseCharacter::ABaseCharacter()
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
+	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ABaseCharacter::OnHit);
 	if (SpawnWeapon)
 	{
 		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(SpawnWeapon)));
 	}
+	HealthComponent->OnHealthDepleted.AddDynamic(this, &ABaseCharacter::HealthDepleted);
 }
 
 // Called every frame
@@ -47,10 +50,14 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 }
 
-float ABaseCharacter::TakePointDamage(float Damage, FVector Force, FPointDamageEvent const& PointDamageEvent,
+float ABaseCharacter::TakePointDamage_Implementation(float Damage, FVector Force, FPointDamageEvent const& PointDamageEvent,
 	AController* EventInstigator, AActor* DamageCauser)
 {
-	if (BloodPFX) UNiagaraFunctionLibrary::SpawnSystemAttached(BloodPFX, GetMesh(), PointDamageEvent.HitInfo.BoneName, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Normal.Rotation(), EAttachLocation::KeepWorldPosition, true);
+	if (BloodPFX)
+	{
+		UNiagaraComponent* BloodNiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(BloodPFX, GetMesh(), PointDamageEvent.HitInfo.BoneName, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Normal.Rotation(), EAttachLocation::KeepWorldPosition, true);
+		BloodNiagaraComponent->SetNiagaraVariableActor("Character", this);
+	}
 	return IDamageableInterface::TakePointDamage(Damage, Force, PointDamageEvent, EventInstigator, DamageCauser);
 }
 
@@ -71,6 +78,20 @@ void ABaseCharacter::HealthDepleted(float Damage, FVector DamageForce, FVector H
 	if (GetController()) GetController()->UnPossess();
 	if (EquippedWep)
 		DropWeapon();
+	
+}
+
+void ABaseCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	FVector NormalImpulse, const FHitResult& Hit)
+{
+	//GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	LaunchCharacter(NormalImpulse/100, true, true);
+	FPointDamageEvent PointDamageEvent;
+	if (OtherActor)
+	{
+		float DamageCalculation = FMath::Pow(FMath::Abs(OtherActor->GetVelocity().Length() - this->GetVelocity().Length()), 1.0f/3.0f);
+		TakePointDamage(DamageCalculation, NormalImpulse, PointDamageEvent, nullptr, nullptr);
+	}
 	
 }
 

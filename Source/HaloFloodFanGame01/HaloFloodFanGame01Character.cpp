@@ -44,8 +44,6 @@ AHaloFloodFanGame01Character::AHaloFloodFanGame01Character()
 	Mesh1P->CastShadow = false;
 	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
-
-	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AHaloFloodFanGame01Character::BeginOverlap);
 }
 
 void AHaloFloodFanGame01Character::BeginPlay()
@@ -57,21 +55,7 @@ void AHaloFloodFanGame01Character::BeginPlay()
 		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(HolsteredGunClass)));
 
 	//Add Input Mapping Context
-	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
-		}
-	}
-
-	if (IsLocallyControlled() && PlayerHUDClass) {
-		APlayerController* PC = GetController<APlayerController>();
-		check(PC);
-		PlayerHUD = CreateWidget<UHaloHUDWidget>(PC, PlayerHUDClass);
-		PlayerHUD->PlayerCharacter = this;
-		PlayerHUD->AddToPlayerScreen();
-	}
+	
 }
 
 FHitResult PlayerAim;
@@ -230,13 +214,19 @@ void AHaloFloodFanGame01Character::MeleeUpdate(float Alpha)
 
 void AHaloFloodFanGame01Character::HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName)
 {
-	PlayerHUD->RemoveFromParent();
-	AController* PC = GetController();
-	PC->UnPossess();
-	FVector Loc = GetFirstPersonCameraComponent()->GetComponentLocation();
-	FRotator Rot = GetFirstPersonCameraComponent()->GetComponentRotation();
-	ASpectatorPawn* SpectatorPawn = Cast<ASpectatorPawn>(GetWorld()->SpawnActor(ASpectatorPawn::StaticClass(), &Loc, &Rot));
-	PC->Possess(SpectatorPawn);
+	//PlayerHUD->RemoveFromParent();
+	if (PlayerController)
+	{
+		PlayerController->UnPossess();
+		if (PlayerHUD)
+			PlayerHUD->RemoveFromParent();
+		FVector Loc = GetFirstPersonCameraComponent()->GetComponentLocation();
+		FRotator Rot = GetFirstPersonCameraComponent()->GetComponentRotation();
+		ASpectatorPawn* SpectatorPawn = Cast<ASpectatorPawn>(GetWorld()->SpawnActor(ASpectatorPawn::StaticClass(), &Loc, &Rot));
+		PlayerController->Possess(SpectatorPawn);
+	}
+		
+	
 	// FTimerHandle RestartTimer;
 	// GetWorldTimerManager().SetTimer(RestartTimer, this, &AHaloFloodFanGame01Character::Attack, 5, false);
 	// GetWorldTimerManager().SetTimer(RestartTimer, UGameplayStatics::GetGameMode(GetWorld())->RestartPlayer(PC), 5, false);
@@ -267,7 +257,8 @@ void AHaloFloodFanGame01Character::SwitchWeapon()
 	HolsteredWeapon->SetActorHiddenInGame(true);
 	EquippedWep->SetActorHiddenInGame(false);
 	EquippedWep->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
-	PlayerHUD->UpdateHUDWeaponData(EquippedWep, HolsteredWeapon);
+	//if (PlayerHUD) PlayerHUD->UpdateHUDWeaponData(EquippedWep, HolsteredWeapon);
+	WeaponsUpdated.Broadcast(EquippedWep, HolsteredWeapon);
 }
 
 void AHaloFloodFanGame01Character::Interact()
@@ -277,13 +268,52 @@ void AHaloFloodFanGame01Character::Interact()
 	FVector TraceEnd = FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector()*1000.0f;
 	FCollisionQueryParams CollisionParameters;
 	CollisionParameters.AddIgnoredActor(this);
-	GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECollisionChannel::ECC_WorldDynamic, CollisionParameters);
+	GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParameters);
 
 	if (Hit.bBlockingHit)
 	{
-		if (IInteractableInterface* IntFace = Cast<IInteractableInterface>(Hit.GetActor()))
+		UE_LOG(LogTemp, Warning, TEXT("Trace Hit %s"), *Hit.GetActor()->GetActorLabel());
+		if (UKismetSystemLibrary::DoesImplementInterface(Hit.GetActor(), UInteractableInterface::StaticClass()))
 		{
-			IntFace->Execute_OnInteract(Hit.GetActor(), this);
+			UE_LOG(LogTemp, Warning, TEXT("Interacted w/ %s"), *Hit.GetActor()->GetActorLabel());
+			IInteractableInterface::Execute_OnInteract(Hit.GetActor(), this);
+			//IntFace->Execute_OnInteract(Hit.GetActor(), this);
+		}
+	}
+}
+
+void AHaloFloodFanGame01Character::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	if (APlayerController* PC = Cast<APlayerController>(NewController))
+	{
+		PlayerController = PC;
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		{
+			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+		}
+
+		if (IsLocallyControlled() && PlayerHUDClass) {
+			check(PlayerController);
+			PlayerHUD = CreateWidget<UHaloHUDWidget>(PlayerController, PlayerHUDClass);
+			PlayerHUD->PlayerCharacter = this;
+			PlayerHUD->AddToPlayerScreen();
+		}
+	}
+	
+}
+
+void AHaloFloodFanGame01Character::UnPossessed()
+{
+	Super::UnPossessed();
+
+	//if (PlayerHUD) PlayerHUD->RemoveFromParent();
+
+	if (APlayerController* PC = Cast<APlayerController>(Controller))
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
+		{
+			Subsystem->RemoveMappingContext(DefaultMappingContext);
 		}
 	}
 }
@@ -292,23 +322,17 @@ void AHaloFloodFanGame01Character::PickupWeapon(AGunBase* Gun)
 {
 	Super::PickupWeapon(Gun);
 	EquippedWep->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
-	if (PlayerHUD)
-		PlayerHUD->UpdateHUDWeaponData(EquippedWep, HolsteredWeapon);
+	WeaponsUpdated.Broadcast(EquippedWep, HolsteredWeapon);
 }
 
 void AHaloFloodFanGame01Character::DropWeapon()
 {
 	Super::DropWeapon();
-	PlayerHUD->UpdateHUDWeaponData(EquippedWep, HolsteredWeapon);
+	WeaponsUpdated.Broadcast(EquippedWep, HolsteredWeapon);
 }
 
 void AHaloFloodFanGame01Character::SetFragCount(int32 NewFragCount)
 {
 	FragCount = NewFragCount;
-	PlayerHUD->SetFragCounter(FragCount);
-}
-
-void AHaloFloodFanGame01Character::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-                                                UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
+	if (PlayerHUD) PlayerHUD->SetFragCounter(FragCount);
 }

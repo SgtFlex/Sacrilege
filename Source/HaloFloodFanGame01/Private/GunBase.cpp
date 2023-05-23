@@ -2,8 +2,10 @@
 
 #include "GunBase.h"
 #include "HaloHUDWidget.h"
+#include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "VectorTypes.h"
+#include "Components/Image.h"
 #include "Engine/DamageEvents.h"
 #include "HaloFloodFanGame01/HaloFloodFanGame01Character.h"
 
@@ -39,7 +41,14 @@ void AGunBase::Pickup(ABaseCharacter* Char)
 {
 	SetOwner(Char);
 	if (AHaloFloodFanGame01Character* PlayerChar = Cast<AHaloFloodFanGame01Character>(Char))
+	{
 		PlayerHUD = PlayerChar->GetPlayerHUD();
+	}
+}
+
+void AGunBase::Equip()
+{
+	PlayerHUD->SetCrosshairTexture(CrosshairTexture);
 }
 
 void AGunBase::Drop()
@@ -96,7 +105,7 @@ void AGunBase::Fire_Implementation()
 	UGameplayStatics::PlaySoundAtLocation(GetWorld(), FiringSound, GetActorLocation(), 1, 1, 0, FiringSoundAttenuation);
 	if (Mesh->DoesSocketExist("Muzzle") && MuzzlePFX)
 	{
-		UNiagaraFunctionLibrary::SpawnSystemAttached(MuzzlePFX, Mesh, "Muzzle", FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
+		UNiagaraComponent* BulletPFX = UNiagaraFunctionLibrary::SpawnSystemAttached(MuzzlePFX, Mesh, "Muzzle", FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
 	}
 	for (int i = 0; i < Multishot; ++i)
 	{
@@ -107,6 +116,7 @@ void AGunBase::Fire_Implementation()
 			GetWorld()->SpawnActor(ProjectileClass, &Location, &Rotation);
 		} else
 		{
+			bool TraceHit = false;
 			FHitResult Hit;
 			FVector TraceStart;
 			FVector TraceEnd;
@@ -118,10 +128,18 @@ void AGunBase::Fire_Implementation()
 			CollisionParameters.AddIgnoredActor(this);
 			CollisionParameters.AddIgnoredActor(GetAttachParentActor());
 			GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParameters);
-			DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor(255, 0, 0), false, 3);
+			TraceHit = Hit.bBlockingHit;
+			//DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor(255, 0, 0), false, 3);
 			IDamageableInterface* HitActor = Cast<IDamageableInterface>(Hit.GetActor());
+			if (Mesh->DoesSocketExist("Muzzle") && TrailPFX)
+			{
+				FVector TrailEnd = (TraceHit) ? Hit.ImpactPoint : TraceEnd;
+				UNiagaraComponent* TrailPFXComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(TrailPFX, Mesh, "Muzzle", FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
+				TrailPFXComponent->SetVectorParameter("BeamEnd", TrailEnd);
+			}
 			if (Hit.bBlockingHit)
 			{
+				
 				FVector ForceVector = (TraceEnd-TraceStart);
 				ForceVector.Normalize();
 			
@@ -150,6 +168,7 @@ void AGunBase::Fire_Implementation()
 					HitActor->TakePointDamage(Damage, HitDir*Force, PointDamageEvent);
 				}
 			}
+			
 		}
 	}
 	BulletsFired++;

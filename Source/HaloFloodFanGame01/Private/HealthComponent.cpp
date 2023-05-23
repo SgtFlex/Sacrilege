@@ -53,13 +53,13 @@ float UHealthComponent::TakeDamage(float Damage, FVector Force, FVector HitLocat
 			this->HealthDepleted(Damage, Force, HitLocation, HitBoneName);
 		}
 	}
+	OnTakeDamage.Broadcast(Damage, Force, HitLocation, HitBoneName);
 	return Damage;
 }
 
 void UHealthComponent::HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName)
 {
-	IDamageableInterface* Owner = Cast<IDamageableInterface>(GetOwner());
-	Owner->HealthDepleted(Damage, Force, HitLocation, HitBoneName);
+	OnHealthDepleted.Broadcast(Damage, Force, HitLocation, HitBoneName);
 }
 
 float UHealthComponent::GetHealth() const

@@ -34,10 +34,15 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
-	virtual float TakePointDamage(float Damage, FVector Force, FPointDamageEvent const& PointDamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
-	
+
+	UFUNCTION(BlueprintNativeEvent)
+	float TakePointDamage(float Damage, FVector Force, FPointDamageEvent const& PointDamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+	UFUNCTION()
 	virtual void HealthDepleted(float Damage, FVector Force, FVector HitLocation = FVector(0,0,0), FName HitBoneName = "") override;
+
+	UFUNCTION()
+	virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit );
 	
 	UFUNCTION(BlueprintCallable)
 	virtual UHealthComponent* GetHealthComponent() override;
@@ -76,10 +81,10 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnDropWeapon OnDropWeapon;
 	
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere,Category="Stats", meta=(AllowPrivateAccess=true))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Stats", meta=(AllowPrivateAccess=true))
 	UHealthComponent* HealthComponent;
 
-	UPROPERTY(EditAnywhere, Category="Loadout")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Loadout", meta=(AllowPrivateAccess=true))
 	TSubclassOf<AGunBase> SpawnWeapon;
 
 	UPROPERTY(BlueprintReadOnly)

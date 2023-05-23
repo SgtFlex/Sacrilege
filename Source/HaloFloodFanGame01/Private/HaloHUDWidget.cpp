@@ -29,6 +29,7 @@ void UHaloHUDWidget::NativeConstruct()
 		UE_LOG(LogTemp, Warning, TEXT("Found Weapon"));
 		UpdateHUDWeaponData(PlayerCharacter->EquippedWep, PlayerCharacter->HolsteredWeapon);
 	}
+	PlayerCharacter->WeaponsUpdated.AddDynamic(this, &UHaloHUDWidget::UpdateHUDWeaponData);
 	
 }
 
@@ -48,7 +49,7 @@ void UHaloHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		SetCrosshairType(1);
 	}
 
-	if (PlayerCharacter && PlayerCharacter->EquippedWep && PlayerCharacter->EquippedWep->CrosshairTexture) Crosshair->SetBrushFromTexture(PlayerCharacter->EquippedWep->CrosshairTexture);
+	//if (PlayerCharacter && PlayerCharacter->EquippedWep && PlayerCharacter->EquippedWep->CrosshairTexture) Crosshair->SetBrushFromTexture(PlayerCharacter->EquippedWep->CrosshairTexture);
 	SetFragCounter(PlayerCharacter->FragCount);
 	IInteractableInterface* IntActor = Cast<IInteractableInterface>(PlayerAim.GetActor());
 	if (PlayerAim.bBlockingHit && IsValid(PlayerAim.GetActor()) && IntActor)
@@ -149,8 +150,8 @@ void UHaloHUDWidget::SetMagazineReserveCounter_Implementation(int32 MagazineCoun
 
 void UHaloHUDWidget::UpdateHUDMagazineElements()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Updated HUD Mag Elements"));
 	SetMagazineReserveCounter(PlayerCharacter->EquippedWep->CurMagazine);
+	SetAmmoReserveCounter(PlayerCharacter->EquippedWep->CurReserve);
 	SetAmmoGridBullets(PlayerCharacter->EquippedWep->CurMagazine, PlayerCharacter->EquippedWep->MaxMagazine);
 }
 
@@ -174,10 +175,39 @@ void UHaloHUDWidget::SetCrosshairType(int type)
 	}
 }
 
+void UHaloHUDWidget::SetCrosshairTexture(UTexture2D* NewTexture)
+{
+	Crosshair->SetBrushFromTexture(NewTexture);
+}
+
+void UHaloHUDWidget::SetFragHUDEnabled(bool bDisplay)
+{
+	if (bDisplay)
+	{
+		FragHUD->SetVisibility(ESlateVisibility::Visible);
+	} else
+	{
+		FragHUD->SetVisibility(ESlateVisibility::Hidden);
+	}
+}
+
+void UHaloHUDWidget::SetWeaponHUDEnabled(bool bDisplay)
+{
+	if (bDisplay)
+	{
+		WeaponHUD->SetVisibility(ESlateVisibility::Visible);
+	} else
+	{
+		WeaponHUD->SetVisibility(ESlateVisibility::Hidden);
+	}
+}
+
+
 void UHaloHUDWidget::UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredGun)
 {
 	if (EquippedGun)
 	{
+		SetCrosshairTexture(EquippedGun->CrosshairTexture);
 		MagazineCounter->SetVisibility(ESlateVisibility::Visible);
 		AmmoReserveCounter->SetVisibility(ESlateVisibility::Visible);
 		AmmoGrid->SetVisibility(ESlateVisibility::Visible);

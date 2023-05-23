@@ -25,7 +25,11 @@ float IDamageableInterface::TakePointDamage(float DamageAmount, FVector Force, F
 	AController* EventInstigator, AActor* DamageCauser)
 {
 	FDamageEvent DamageEvent;
-	TakeDamage(DamageAmount, Force, DamageEvent, EventInstigator, DamageCauser);
+	//TakeDamage(DamageAmount, Force, DamageEvent, EventInstigator, DamageCauser);
+	if (GetHealthComponent())
+	{
+		GetHealthComponent()->TakeDamage(DamageAmount, Force, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.BoneName, EventInstigator, DamageCauser);
+	}
 	return 0;
 }
 

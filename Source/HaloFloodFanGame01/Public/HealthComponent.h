@@ -3,9 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DamageableInterface.h"
 #include "Components/ActorComponent.h"
 #include "HealthComponent.generated.h"
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnTakeDamage, float, Damage, FVector, Force, FVector, HitLocation, FName, HitBoneName);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnHealthDepleted, float, Damage, FVector, Force, FVector, HitLocation, FName, HitBoneName);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class HALOFLOODFANGAME01_API UHealthComponent : public UActorComponent
@@ -20,12 +24,15 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-public:	
+public:
+
+	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
 	float TakeDamage(float Damage, FVector Force = FVector(0,0,0), FVector HitLocation = FVector(0,0,0), FName HitBoneName = "", AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr, bool bIgnoreShields = false, bool bIgnoreHealthArmor = false, bool bIgnoreShieldArmor = false);
 
+	
 	void HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName);
 
 public:
@@ -51,6 +58,12 @@ public:
 	float ShieldRegenDelay = 3;
 	UPROPERTY(EditAnywhere, meta = (Category="Shields"))
 	float ShieldRegenRatePerSecond = 30;
+
+	UPROPERTY()
+	FOnTakeDamage OnTakeDamage;
+
+	UPROPERTY()
+	FOnHealthDepleted OnHealthDepleted;
 
 	float HealthRegenTickRate = 0.01;
 	float ShieldRegenTickRate = 0.01;
