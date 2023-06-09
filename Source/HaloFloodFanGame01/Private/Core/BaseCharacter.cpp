@@ -12,6 +12,9 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "Perception/AIPerceptionComponent.h"
+#include "Perception/AISense_Damage.h"
+#include "Perception/AISense_Touch.h"
 
 // Sets default values
 ABaseCharacter::ABaseCharacter()
@@ -57,6 +60,8 @@ float ABaseCharacter::TakePointDamage_Implementation(float Damage, FVector Force
 	{
 		UNiagaraComponent* BloodNiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(BloodPFX, GetMesh(), PointDamageEvent.HitInfo.BoneName, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Normal.Rotation(), EAttachLocation::KeepWorldPosition, true);
 		BloodNiagaraComponent->SetNiagaraVariableActor("Character", this);
+		//UAISense_Damage::ReportDamageEvent(GetWorld(), this, DamageCauser, Damage, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Location);
+
 	}
 	return IDamageableInterface::TakePointDamage(Damage, Force, PointDamageEvent, EventInstigator, DamageCauser);
 }
