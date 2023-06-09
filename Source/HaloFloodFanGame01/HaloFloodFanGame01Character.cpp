@@ -123,7 +123,6 @@ void AHaloFloodFanGame01Character::SetupPlayerInputComponent(class UInputCompone
 	}
 }
 
-
 void AHaloFloodFanGame01Character::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D

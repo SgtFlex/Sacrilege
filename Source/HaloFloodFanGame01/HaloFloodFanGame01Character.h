@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GenericTeamAgentInterface.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "Components/TimelineComponent.h"
@@ -167,6 +168,7 @@ private:
 
 	FHitResult PlayerAim;
 
+	
 
 protected:
 	UPROPERTY(EditAnywhere, Category="Collision")

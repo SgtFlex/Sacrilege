@@ -56,11 +56,19 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 float ABaseCharacter::TakePointDamage_Implementation(float Damage, FVector Force, FPointDamageEvent const& PointDamageEvent,
 	AController* EventInstigator, AActor* DamageCauser)
 {
+	
+	if (EventInstigator)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Damage taken"));
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *DamageCauser->GetActorLabel());
+		UAISense_Damage::ReportDamageEvent(GetWorld(), this, EventInstigator->GetPawn(), Damage, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Location);
+	}
+		
 	if (BloodPFX)
 	{
 		UNiagaraComponent* BloodNiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(BloodPFX, GetMesh(), PointDamageEvent.HitInfo.BoneName, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Normal.Rotation(), EAttachLocation::KeepWorldPosition, true);
 		BloodNiagaraComponent->SetNiagaraVariableActor("Character", this);
-		//UAISense_Damage::ReportDamageEvent(GetWorld(), this, DamageCauser, Damage, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Location);
+		
 
 	}
 	return IDamageableInterface::TakePointDamage(Damage, Force, PointDamageEvent, EventInstigator, DamageCauser);
@@ -96,6 +104,7 @@ void ABaseCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 	{
 		float DamageCalculation = FMath::Pow(FMath::Abs(OtherActor->GetVelocity().Length() - this->GetVelocity().Length()), 1.0f/3.0f);
 		TakePointDamage(DamageCalculation, NormalImpulse, PointDamageEvent, nullptr, nullptr);
+		UAISense_Touch::ReportTouchEvent(GetWorld(), this, OtherActor, Hit.Location);
 	}
 	
 }

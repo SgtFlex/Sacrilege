@@ -8,6 +8,7 @@
 #include "Components/Image.h"
 #include "Engine/DamageEvents.h"
 #include "HaloFloodFanGame01/HaloFloodFanGame01Character.h"
+#include "Perception/AISense_Hearing.h"
 
 
 // Sets default values
@@ -93,9 +94,11 @@ void AGunBase::Fire_Implementation()
 		ReleaseTrigger();
 		return;
 	}
+		
 	CurMagazine--;
 	ABaseCharacter* OwningChar = Cast<ABaseCharacter>(GetOwner());
 	if (!OwningChar) return;
+	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, OwningChar);
 	if (OwningChar->FiringAnim) OwningChar->GetMesh()->GetAnimInstance()->Montage_Play(OwningChar->FiringAnim);
 	if (AHaloFloodFanGame01Character* Char = Cast<AHaloFloodFanGame01Character>(GetOwner()))
 	{
@@ -165,7 +168,9 @@ void AGunBase::Fire_Implementation()
 					FPointDamageEvent PointDamageEvent;
 					PointDamageEvent.Damage = Damage * FalloffCurve->GetFloatValue(Hit.Distance/Range);
 					PointDamageEvent.HitInfo = Hit;
-					HitActor->TakePointDamage(Damage, HitDir*Force, PointDamageEvent);
+					
+					if (APawn* OwningPawn = Cast<APawn>(GetOwner()))
+						HitActor->TakePointDamage(Damage, HitDir*Force, PointDamageEvent, OwningPawn->GetController(), this);
 				}
 			}
 			
