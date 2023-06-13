@@ -6,6 +6,7 @@
 #include "GameFramework/Pawn.h"
 #include "BasePawn.generated.h"
 
+class ASmartObject;
 class UCapsuleComponent;
 UCLASS()
 class HALOFLOODFANGAME01_API ABasePawn : public APawn
@@ -53,5 +54,4 @@ public:
 	float CurShields;
 	float ShieldRegenDelay;
 	float ShieldRegenPerSec;
-
 };

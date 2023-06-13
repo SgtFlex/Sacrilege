@@ -59,8 +59,6 @@ float ABaseCharacter::TakePointDamage_Implementation(float Damage, FVector Force
 	
 	if (EventInstigator)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Damage taken"));
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *DamageCauser->GetActorLabel());
 		UAISense_Damage::ReportDamageEvent(GetWorld(), this, EventInstigator->GetPawn(), Damage, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Location);
 	}
 		
@@ -88,7 +86,8 @@ void ABaseCharacter::HealthDepleted(float Damage, FVector DamageForce, FVector H
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->AddImpulseAtLocation(DamageForce, HitLocation, HitBoneName);
-	if (GetController()) GetController()->UnPossess();
+	OnKilled.Broadcast();
+	if (GetController()) GetController()->Destroy();
 	if (EquippedWep)
 		DropWeapon();
 	
@@ -98,15 +97,20 @@ void ABaseCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 	FVector NormalImpulse, const FHitResult& Hit)
 {
 	//GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	UAISense_Touch::ReportTouchEvent(GetWorld(), this, OtherActor, Hit.Location);
 	LaunchCharacter(NormalImpulse/100, true, true);
-	FPointDamageEvent PointDamageEvent;
 	if (OtherActor)
 	{
-		float DamageCalculation = FMath::Pow(FMath::Abs(OtherActor->GetVelocity().Length() - this->GetVelocity().Length()), 1.0f/3.0f);
-		TakePointDamage(DamageCalculation, NormalImpulse, PointDamageEvent, nullptr, nullptr);
-		UAISense_Touch::ReportTouchEvent(GetWorld(), this, OtherActor, Hit.Location);
+		float VelocityDifference = FMath::Abs(OtherActor->GetVelocity().Length() - this->GetVelocity().Length());
+		float Mass = OtherComp->IsSimulatingPhysics() ? (OtherComp->GetMass()/500) : 1;
+		float DamageCalculation = FMath::Pow(VelocityDifference, 1.0f/3.0f) * Mass;
+		
+		if (DamageCalculation > 5)
+		{
+			FPointDamageEvent PointDamageEvent;
+			TakePointDamage(DamageCalculation, NormalImpulse, PointDamageEvent, nullptr, nullptr);
+		}
 	}
-	
 }
 
 UHealthComponent* ABaseCharacter::GetHealthComponent()

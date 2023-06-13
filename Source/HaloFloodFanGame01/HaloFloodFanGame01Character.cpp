@@ -268,13 +268,13 @@ void AHaloFloodFanGame01Character::Interact()
 	CollisionParameters.AddIgnoredActor(this);
 	GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParameters);
 
-	if (Hit.bBlockingHit)
+	if (AActor* HitActor = Hit.GetActor())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Trace Hit %s"), *Hit.GetActor()->GetActorLabel());
-		if (UKismetSystemLibrary::DoesImplementInterface(Hit.GetActor(), UInteractableInterface::StaticClass()))
+		UE_LOG(LogTemp, Warning, TEXT("Trace Hit %s"), *HitActor->GetActorLabel());
+		if (UKismetSystemLibrary::DoesImplementInterface(HitActor, UInteractableInterface::StaticClass()))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Interacted w/ %s"), *Hit.GetActor()->GetActorLabel());
-			IInteractableInterface::Execute_OnInteract(Hit.GetActor(), this);
+			UE_LOG(LogTemp, Warning, TEXT("Interacted w/ %s"), *HitActor->GetActorLabel());
+			IInteractableInterface::Execute_OnInteract(HitActor, this);
 			//IntFace->Execute_OnInteract(Hit.GetActor(), this);
 		}
 	}

@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "BaseCharacter.generated.h"
 
+class ASmartObject;
 class ABaseGrenade;
 class ADecalActor;
 class AGunBase;
@@ -14,6 +15,7 @@ class UHealthComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPickupWeapon);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDropWeapon);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnKilled);
 
 UCLASS()
 class HALOFLOODFANGAME01_API ABaseCharacter : public ACharacter, public IDamageableInterface
@@ -110,6 +112,12 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	UAnimMontage* DeathAnim;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ASmartObject* SmartObject;
+
+	UPROPERTY(VisibleAnywhere)
+	FOnKilled OnKilled;
 
 protected:
 	UPROPERTY(EditDefaultsOnly)
