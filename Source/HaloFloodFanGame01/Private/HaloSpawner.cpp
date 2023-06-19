@@ -37,6 +37,13 @@ void AHaloSpawner::Tick(float DeltaTime)
 
 TArray<ABaseCharacter*> AHaloSpawner::SpawnSquad(TMap<TSubclassOf<ABaseCharacter>, int> SquadToSpawn)
 {
+	if (!SpawnedChars.IsEmpty())
+	{
+		for (auto SpawnedChar : SpawnedChars)
+		{
+			if (SpawnedChar) SpawnedChar->Destroy();
+		}
+	}
 	SpawnedChars.Empty();
 	FVector BoxExtents = Box->GetScaledBoxExtent();
 	BoxExtents[2] = 0;

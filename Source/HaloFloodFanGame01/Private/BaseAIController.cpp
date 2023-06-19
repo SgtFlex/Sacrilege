@@ -64,7 +64,6 @@ void ABaseAIController::OnPerceptionUpdated_Implementation(AActor* Actor, FAISti
 {
 	if (GetTeamAttitudeTowards(*Actor)!=ETeamAttitude::Hostile)
 		return;
-	UE_LOG(LogTemp, Warning, TEXT("Found enemy!"));
 	CurEnemy = Actor;
 	AlertState = Alerted;
 }

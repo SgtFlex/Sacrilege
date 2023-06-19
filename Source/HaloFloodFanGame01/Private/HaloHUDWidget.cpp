@@ -9,6 +9,8 @@
 #include "Components/UniformGridPanel.h"
 #include "Components/Image.h"
 #include "GunBase.h"
+#include "HealthComponent.h"
+#include "Camera/CameraComponent.h"
 #include "Styling/SlateTypes.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
@@ -30,7 +32,7 @@ void UHaloHUDWidget::NativeConstruct()
 		UpdateHUDWeaponData(PlayerCharacter->EquippedWep, PlayerCharacter->HolsteredWeapon);
 	}
 	PlayerCharacter->WeaponsUpdated.AddDynamic(this, &UHaloHUDWidget::UpdateHUDWeaponData);
-	
+	PlayerCharacter->GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &UHaloHUDWidget::OnHealthUpdated);
 }
 
 void UHaloHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -48,6 +50,8 @@ void UHaloHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	{
 		SetCrosshairType(1);
 	}
+
+	SetCompassDirection(PlayerCharacter->GetFirstPersonCameraComponent()->GetComponentRotation().Yaw);
 
 	//if (PlayerCharacter && PlayerCharacter->EquippedWep && PlayerCharacter->EquippedWep->CrosshairTexture) Crosshair->SetBrushFromTexture(PlayerCharacter->EquippedWep->CrosshairTexture);
 	SetFragCounter(PlayerCharacter->FragCount);
@@ -88,7 +92,8 @@ void UHaloHUDWidget::SetCompassDirection_Implementation(float Yaw)
 	float x = ((Yaw+Offset)*-10);
 	UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Compass->Slot);
 	CanvasSlot->SetPosition(FVector2d(x, 0));
-	
+	//UE_LOG(LogTemp, Warning, TEXT("%f"), Yaw);
+	CompassNum->SetText(FText::AsNumber(x));
 }
 
 
@@ -202,6 +207,12 @@ void UHaloHUDWidget::SetWeaponHUDEnabled(bool bDisplay)
 	}
 }
 
+void UHaloHUDWidget::OnHealthUpdated(UHealthComponent* HealthComp)
+{
+	SetHealth(HealthComp->GetHealth(), HealthComp->GetMaxHealth());
+	SetShields(HealthComp->GetShields(), HealthComp->GetMaxShields());
+}
+
 
 void UHaloHUDWidget::UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredGun)
 {
@@ -245,6 +256,7 @@ void UHaloHUDWidget::SetHealth_Implementation(float CurrentHealth, float MaxHeal
 {
 	if (HealthBar) {
 		HealthBar->SetPercent(CurrentHealth / MaxHealth);
+		HealthNum->SetText(FText::AsNumber(CurrentHealth));
 	}
 }
 
@@ -252,6 +264,7 @@ void UHaloHUDWidget::SetShields_Implementation(float CurrentShields, float MaxSh
 {
 	if (ShieldBar) {
 		ShieldBar->SetPercent(CurrentShields / MaxShields);
+		ShieldNum->SetText(FText::AsNumber(CurrentShields));
 	}
 }
 

@@ -70,7 +70,13 @@ int AHaloFloodFanGame01GameMode::GetCurrentSet()
 
 void AHaloFloodFanGame01GameMode::SpawnWave(TArray<FWaveStruct> WaveToSpawn)
 {
+	OnWaveStart.Broadcast(curWave, curSet);
 	TArray<AHaloSpawner*> AvailableSpawners = Spawners;
+	if (Spawners.IsEmpty())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No spawners found"));
+		return;
+	}
 	UE_LOG(LogTemp, Warning, TEXT("Spawning wave!"));
 	for (auto WaveSquad : WaveToSpawn)
 	{

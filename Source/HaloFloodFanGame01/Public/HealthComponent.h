@@ -10,6 +10,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnTakeDamage, float, Damage, FVector, Force, FVector, HitLocation, FName, HitBoneName);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnHealthDepleted, float, Damage, FVector, Force, FVector, HitLocation, FName, HitBoneName);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthUpdate, UHealthComponent*, HealthComp);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class HALOFLOODFANGAME01_API UHealthComponent : public UActorComponent
@@ -59,16 +60,29 @@ public:
 	UPROPERTY(EditAnywhere, meta = (Category="Shields"))
 	float ShieldRegenRatePerSecond = 30;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	USoundBase* ShieldBreakSFX;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	USoundBase* ShieldStartRegenSFX;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	USoundBase* ShieldRegenSFX;
+
 	UPROPERTY()
 	FOnTakeDamage OnTakeDamage;
 
 	UPROPERTY()
 	FOnHealthDepleted OnHealthDepleted;
 
+	UPROPERTY(VisibleAnywhere, BlueprintAssignable)
+	FOnHealthUpdate OnHealthUpdate;
+
 	float HealthRegenTickRate = 0.01;
 	float ShieldRegenTickRate = 0.01;
-
+	
 private:
+	UPROPERTY()
 	FTimerHandle ShieldDelayTimerHandle;
 	
 public:
@@ -91,7 +105,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	float GetShields() const;
 	UFUNCTION(BlueprintCallable)
-	void SetShields(float NewShields);
+	float SetShields(float NewShields);
 	UFUNCTION(BlueprintCallable)
 	float GetMaxShields() const;
 	UFUNCTION(BlueprintCallable)
@@ -103,8 +117,8 @@ public:
 	float GetShieldRegenRatePerSecond() const;
 	UFUNCTION(BlueprintCallable)
 	void SetShieldRegenRatePerSecond(float NewShieldRegenRatePerSecond);
-
+	UFUNCTION()
 	void BreakShields();
-	void RegenShields();
-	
+	UFUNCTION()
+	void RegenShields();	
 };

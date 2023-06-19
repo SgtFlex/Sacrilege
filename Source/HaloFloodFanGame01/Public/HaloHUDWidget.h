@@ -7,6 +7,7 @@
 #include "HaloHUDWidget.generated.h"
 
 
+class UHealthComponent;
 class AHaloFloodFanGame01Character;
 /**
  * 
@@ -75,6 +76,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetWeaponHUDEnabled(bool bDisplay);
 
+	UFUNCTION(BlueprintCallable)
+	void OnHealthUpdated(UHealthComponent* HealthComp);
+
 	UFUNCTION()
 	void UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredGun);
 
@@ -99,7 +103,13 @@ public:
 	class UProgressBar* HealthBar;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	class UTextBlock* HealthNum;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UProgressBar* ShieldBar;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	class UTextBlock* ShieldNum;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UVerticalBox* InteractBoxWidget;
@@ -139,6 +149,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UImage* Compass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	class UTextBlock* CompassNum;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UImage* InteractIcon;

@@ -68,18 +68,6 @@ void AHaloFloodFanGame01Character::Tick(float DeltaSeconds)
 	FCollisionQueryParams CollisionParameters;
 	CollisionParameters.AddIgnoredActor(this);
 	GetWorld()->LineTraceSingleByChannel(PlayerAim, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParameters);
-
-	
-
-	if (PlayerHUD)
-	{
-		
-
-		
-		PlayerHUD->SetCompassDirection(FirstPersonCameraComponent->GetComponentRotation().Yaw);
-		PlayerHUD->SetShields(HealthComponent->GetShields(), HealthComponent->GetMaxShields());
-		PlayerHUD->SetHealth(HealthComponent->GetHealth(), HealthComponent->GetMaxHealth());
-	}
 }
 
 FHitResult AHaloFloodFanGame01Character::GetPlayerAim()
@@ -212,7 +200,6 @@ void AHaloFloodFanGame01Character::MeleeUpdate(float Alpha)
 
 void AHaloFloodFanGame01Character::HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName)
 {
-	//PlayerHUD->RemoveFromParent();
 	if (PlayerController)
 	{
 		PlayerController->UnPossess();
@@ -255,7 +242,6 @@ void AHaloFloodFanGame01Character::SwitchWeapon()
 	HolsteredWeapon->SetActorHiddenInGame(true);
 	EquippedWep->SetActorHiddenInGame(false);
 	EquippedWep->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
-	//if (PlayerHUD) PlayerHUD->UpdateHUDWeaponData(EquippedWep, HolsteredWeapon);
 	WeaponsUpdated.Broadcast(EquippedWep, HolsteredWeapon);
 }
 
@@ -270,10 +256,12 @@ void AHaloFloodFanGame01Character::Interact()
 
 	if (AActor* HitActor = Hit.GetActor())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Trace Hit %s"), *HitActor->GetActorLabel());
 		if (UKismetSystemLibrary::DoesImplementInterface(HitActor, UInteractableInterface::StaticClass()))
 		{
+			#if WITH_EDITOR
 			UE_LOG(LogTemp, Warning, TEXT("Interacted w/ %s"), *HitActor->GetActorLabel());
+			#endif
+			
 			IInteractableInterface::Execute_OnInteract(HitActor, this);
 			//IntFace->Execute_OnInteract(Hit.GetActor(), this);
 		}
@@ -291,7 +279,7 @@ void AHaloFloodFanGame01Character::PossessedBy(AController* NewController)
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 
-		if (IsLocallyControlled() && PlayerHUDClass) {
+		if (IsLocallyControlled() && PlayerHUDClass && !PlayerHUD) {
 			check(PlayerController);
 			PlayerHUD = CreateWidget<UHaloHUDWidget>(PlayerController, PlayerHUDClass);
 			PlayerHUD->PlayerCharacter = this;
@@ -304,9 +292,7 @@ void AHaloFloodFanGame01Character::PossessedBy(AController* NewController)
 void AHaloFloodFanGame01Character::UnPossessed()
 {
 	Super::UnPossessed();
-
-	//if (PlayerHUD) PlayerHUD->RemoveFromParent();
-
+	
 	if (APlayerController* PC = Cast<APlayerController>(Controller))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))

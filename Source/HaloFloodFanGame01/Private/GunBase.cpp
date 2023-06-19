@@ -58,6 +58,14 @@ void AGunBase::Drop()
 	PlayerHUD = nullptr;
 }
 
+void AGunBase::StartReload()
+{
+	if (bReloading || CurReserve <= 0 || CurMagazine == MaxMagazine) return;
+	bReloading = true;
+	GetWorld()->GetTimerManager().SetTimer(ReloadTimer, this, &AGunBase::FinishReload, ReloadSpeed, false);
+	if (ReloadSound) UGameplayStatics::SpawnSoundAttached(ReloadSound, GetRootComponent());
+}
+
 void AGunBase::PullTrigger_Implementation()
 {
 	if (GetWorldTimerManager().TimerExists(BurstRetriggerHandle))
@@ -89,12 +97,11 @@ void AGunBase::GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon)
 
 void AGunBase::Fire_Implementation()
 {
-	if (CurMagazine <= 0)
+	if (bReloading || CurMagazine <= 0)
 	{
 		ReleaseTrigger();
 		return;
 	}
-		
 	CurMagazine--;
 	ABaseCharacter* OwningChar = Cast<ABaseCharacter>(GetOwner());
 	if (!OwningChar) return;
@@ -105,7 +112,7 @@ void AGunBase::Fire_Implementation()
 		if (FiringCameraShake)
 			Cast<APlayerController>(Char->GetController())->PlayerCameraManager->StartCameraShake(FiringCameraShake, 1, ECameraShakePlaySpace::CameraLocal);
 	}
-	UGameplayStatics::PlaySoundAtLocation(GetWorld(), FiringSound, GetActorLocation(), 1, 1, 0, FiringSoundAttenuation);
+	if (FiringSound) UGameplayStatics::SpawnSoundAttached(FiringSound, GetRootComponent());
 	if (Mesh->DoesSocketExist("Muzzle") && MuzzlePFX)
 	{
 		UNiagaraComponent* BulletPFX = UNiagaraFunctionLibrary::SpawnSystemAttached(MuzzlePFX, Mesh, "Muzzle", FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
@@ -184,10 +191,9 @@ void AGunBase::Fire_Implementation()
 	OnFire.Broadcast();
 }
 
-void AGunBase::Reload_Implementation()
+void AGunBase::FinishReload_Implementation()
 {
-	if (CurReserve <= 0 || CurMagazine == MaxMagazine) return;
-
+	bReloading = false;
 	int32 AmountNeed = MaxMagazine - CurMagazine; //32 - 27 gives 5 for example
 	int32 AmountGrabbed = FMath::Min(AmountNeed, CurReserve);
 	CurMagazine = CurMagazine + AmountGrabbed;

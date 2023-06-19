@@ -2,10 +2,8 @@
 
 
 #include "HealthComponent.h"
-
-#include "Core/BaseCharacter.h"
-#include "Engine/DamageEvents.h"
 #include "GameFramework/Actor.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values for this component's properties
 UHealthComponent::UHealthComponent()
@@ -39,21 +37,37 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 float UHealthComponent::TakeDamage(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser, bool bIgnoreShields, bool bIgnoreHealthArmor, bool bIgnoreShieldArmor)
 {
 	float DamageLeft = Damage;
-	GetOwner()->GetWorldTimerManager().SetTimer(ShieldDelayTimerHandle, this, &UHealthComponent::RegenShields, ShieldRegenTickRate, true, ShieldRegenDelay);
+	UE_LOG(LogTemp, Warning, TEXT("%f"), Health);
+	//if (MaxShields > 0 && GetWorld()) GetOwner()->GetWorldTimerManager();
 	if (Shields > 0)
 	{
 		DamageLeft = Damage - Shields;
-		Shields -= Damage;
+		
+		// if (ShieldMat)
+		// {
+		// 	for (auto Mesh : MeshArray)
+		// 	{
+		// 		Mesh->OverlayMaterial = ShieldMat;
+		// 		UMaterialInstanceDynamic* ShieldMatDynamic = UMaterialInstanceDynamic::Create(ShieldMat, this->GetOwner());
+		// 		ShieldMatDynamic->SetScalarParameterValue(FName("Intensity"), 50 * (Shields/MaxShields));
+		// 	}
+		// }
+		if (SetShields(Shields - Damage) <= 0)
+		{
+			BreakShields();
+		}
 	} 
 	if (Shields <= 0 && Health > 0)
 	{
-		Health -= DamageLeft;
+		//Health -= DamageLeft;
+		SetHealth(Health - DamageLeft);
 		if (Health <= 0)
 		{
 			this->HealthDepleted(Damage, Force, HitLocation, HitBoneName);
 		}
 	}
-	OnTakeDamage.Broadcast(Damage, Force, HitLocation, HitBoneName);
+	//OnTakeDamage.Broadcast(Damage, Force, HitLocation, HitBoneName);
+	OnHealthUpdate.Broadcast(this);
 	return Damage;
 }
 
@@ -69,7 +83,7 @@ float UHealthComponent::GetHealth() const
 
 void UHealthComponent::SetHealth(float NewHealth)
 {
-	this->Health = NewHealth;
+	this->Health = FMath::Clamp(NewHealth, 0, MaxHealth);
 }
 
 float UHealthComponent::GetMaxHealth() const
@@ -107,9 +121,9 @@ float UHealthComponent::GetShields() const
 	return Shields;
 }
 
-void UHealthComponent::SetShields(float NewShields)
+float UHealthComponent::SetShields(float NewShields)
 {
-	this->Shields = NewShields;
+	return this->Shields = FMath::Clamp(NewShields, 0, MaxShields);
 }
 
 float UHealthComponent::GetMaxShields() const
@@ -142,9 +156,17 @@ void UHealthComponent::SetShieldRegenRatePerSecond(float NewShieldRegenRatePerSe
 	this->ShieldRegenRatePerSecond = NewShieldRegenRatePerSecond;
 }
 
+void UHealthComponent::BreakShields()
+{
+	if (ShieldBreakSFX) UGameplayStatics::SpawnSoundAttached(ShieldBreakSFX, GetOwner()->GetRootComponent());
+}
+
 void UHealthComponent::RegenShields()
 {
-	Shields += (ShieldRegenRatePerSecond*ShieldRegenTickRate);
+	OnHealthUpdate.Broadcast(this);
+	if (ShieldStartRegenSFX) UGameplayStatics::SpawnSoundAttached(ShieldStartRegenSFX, GetOwner()->GetRootComponent());
+	float ShieldRegenAmount = ShieldRegenRatePerSecond*ShieldRegenTickRate;
+	SetShields(FMath::Min(MaxShields, Shields + ShieldRegenAmount));
 	if (Shields >= MaxShields) GetOwner()->GetWorldTimerManager().ClearTimer(ShieldDelayTimerHandle);
 	
 }

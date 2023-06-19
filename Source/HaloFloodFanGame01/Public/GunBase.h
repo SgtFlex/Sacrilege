@@ -47,8 +47,11 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	void Fire();
 
+	UFUNCTION()
+	void StartReload();
+
 	UFUNCTION(BlueprintNativeEvent)
-	void Reload();
+	void FinishReload();
 
 	UFUNCTION(BlueprintNativeEvent)
 	void PullTrigger();
@@ -99,6 +102,8 @@ public:
 	//Amount of seconds required to reload the gun
 	UPROPERTY(EditAnywhere, meta = (Category="Attributes"))
 	float ReloadSpeed = 3;
+	
+	FTimerHandle ReloadTimer;
 
 	//How far left/right the gun jumps when firing a bullet
 	UPROPERTY(EditAnywhere, meta = (Category="Attributes"))
@@ -164,6 +169,8 @@ public:
 	FTimerHandle FireHandle;
 
 	FTimerHandle BurstRetriggerHandle;
+
+	bool bReloading = false;
 
 	UPROPERTY(EditAnywhere)
 	class UNiagaraSystem* MuzzlePFX;

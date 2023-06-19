@@ -76,6 +76,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void DropWeapon();
 
+	void Stun();
+
+	void Unstun();
+
 public:
 	UPROPERTY(BlueprintAssignable)
 	FOnPickupWeapon OnPickupWeapon;
@@ -99,7 +103,13 @@ public:
 	class UNiagaraSystem* BloodPFX;
 
 	UPROPERTY(EditAnywhere)
-	UMaterial* BloodDecalMaterial;
+	UMaterialInterface* BloodDecalMaterial;
+
+	UPROPERTY(EditAnywhere)
+	UMaterialInterface* BloodSplatterMat;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USoundBase* DeathSound;
 
 	UPROPERTY(EditAnywhere, Category="Loadout")
 	TSubclassOf<ABaseGrenade> EquippedGrenadeClass;
@@ -118,6 +128,12 @@ public:
 
 	UPROPERTY(VisibleAnywhere)
 	FOnKilled OnKilled;
+
+	UPROPERTY()
+	FTimerHandle StunTimer;
+
+	UPROPERTY()
+	float StunAmount = 100;
 
 protected:
 	UPROPERTY(EditDefaultsOnly)

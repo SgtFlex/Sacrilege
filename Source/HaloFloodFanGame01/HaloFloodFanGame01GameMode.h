@@ -9,6 +9,8 @@
 class ABaseCharacter;
 class AHaloSpawner;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWaveStart, int, CurrentWave, int, CurrentSet);
+
 USTRUCT(BlueprintType)
 struct FWaveStruct
 {
@@ -36,16 +38,22 @@ public:
 	void SpawnWave(TArray<FWaveStruct> WaveToSpawn);
 	void GameFinished();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintAssignable)
+	FOnWaveStart OnWaveStart;
+
 private:
 	int curWave = 0;
 	int maxWave = 3;
 	int curSet = 0;
 	int maxSet = 3;
 
-	int CurrentEnemyCount = 0;
+	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FWaveStruct> Wave;
+
+	UPROPERTY(BlueprintReadWrite)
+	int CurrentEnemyCount = 0;
 	
 	TArray<AHaloSpawner*> Spawners;
 };
