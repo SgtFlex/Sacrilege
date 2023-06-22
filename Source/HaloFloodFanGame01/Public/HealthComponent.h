@@ -8,8 +8,9 @@
 #include "HealthComponent.generated.h"
 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnTakeDamage, float, Damage, FVector, Force, FVector, HitLocation, FName, HitBoneName);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnHealthDepleted, float, Damage, FVector, Force, FVector, HitLocation, FName, HitBoneName);
+class UNiagaraSystem;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnHealthDepleted, float, Damage, FVector, Force, FVector, HitLocation,
+                                              FName, HitBoneName);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthUpdate, UHealthComponent*, HealthComp);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -64,15 +65,24 @@ public:
 	USoundBase* ShieldBreakSFX;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UNiagaraSystem* ShieldBreakFX;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	USoundBase* ShieldStartRegenSFX;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	USoundBase* ShieldRegenSFX;
 
-	UPROPERTY()
-	FOnTakeDamage OnTakeDamage;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	USoundBase* ShieldFinishRegenSFX;
 
 	UPROPERTY()
+	UAudioComponent* ShieldAudioComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UMaterialInterface* ShieldMat;
+
+	UPROPERTY(VisibleAnywhere, BlueprintAssignable)
 	FOnHealthDepleted OnHealthDepleted;
 
 	UPROPERTY(VisibleAnywhere, BlueprintAssignable)
@@ -84,6 +94,8 @@ public:
 private:
 	UPROPERTY()
 	FTimerHandle ShieldDelayTimerHandle;
+	UPROPERTY()
+	FTimerHandle ShieldRegenTimer;
 	
 public:
 	UFUNCTION(BlueprintCallable)
@@ -120,5 +132,9 @@ public:
 	UFUNCTION()
 	void BreakShields();
 	UFUNCTION()
-	void RegenShields();	
+	void StartShieldRegen();
+	UFUNCTION()
+	void RegenShields();
+	UFUNCTION()
+	void StopShieldRegen();
 };

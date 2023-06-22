@@ -11,17 +11,17 @@
 #include "GunBase.h"
 #include "HealthComponent.h"
 #include "Camera/CameraComponent.h"
-#include "Styling/SlateTypes.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Components/UniformGridSlot.h"
 #include "Components/VerticalBox.h"
 #include "HaloFloodFanGame01/HaloFloodFanGame01Character.h"
+#include "HaloFloodFanGame01/HaloFloodFanGame01GameMode.h"
 
 void UHaloHUDWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-
+	UE_LOG(LogTemp, Warning, TEXT("Found Weapon"));
 	SetFragCounter(PlayerCharacter->FragCount);
 	SetPlasmaCounter(PlayerCharacter->PlasmaCount);
 	SetSpikeCounter(PlayerCharacter->SpikeCount);
@@ -33,6 +33,7 @@ void UHaloHUDWidget::NativeConstruct()
 	}
 	PlayerCharacter->WeaponsUpdated.AddDynamic(this, &UHaloHUDWidget::UpdateHUDWeaponData);
 	PlayerCharacter->GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &UHaloHUDWidget::OnHealthUpdated);
+	Cast<AHaloFloodFanGame01GameMode>(UGameplayStatics::GetGameMode(GetWorld()))->OnWaveStart.AddDynamic(this, &UHaloHUDWidget::UpdateSetAndWaveCount);
 }
 
 void UHaloHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -70,9 +71,6 @@ void UHaloHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 
 void UHaloHUDWidget::SetInteractInfo(FText InfoText, UTexture2D* Icon)
 {
-	TestText = InfoText;
-	
-	
 	if (Icon)
 	{
 		InteractIcon->SetBrushFromTexture(Icon);
@@ -149,7 +147,6 @@ void UHaloHUDWidget::SetAmmoGridBullets_Implementation(int32 CurMagazine, int32 
 void UHaloHUDWidget::SetMagazineReserveCounter_Implementation(int32 MagazineCount)
 {
 	MagazineCounter->SetText(FText::AsNumber(MagazineCount));
-	InteractActionWidget->SetText(TestText);
 }
 
 
@@ -213,7 +210,6 @@ void UHaloHUDWidget::OnHealthUpdated(UHealthComponent* HealthComp)
 	SetShields(HealthComp->GetShields(), HealthComp->GetMaxShields());
 }
 
-
 void UHaloHUDWidget::UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredGun)
 {
 	if (EquippedGun)
@@ -243,6 +239,18 @@ void UHaloHUDWidget::UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* Holste
 		HolsteredGunWidget->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
+
+void UHaloHUDWidget::UpdateSetAndWaveCount(int Set, int Wave)
+{
+	SetCount->SetText(FText::AsNumber(Set));
+	WaveCount->SetText(FText::AsNumber(Wave));
+}
+
+void UHaloHUDWidget::PushTextNotification_Implementation(const FText& Text)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Pushing notif"));
+}
+
 
 bool UHaloHUDWidget::Initialize()
 {

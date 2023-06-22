@@ -20,6 +20,7 @@ AGunBase::AGunBase()
 	
 	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
 	Mesh->SetSimulatePhysics(true);
+	RootComponent = Mesh;
 }
 
 // Called when the game starts or when spawned

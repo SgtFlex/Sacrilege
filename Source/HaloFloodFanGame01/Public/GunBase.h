@@ -148,9 +148,6 @@ public:
 	USoundBase* FiringSound;
 
 	UPROPERTY(EditAnywhere, meta = (Category="SFX"))
-	USoundAttenuation* FiringSoundAttenuation;
-
-	UPROPERTY(EditAnywhere, meta = (Category="SFX"))
 	USoundBase* ReloadSound;
 
 	UPROPERTY(EditAnywhere, meta = (Category="HUD"))

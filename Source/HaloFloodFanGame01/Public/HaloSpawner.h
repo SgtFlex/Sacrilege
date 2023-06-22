@@ -6,11 +6,13 @@
 #include "GameFramework/Actor.h"
 #include "HaloSpawner.generated.h"
 
+class UHealthComponent;
 class ASmartObject;
 class UBoxComponent;
 class ABaseCharacter;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSpawned);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAvailable, AHaloSpawner*, Spawner);
 
 UCLASS()
 class HALOFLOODFANGAME01_API AHaloSpawner : public AActor
@@ -24,6 +26,9 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	void OnUnitKilled(UHealthComponent* HealthComponent);
 
 public:	
 	// Called every frame
@@ -42,5 +47,8 @@ public:
 
 	UPROPERTY()
 	TArray<ABaseCharacter*> SpawnedChars;
+
+	UPROPERTY()
+	FOnAvailable OnAvailable;
 
 };

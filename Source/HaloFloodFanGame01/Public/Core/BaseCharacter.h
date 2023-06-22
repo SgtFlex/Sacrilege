@@ -46,7 +46,7 @@ public:
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit );
 	
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintGetter)
 	virtual UHealthComponent* GetHealthComponent() override;
 
 	UFUNCTION(BlueprintNativeEvent)
@@ -75,6 +75,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	virtual void DropWeapon();
+
+	UFUNCTION()
+	void RagdollSettled();
 
 	void Stun();
 
@@ -144,4 +147,6 @@ protected:
 	
 	UPROPERTY(EditAnywhere)
 	float MeleeForce = 100000;
+
+	FTimerHandle RagdollTimer;
 };

@@ -9,15 +9,18 @@
 class ABaseCharacter;
 class AHaloSpawner;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWaveStart, int, CurrentWave, int, CurrentSet);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWaveStart, int, CurrentSet, int, CurrentWave);
 
 USTRUCT(BlueprintType)
-struct FWaveStruct
+struct FSquadStruct
 {
 	GENERATED_BODY()
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TMap<TSubclassOf<ABaseCharacter>, int> Squad;
+	float Cost;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TMap<TSubclassOf<ABaseCharacter>, int> SquadUnits;
+	
 };
 
 UCLASS(minimalapi)
@@ -33,29 +36,60 @@ public:
 	UFUNCTION()
 	void OnEnemyKilled();
 	int GetCurrentWave();
-	void WaveFinished();
+	void StartSet();
+	void FinishSet();
+	void StartWave();
+	void FinishWave();
 	int GetCurrentSet();
-	void SpawnWave(TArray<FWaveStruct> WaveToSpawn);
+	TArray<FSquadStruct> CalculateWave();
+	void SpawnWave(TArray<FSquadStruct> WaveToSpawn);
+	void OnSpawnerAvailable(AHaloSpawner* Spawner);
 	void GameFinished();
+
+	UFUNCTION()
+	UAudioComponent* GetSoundtrackComponent();
+
+	FTimerHandle SetFinishDelayTimer;
+
+public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintAssignable)
 	FOnWaveStart OnWaveStart;
 
+	
 private:
 	int curWave = 0;
 	int maxWave = 3;
 	int curSet = 0;
 	int maxSet = 3;
 
+	int MaxWavePool = 5;
+	int CurWavePool = 5;
+	int MaxSquadCost = 1;
 	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<FWaveStruct> Wave;
+	TArray<FSquadStruct> SquadPool;
+
+	TArray<FSquadStruct> SquadsToSpawn;
+
+	TArray<FSquadStruct> SquadsAtWaveStart;
 
 	UPROPERTY(BlueprintReadWrite)
 	int CurrentEnemyCount = 0;
+
+	UPROPERTY()
+	int WaveEnemyCount;
 	
 	TArray<AHaloSpawner*> Spawners;
+
+	TArray<AHaloSpawner*> AvailableSpawners;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TArray<USoundBase*> Soundtracks;
+
+	UPROPERTY()
+	UAudioComponent* SoundtrackComponent;
 };
 
 

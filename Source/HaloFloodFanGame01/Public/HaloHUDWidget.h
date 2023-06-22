@@ -4,9 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/TextBlock.h"
 #include "HaloHUDWidget.generated.h"
 
 
+class UListView;
+class UTextBlock;
 class UHealthComponent;
 class AHaloFloodFanGame01Character;
 /**
@@ -82,7 +85,21 @@ public:
 	UFUNCTION()
 	void UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredGun);
 
+
+	void Test();
+	UFUNCTION()
+	void UpdateSetAndWaveCount(int Set, int Wave);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void PushTextNotification(const FText& Text);
+	
 	virtual bool Initialize() override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	UTextBlock* WaveCount;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	UTextBlock* SetCount;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UWidget* WeaponHUD;
@@ -95,6 +112,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UWidget* CompassHUD;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	UListView* TextNotificationList;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UImage* Crosshair;
@@ -172,8 +192,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Colors")
 	FLinearColor HUDColor = FColor(255, 150, 50, 255);
-
-	FText TestText;
 
 	UPROPERTY()
 	class AHaloFloodFanGame01Character* PlayerCharacter;

@@ -28,7 +28,6 @@ void ABaseAIController::BeginPlay()
 
 void ABaseAIController::BeginPlayDelayed()
 {
-	
 	ABaseCharacter* Char = Cast<ABaseCharacter>(GetPawn());
 	if (Char)
 	{
@@ -39,8 +38,6 @@ void ABaseAIController::BeginPlayDelayed()
 			AlertState = SmartObj->AlertState;
 		}
 	}
-	
-	
 }
 
 ETeamAttitude::Type ABaseAIController::GetTeamAttitudeTowards(const AActor& Other) const

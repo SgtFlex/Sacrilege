@@ -2,6 +2,8 @@
 
 
 #include "HaloSpawner.h"
+
+#include "HealthComponent.h"
 #include "Core/BaseCharacter.h"
 
 #include "Components/BoxComponent.h"
@@ -28,6 +30,19 @@ void AHaloSpawner::BeginPlay()
 	
 }
 
+void AHaloSpawner::OnUnitKilled(UHealthComponent* HealthComponent)
+{
+	if (HealthComponent->GetHealth() <= 0)
+	{
+		SpawnedChars.Remove(Cast<ABaseCharacter>(HealthComponent->GetOwner()));
+	}
+	if (SpawnedChars.IsEmpty())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Spawner available!"));
+		OnAvailable.Broadcast(this);
+	}
+}
+
 // Called every frame
 void AHaloSpawner::Tick(float DeltaTime)
 {
@@ -37,13 +52,6 @@ void AHaloSpawner::Tick(float DeltaTime)
 
 TArray<ABaseCharacter*> AHaloSpawner::SpawnSquad(TMap<TSubclassOf<ABaseCharacter>, int> SquadToSpawn)
 {
-	if (!SpawnedChars.IsEmpty())
-	{
-		for (auto SpawnedChar : SpawnedChars)
-		{
-			if (SpawnedChar) SpawnedChar->Destroy();
-		}
-	}
 	SpawnedChars.Empty();
 	FVector BoxExtents = Box->GetScaledBoxExtent();
 	BoxExtents[2] = 0;
@@ -55,11 +63,16 @@ TArray<ABaseCharacter*> AHaloSpawner::SpawnSquad(TMap<TSubclassOf<ABaseCharacter
 			FVector Loc = UKismetMathLibrary::RandomPointInBoundingBox(GetActorLocation(), BoxExtents);
 			FRotator Rot = FRotator(0,0,0);
 			ABaseCharacter* Char = GetWorld()->SpawnActor<ABaseCharacter>(elem.Key, Loc, Rot);
-			SpawnedChars.Add(Char);
-			if (Char && SmartObj)
+			if (Char)
 			{
-				Char->SmartObject = SmartObj;
+				Char->GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &AHaloSpawner::OnUnitKilled);
+				SpawnedChars.Add(Char);
+				if (SmartObj)
+				{
+					Char->SmartObject = SmartObj;
+				}
 			}
+			
 			
 		}
 	}

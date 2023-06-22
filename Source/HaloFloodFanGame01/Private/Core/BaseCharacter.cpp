@@ -12,6 +12,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
+#include "TimerManager.h"
+#include "Animation/AnimInstance.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
@@ -25,8 +27,8 @@ ABaseCharacter::ABaseCharacter()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComp"));
-	UE_LOG(LogTemp, Warning, TEXT("Char: %s %f"), *GetActorLabel(), GetHealthComponent()->GetHealth());
+	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
+	
 	GetCapsuleComponent()->SetNotifyRigidBodyCollision(true);
 	
 }
@@ -40,14 +42,15 @@ void ABaseCharacter::BeginPlay()
 	{
 		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(SpawnWeapon)));
 	}
-	HealthComponent->OnHealthDepleted.AddDynamic(this, &ABaseCharacter::HealthDepleted);
+	//UE_LOG(LogTemp, Warning, TEXT("Char: %s %f"), *GetActorLabel(), GetHealthComponent()->GetHealth());
+	//if (GetHealthComponent()) UE_LOG(LogTemp, Warning, TEXT("%s's Health component is owned by %s (Should be %s)"), *GetActorLabel(), *GetHealthComponent()->GetOwner()->GetActorLabel(), *GetActorLabel());
+	if (GetHealthComponent()) GetHealthComponent()->OnHealthDepleted.AddDynamic(this, &ABaseCharacter::HealthDepleted);
 }
 
 // Called every frame
 void ABaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 // Called to bind functionality to input
@@ -64,50 +67,54 @@ float ABaseCharacter::TakePointDamage_Implementation(float Damage, FVector Force
 	{
 		UAISense_Damage::ReportDamageEvent(GetWorld(), this, EventInstigator->GetPawn(), Damage, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Location);
 	}
-	if (HurtAnim)
+	
+	if (GetHealthComponent()->GetShields() <= 0)
 	{
-		StunAmount = StunAmount + (Force.Length()/50);
-		if (StunAmount >= 100  && !GetMesh()->GetAnimInstance()->Montage_IsPlaying(HurtAnim))
+		if (HurtAnim)
 		{
-			Stun();
+			StunAmount = StunAmount + (Force.Length()/50);
+			if (StunAmount >= 100  && !GetMesh()->GetAnimInstance()->Montage_IsPlaying(HurtAnim))
+			{
+				Stun();
+			}
+		}
+		if (BloodPFX)
+		{
+			UNiagaraComponent* BloodNiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(BloodPFX, GetMesh(), PointDamageEvent.HitInfo.BoneName, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Normal.Rotation(), EAttachLocation::KeepWorldPosition, true);
+			BloodNiagaraComponent->SetNiagaraVariableActor("Character", this);
+		}
+		if (BloodSplatterMat)
+		{
+			UGameplayStatics::SpawnDecalAttached(BloodSplatterMat, FVector(10,10,10), GetMesh(),
+			PointDamageEvent.HitInfo.BoneName, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Normal.Rotation() + FRotator(-90, 0, FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition, 0);
+		}
+		if (BloodDecalMaterial)
+		{
+			float DecalSize = FMath::RandRange(10, 130);
+			if (GetHealthComponent()->GetHealth() > 0)
+			{
+				FHitResult HitResult;
+				FCollisionQueryParams QueryParams;
+				QueryParams.AddIgnoredActor(this);
+				float BoxMax = GetMesh()->Bounds.GetBoxExtrema(1).Z;
+				FVector Loc1 = GetMesh()->GetComponentLocation(); Loc1.Z = GetMesh()->GetComponentLocation().Z + (BoxMax/2);
+				FVector Loc2 = PointDamageEvent.HitInfo.Location; Loc2.Z = Loc1.Z;
+				FVector Line = (Loc1 - Loc2);
+				Line.Normalize();
+				Line = Line + FVector(0,0,FMath::RandRange(-0.15, 0.15));
+				GetWorld()->LineTraceSingleByChannel(HitResult, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Location + (Line)*5000,ECollisionChannel::ECC_Visibility, QueryParams);
+				if (HitResult.bBlockingHit)
+				{
+					UGameplayStatics::SpawnDecalAttached(BloodDecalMaterial, FVector(DecalSize,DecalSize,DecalSize), HitResult.GetComponent(), HitResult.BoneName, HitResult.Location, HitResult.Normal.Rotation() + FRotator(-180,0,FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition);
+				}
+			}
+			else
+			{
+				UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(DecalSize, DecalSize, DecalSize), PointDamageEvent.HitInfo.Location + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), 0), FRotator(-90,0,FMath::RandRange(-180, 180)));
+			}
 		}
 	}
 	
-	if (BloodPFX)
-	{
-		UNiagaraComponent* BloodNiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(BloodPFX, GetMesh(), PointDamageEvent.HitInfo.BoneName, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Normal.Rotation(), EAttachLocation::KeepWorldPosition, true);
-		BloodNiagaraComponent->SetNiagaraVariableActor("Character", this);
-	}
-	if (BloodSplatterMat)
-	{
-		UGameplayStatics::SpawnDecalAttached(BloodSplatterMat, FVector(10,10,10), GetMesh(),
-		PointDamageEvent.HitInfo.BoneName, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Normal.Rotation() + FRotator(-90, 0, FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition, 0);
-	}
-	if (BloodDecalMaterial)
-	{
-		float DecalSize = FMath::RandRange(10, 130);
-		if (GetHealthComponent()->GetHealth() > 0)
-		{
-			FHitResult HitResult;
-			FCollisionQueryParams QueryParams;
-			QueryParams.AddIgnoredActor(this);
-			float BoxMax = GetMesh()->Bounds.GetBoxExtrema(1).Z;
-			FVector Loc1 = GetMesh()->GetComponentLocation(); Loc1.Z = GetMesh()->GetComponentLocation().Z + (BoxMax/2);
-			FVector Loc2 = PointDamageEvent.HitInfo.Location; Loc2.Z = Loc1.Z;
-			FVector Line = (Loc1 - Loc2);
-			Line.Normalize();
-			Line = Line + FVector(0,0,FMath::RandRange(-0.15, 0.15));
-			GetWorld()->LineTraceSingleByChannel(HitResult, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Location + (Line)*5000,ECollisionChannel::ECC_Visibility, QueryParams);
-			if (HitResult.bBlockingHit)
-			{
-				UGameplayStatics::SpawnDecalAttached(BloodDecalMaterial, FVector(DecalSize,DecalSize,DecalSize), HitResult.GetComponent(), HitResult.BoneName, HitResult.Location, HitResult.Normal.Rotation() + FRotator(-180,0,FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition);
-			}
-		}
-		else
-		{
-			UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(DecalSize, DecalSize, DecalSize), PointDamageEvent.HitInfo.Location + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), 0), FRotator(-90,0,FMath::RandRange(-180, 180)));
-		}
-	}
 	return IDamageableInterface::TakePointDamage(Damage, Force, PointDamageEvent, EventInstigator, DamageCauser);
 }
 
@@ -121,12 +128,14 @@ void ABaseCharacter::HealthDepleted(float Damage, FVector DamageForce, FVector H
 {
 	if (BloodDecalMaterial) UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(100, 100, 100), GetActorLocation(), FRotator(-90,0,0));
 	if (DeathSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), DeathSound, GetActorLocation());
+	GetMesh()->OnComponentHit.AddDynamic(this, &ABaseCharacter::OnHit);
 	GetMesh()->GetAnimInstance()->Montage_Play(DeathAnim);
 	GetCapsuleComponent()->DestroyComponent();
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->AddImpulseAtLocation(DamageForce, HitLocation, HitBoneName);
 	OnKilled.Broadcast();
+	GetWorld()->GetTimerManager().SetTimer(RagdollTimer, this, &ABaseCharacter::RagdollSettled, 1);
 	if (GetController()) GetController()->Destroy();
 	if (EquippedWep)
 		DropWeapon();
@@ -139,18 +148,21 @@ void ABaseCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 	//GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	UAISense_Touch::ReportTouchEvent(GetWorld(), this, OtherActor, Hit.Location);
 	LaunchCharacter(NormalImpulse/100, true, true);
+	float DamageCalculation;
 	if (OtherActor)
 	{
 		float VelocityDifference = FMath::Abs(OtherActor->GetVelocity().Length() - this->GetVelocity().Length());
 		float Mass = OtherComp->IsSimulatingPhysics() ? (OtherComp->GetMass()/300) : 1;
-		float DamageCalculation = FMath::Pow(VelocityDifference, 1.0f/3.0f) * Mass;
-		
-		if (DamageCalculation > 5)
-		{
-			FPointDamageEvent PointDamageEvent;
-			TakePointDamage(DamageCalculation, NormalImpulse, PointDamageEvent, nullptr, nullptr);
-			//if (BloodDecalMaterial) UGameplayStatics::SpawnDecalAttached(BloodDecalMaterial, FVector(50,50,50), OtherComp, Hit.BoneName, Hit.Location, Hit.Normal.Rotation(), EAttachLocation::KeepWorldPosition);
-		}
+		DamageCalculation = FMath::Pow(VelocityDifference, 1.0f/3.0f) * Mass;
+	} else {
+		DamageCalculation = HitComponent->GetComponentVelocity().Length();
+	}
+	if (DamageCalculation > 5)
+	{
+		FPointDamageEvent PointDamageEvent;
+		TakePointDamage(DamageCalculation, NormalImpulse, PointDamageEvent, nullptr, nullptr);
+		float DecalSize = 100;
+		UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(DecalSize, DecalSize, DecalSize), PointDamageEvent.HitInfo.Location + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), 0), FRotator(-90,0,FMath::RandRange(-180, 180)));
 	}
 }
 
@@ -253,6 +265,20 @@ void ABaseCharacter::DropWeapon()
 	EquippedWep->Mesh->SetSimulatePhysics(true);
 	//EquippedWep->Mesh->AddImpulse(FirstPersonCameraComponent->GetForwardVector()*5000);
 	EquippedWep = nullptr;
+}
+
+void ABaseCharacter::RagdollSettled()
+{
+	TArray<FName> BoneNames;
+	GetMesh()->GetBoneNames(BoneNames);
+	if (GetMesh()->GetPhysicsLinearVelocity(BoneNames[1]).Length() <= 1)
+	{
+		GetMesh()->PutAllRigidBodiesToSleep();
+		GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+	} else
+	{
+		GetWorld()->GetTimerManager().SetTimer(RagdollTimer, this, &ABaseCharacter::RagdollSettled, 1);
+	}
 }
 
 void ABaseCharacter::Stun()

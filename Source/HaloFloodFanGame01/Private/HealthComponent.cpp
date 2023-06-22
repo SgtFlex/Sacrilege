@@ -2,6 +2,11 @@
 
 
 #include "HealthComponent.h"
+
+#include "NiagaraFunctionLibrary.h"
+#include "TimerManager.h"
+#include "Components/AudioComponent.h"
+#include "Core/BaseCharacter.h"
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -20,7 +25,6 @@ UHealthComponent::UHealthComponent()
 void UHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
 	// ...
 	
 }
@@ -36,22 +40,26 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 float UHealthComponent::TakeDamage(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser, bool bIgnoreShields, bool bIgnoreHealthArmor, bool bIgnoreShieldArmor)
 {
+	if (ShieldAudioComponent) ShieldAudioComponent->Stop();
 	float DamageLeft = Damage;
-	UE_LOG(LogTemp, Warning, TEXT("%f"), Health);
-	//if (MaxShields > 0 && GetWorld()) GetOwner()->GetWorldTimerManager();
+	//UE_LOG(LogTemp, Warning, TEXT("%s: %f %f TEST"), *GetOwner()->GetActorLabel(), GetHealth(), GetShields());
+	if (MaxShields > 0 && GetWorld())
+	{
+		GetOwner()->GetWorldTimerManager().ClearTimer(ShieldRegenTimer);
+		GetOwner()->GetWorldTimerManager().SetTimer(ShieldDelayTimerHandle, this, &UHealthComponent::StartShieldRegen, ShieldRegenDelay);
+	}
+		
 	if (Shields > 0)
 	{
 		DamageLeft = Damage - Shields;
 		
-		// if (ShieldMat)
-		// {
-		// 	for (auto Mesh : MeshArray)
-		// 	{
-		// 		Mesh->OverlayMaterial = ShieldMat;
-		// 		UMaterialInstanceDynamic* ShieldMatDynamic = UMaterialInstanceDynamic::Create(ShieldMat, this->GetOwner());
-		// 		ShieldMatDynamic->SetScalarParameterValue(FName("Intensity"), 50 * (Shields/MaxShields));
-		// 	}
-		// }
+		 if (ShieldMat)
+		 {
+		 	UMeshComponent* MeshComp = Cast<UMeshComponent>(GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
+		 	MeshComp->SetOverlayMaterial(ShieldMat);
+		 	UMaterialInstanceDynamic* ShieldMatDynamic = UMaterialInstanceDynamic::Create(ShieldMat, this->GetOwner());
+		 	ShieldMatDynamic->SetScalarParameterValue(FName("Intensity"), 40 * (Shields/MaxShields));
+		 }
 		if (SetShields(Shields - Damage) <= 0)
 		{
 			BreakShields();
@@ -59,20 +67,21 @@ float UHealthComponent::TakeDamage(float Damage, FVector Force, FVector HitLocat
 	} 
 	if (Shields <= 0 && Health > 0)
 	{
-		//Health -= DamageLeft;
 		SetHealth(Health - DamageLeft);
 		if (Health <= 0)
 		{
-			this->HealthDepleted(Damage, Force, HitLocation, HitBoneName);
+			//UE_LOG(LogTemp, Warning, TEXT("Health depleted"));
+			HealthDepleted(Damage, Force, HitLocation, HitBoneName);
 		}
 	}
-	//OnTakeDamage.Broadcast(Damage, Force, HitLocation, HitBoneName);
+	//UE_LOG(LogTemp, Warning, TEXT("%s: %f"), *GetOwner()->GetActorLabel(), Health);
 	OnHealthUpdate.Broadcast(this);
 	return Damage;
 }
 
 void UHealthComponent::HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName)
 {
+	//UE_LOG(LogTemp, Warning, TEXT("Health depleted!"));
 	OnHealthDepleted.Broadcast(Damage, Force, HitLocation, HitBoneName);
 }
 
@@ -158,16 +167,36 @@ void UHealthComponent::SetShieldRegenRatePerSecond(float NewShieldRegenRatePerSe
 
 void UHealthComponent::BreakShields()
 {
+	if (ShieldMat) {
+		UMeshComponent* MeshComp = Cast<UMeshComponent>(GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
+		MeshComp->SetOverlayMaterial(nullptr);
+	}
+	if (ShieldBreakFX) UNiagaraFunctionLibrary::SpawnSystemAttached(ShieldBreakFX, Cast<ABaseCharacter>(GetOwner())->GetMesh(),
+		NAME_None, FVector(0,0,0), FRotator(0,0,0),EAttachLocation::SnapToTarget, true);
 	if (ShieldBreakSFX) UGameplayStatics::SpawnSoundAttached(ShieldBreakSFX, GetOwner()->GetRootComponent());
+}
+
+void UHealthComponent::StartShieldRegen()
+{
+	
+	if (ShieldStartRegenSFX) ShieldAudioComponent = UGameplayStatics::SpawnSoundAttached(ShieldStartRegenSFX, GetOwner()->GetRootComponent(), NAME_None,
+		FVector(ForceInit), FRotator::ZeroRotator, EAttachLocation::KeepRelativeOffset, false, 1, 1, ShieldStartRegenSFX->GetDuration() * Shields/MaxShields);
+	GetOwner()->GetWorldTimerManager().SetTimer(ShieldRegenTimer, this, &UHealthComponent::RegenShields, ShieldRegenTickRate, true);
 }
 
 void UHealthComponent::RegenShields()
 {
 	OnHealthUpdate.Broadcast(this);
-	if (ShieldStartRegenSFX) UGameplayStatics::SpawnSoundAttached(ShieldStartRegenSFX, GetOwner()->GetRootComponent());
+	
 	float ShieldRegenAmount = ShieldRegenRatePerSecond*ShieldRegenTickRate;
 	SetShields(FMath::Min(MaxShields, Shields + ShieldRegenAmount));
-	if (Shields >= MaxShields) GetOwner()->GetWorldTimerManager().ClearTimer(ShieldDelayTimerHandle);
+	if (Shields >= MaxShields) StopShieldRegen();
 	
+}
+
+void UHealthComponent::StopShieldRegen()
+{
+	if (ShieldFinishRegenSFX) UGameplayStatics::SpawnSound2D(GetWorld(), ShieldFinishRegenSFX);
+	GetOwner()->GetWorldTimerManager().ClearTimer(ShieldRegenTimer);
 }
 
