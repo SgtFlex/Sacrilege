@@ -76,7 +76,7 @@ public:
 
 	virtual void Pickup(AHaloFloodFanGame01Character* Character) override;
 
-	virtual float TakePointDamage(float DamageAmount, FVector Force, FPointDamageEvent const& PointDamageEvent, AController*, AActor* DamageCauser) override;
+	virtual float TakePointDamage(FPointDamageEvent const& PointDamageEvent, FVector Force, AController*, AActor* DamageCauser) override;
 
 	virtual float TakeRadialDamage(float DamageAmount, FVector Force, FRadialDamageEvent const& RadialDamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 };

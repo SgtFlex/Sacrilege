@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "HaloFloodFanGame01Projectile.generated.h"
 
+class UNiagaraSystem;
 class USphereComponent;
 class UProjectileMovementComponent;
 
@@ -23,11 +24,31 @@ class AHaloFloodFanGame01Projectile : public AActor
 	UProjectileMovementComponent* ProjectileMovement;
 
 public:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	float Damage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	float Force;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	USoundBase* IdleSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	USoundBase* HitSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	USoundBase* ExpireSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UNiagaraSystem* HitPFX;
+
+public:
 	AHaloFloodFanGame01Projectile();
 
-	/** called when projectile hits something */
+	virtual void BeginPlay() override;
+	
 	UFUNCTION()
-	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	void OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 
 	/** Returns CollisionComp subobject **/
 	USphereComponent* GetCollisionComp() const { return CollisionComp; }

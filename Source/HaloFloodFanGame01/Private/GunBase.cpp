@@ -122,9 +122,12 @@ void AGunBase::Fire_Implementation()
 	{
 		if (ProjectileClass)
 		{
-			FVector Location = GetActorLocation() + GetActorForwardVector()*50.0f;
+			FVector Location = Mesh->DoesSocketExist("Muzzle") ? Mesh->GetSocketLocation("Muzzle") : GetActorLocation() + GetActorForwardVector()*50000.0f;
 			FRotator Rotation = OwningChar->GetBaseAimRotation();
-			GetWorld()->SpawnActor(ProjectileClass, &Location, &Rotation);
+			FActorSpawnParameters ActorSpawnParameters;
+			ActorSpawnParameters.Owner = this;
+			ActorSpawnParameters.Instigator = Cast<ABaseCharacter>(this->GetOwner());
+			GetWorld()->SpawnActor(ProjectileClass, &Location, &Rotation, ActorSpawnParameters);
 		} else
 		{
 			bool TraceHit = false;
@@ -173,12 +176,10 @@ void AGunBase::Fire_Implementation()
 				{
 					FVector HitDir = Hit.Location - TraceStart;
 					HitDir.Normalize();
-					FPointDamageEvent PointDamageEvent;
-					PointDamageEvent.Damage = Damage * FalloffCurve->GetFloatValue(Hit.Distance/Range);
-					PointDamageEvent.HitInfo = Hit;
+					FPointDamageEvent PointDamageEvent = FPointDamageEvent(Damage * FalloffCurve->GetFloatValue(Hit.Distance/Range), Hit, HitDir, UDamageType::StaticClass());
 					
 					if (APawn* OwningPawn = Cast<APawn>(GetOwner()))
-						HitActor->TakePointDamage(Damage, HitDir*Force, PointDamageEvent, OwningPawn->GetController(), this);
+						HitActor->TakePointDamage(PointDamageEvent, HitDir*Force, OwningPawn->GetController(), this);
 				}
 			}
 			

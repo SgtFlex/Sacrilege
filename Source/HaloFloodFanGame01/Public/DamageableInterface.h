@@ -25,7 +25,7 @@ public:
 	virtual float TakeDamage(float DamageAmount, FVector Force, FDamageEvent const& DamageEvent, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
 	UFUNCTION(BlueprintCallable)
-	virtual float TakePointDamage(float DamageAmount, FVector Force, FPointDamageEvent const& PointDamageEvent, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
+	virtual float TakePointDamage(FPointDamageEvent const& PointDamageEvent, FVector Force, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
 	UFUNCTION(BlueprintCallable)
 	virtual float TakeRadialDamage(float DamageAmount, FVector Force, FRadialDamageEvent const& RadialDamageEvent, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);

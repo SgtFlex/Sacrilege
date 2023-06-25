@@ -29,6 +29,15 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	void OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
 
+	UFUNCTION()
+	void HearingStimulusUpdated(AActor* Actor, FAIStimulus Stimulus);
+
+	UFUNCTION()
+	void SightStimulusUpdated(AActor* Actor, FAIStimulus Stimulus);
+
+	UFUNCTION()
+	void DamageStimulusUpdated(AActor* Actor, FAIStimulus Stimulus);
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TObjectPtr<UAIPerceptionComponent> AIPerceptionComponent;
@@ -48,5 +57,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UBlackboardComponent* BlackboardComp;
 
+	UPROPERTY(BlueprintReadOnly)
+	FVector StimulusLocation;
+
 	FTimerHandle Delay;
+
+	UPROPERTY()
+	TSet<AActor*> Targets;
+
+	UPROPERTY()
+	class UAISenseConfig_Sight* Sight;
+	UPROPERTY()
+	class UAISenseConfig_Hearing* Hearing;
+	UPROPERTY()
+	class UAISenseConfig_Damage* Damage;
+	UPROPERTY()
+	class UAISenseConfig_Team* Team;
 };

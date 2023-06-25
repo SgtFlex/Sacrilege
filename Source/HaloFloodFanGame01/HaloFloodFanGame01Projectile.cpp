@@ -1,16 +1,23 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "HaloFloodFanGame01Projectile.h"
+
+#include "DamageableInterface.h"
+#include "GunBase.h"
+#include "NiagaraFunctionLibrary.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
+#include "Core/BaseCharacter.h"
+#include "Engine/DamageEvents.h"
 
 AHaloFloodFanGame01Projectile::AHaloFloodFanGame01Projectile() 
 {
 	// Use a sphere as a simple collision representation
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	CollisionComp->InitSphereRadius(5.0f);
+	CollisionComp->SetGenerateOverlapEvents(true);
 	CollisionComp->BodyInstance.SetCollisionProfileName("Projectile");
-	CollisionComp->OnComponentHit.AddDynamic(this, &AHaloFloodFanGame01Projectile::OnHit);		// set up a notification for when this component hits something blocking
+	
 	// Players can't walk on it
 	CollisionComp->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
 	CollisionComp->CanCharacterStepUpOn = ECB_No;
@@ -27,16 +34,35 @@ AHaloFloodFanGame01Projectile::AHaloFloodFanGame01Projectile()
 	ProjectileMovement->bShouldBounce = true;
 
 	// Die after 3 seconds by default
-	InitialLifeSpan = 3.0f;
+	InitialLifeSpan = 5.0f;
 }
 
-void AHaloFloodFanGame01Projectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+void AHaloFloodFanGame01Projectile::BeginPlay()
 {
-	// Only add impulse and destroy projectile if we hit a physics
-	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
-	{
-		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
+	Super::BeginPlay();
 
-		Destroy();
+	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &AHaloFloodFanGame01Projectile::OnOverlap);
+}
+
+void AHaloFloodFanGame01Projectile::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+                                              UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (Cast<ABaseCharacter>(OtherActor) == GetInstigator() || OtherActor == GetOwner())
+	{
+		return;
 	}
+	IDamageableInterface* DamageableActor = Cast<IDamageableInterface>(OtherActor);
+	FVector Direction = GetVelocity();
+	Direction.Normalize();
+	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && (DamageableActor))
+	{
+		FPointDamageEvent PointDamageEvent = FPointDamageEvent(Damage, SweepResult, Direction, UDamageType::StaticClass());
+		DamageableActor->TakePointDamage(PointDamageEvent, Direction*Force, GetInstigator()->GetController(), this);
+	}
+	if (OverlappedComponent->IsSimulatingPhysics())
+	{
+		OverlappedComponent->AddImpulse(Direction*Force);
+	}
+	if (AGunBase* Gun = Cast<AGunBase>(GetOwner())) UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), Gun->MuzzlePFX, SweepResult.Location, SweepResult.Normal.Rotation());
+	Destroy();
 }

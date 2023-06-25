@@ -190,7 +190,7 @@ void AHaloFloodFanGame01Character::MeleeDamageCode()
 	PointDamageEvent.HitInfo = MeleeHit;
 	FVector Dir = MeleeHit.Location - MeleeHit.TraceStart;
 	Dir.Normalize();
-	HitActor->TakePointDamage(MeleeDamage, Dir*MeleeForce, PointDamageEvent);
+	HitActor->TakePointDamage(PointDamageEvent, Dir*MeleeForce);
 }
 
 void AHaloFloodFanGame01Character::MeleeUpdate(float Alpha)

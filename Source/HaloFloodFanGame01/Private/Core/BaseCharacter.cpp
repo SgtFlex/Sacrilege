@@ -60,12 +60,11 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 }
 
-float ABaseCharacter::TakePointDamage_Implementation(float Damage, FVector Force, FPointDamageEvent const& PointDamageEvent,
-	AController* EventInstigator, AActor* DamageCauser)
+float ABaseCharacter::TakePointDamage_Implementation(FPointDamageEvent const& PointDamageEvent, FVector Force, AController* EventInstigator, AActor* DamageCauser)
 {
 	if (EventInstigator && Cast<ABaseAIController>(GetController()))
 	{
-		UAISense_Damage::ReportDamageEvent(GetWorld(), this, EventInstigator->GetPawn(), Damage, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Location);
+		UAISense_Damage::ReportDamageEvent(GetWorld(), this, EventInstigator->GetPawn(), PointDamageEvent.Damage, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Location);
 	}
 	
 	if (GetHealthComponent()->GetShields() <= 0)
@@ -97,12 +96,7 @@ float ABaseCharacter::TakePointDamage_Implementation(float Damage, FVector Force
 				FCollisionQueryParams QueryParams;
 				QueryParams.AddIgnoredActor(this);
 				float BoxMax = GetMesh()->Bounds.GetBoxExtrema(1).Z;
-				FVector Loc1 = GetMesh()->GetComponentLocation(); Loc1.Z = GetMesh()->GetComponentLocation().Z + (BoxMax/2);
-				FVector Loc2 = PointDamageEvent.HitInfo.Location; Loc2.Z = Loc1.Z;
-				FVector Line = (Loc1 - Loc2);
-				Line.Normalize();
-				Line = Line + FVector(0,0,FMath::RandRange(-0.15, 0.15));
-				GetWorld()->LineTraceSingleByChannel(HitResult, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Location + (Line)*5000,ECollisionChannel::ECC_Visibility, QueryParams);
+				GetWorld()->LineTraceSingleByChannel(HitResult, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Location + (PointDamageEvent.ShotDirection * 4000),ECollisionChannel::ECC_Visibility, QueryParams);
 				if (HitResult.bBlockingHit)
 				{
 					UGameplayStatics::SpawnDecalAttached(BloodDecalMaterial, FVector(DecalSize,DecalSize,DecalSize), HitResult.GetComponent(), HitResult.BoneName, HitResult.Location, HitResult.Normal.Rotation() + FRotator(-180,0,FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition);
@@ -115,7 +109,7 @@ float ABaseCharacter::TakePointDamage_Implementation(float Damage, FVector Force
 		}
 	}
 	
-	return IDamageableInterface::TakePointDamage(Damage, Force, PointDamageEvent, EventInstigator, DamageCauser);
+	return IDamageableInterface::TakePointDamage(PointDamageEvent, Force, EventInstigator, DamageCauser);
 }
 
 // void ABaseCharacter::TakeDamage(float DamageAmount)
@@ -128,6 +122,7 @@ void ABaseCharacter::HealthDepleted(float Damage, FVector DamageForce, FVector H
 {
 	if (BloodDecalMaterial) UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(100, 100, 100), GetActorLocation(), FRotator(-90,0,0));
 	if (DeathSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), DeathSound, GetActorLocation());
+	GetMesh()->SetNotifyRigidBodyCollision(true);
 	GetMesh()->OnComponentHit.AddDynamic(this, &ABaseCharacter::OnHit);
 	GetMesh()->GetAnimInstance()->Montage_Play(DeathAnim);
 	GetCapsuleComponent()->DestroyComponent();
@@ -155,14 +150,14 @@ void ABaseCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 		float Mass = OtherComp->IsSimulatingPhysics() ? (OtherComp->GetMass()/300) : 1;
 		DamageCalculation = FMath::Pow(VelocityDifference, 1.0f/3.0f) * Mass;
 	} else {
-		DamageCalculation = HitComponent->GetComponentVelocity().Length();
+		DamageCalculation = FMath::Pow(this->GetVelocity().Length(), 1.0f/5.0f);
 	}
 	if (DamageCalculation > 5)
 	{
-		FPointDamageEvent PointDamageEvent;
-		TakePointDamage(DamageCalculation, NormalImpulse, PointDamageEvent, nullptr, nullptr);
+		FPointDamageEvent PointDamageEvent = FPointDamageEvent(DamageCalculation, Hit, FVector(0,0,0), UDamageType::StaticClass());
+		TakePointDamage(PointDamageEvent, NormalImpulse, nullptr, nullptr);
 		float DecalSize = 100;
-		UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(DecalSize, DecalSize, DecalSize), PointDamageEvent.HitInfo.Location + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), 0), FRotator(-90,0,FMath::RandRange(-180, 180)));
+		UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(DecalSize, DecalSize, DecalSize), GetMesh()->GetComponentLocation() + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), 0), FRotator(-90,0,FMath::RandRange(-180, 180)));
 	}
 }
 

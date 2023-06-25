@@ -21,14 +21,12 @@ float IDamageableInterface::TakeDamage(float DamageAmount, FVector Force, FDamag
 	return 0;
 }
 
-float IDamageableInterface::TakePointDamage(float DamageAmount, FVector Force, FPointDamageEvent const& PointDamageEvent,
-	AController* EventInstigator, AActor* DamageCauser)
+float IDamageableInterface::TakePointDamage(FPointDamageEvent const& PointDamageEvent, FVector Force,
+                                            AController* EventInstigator, AActor* DamageCauser)
 {
-	FDamageEvent DamageEvent;
-	//TakeDamage(DamageAmount, Force, DamageEvent, EventInstigator, DamageCauser);
 	if (GetHealthComponent())
 	{
-		GetHealthComponent()->TakeDamage(DamageAmount, Force, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.BoneName, EventInstigator, DamageCauser);
+		GetHealthComponent()->TakeDamage(PointDamageEvent.Damage, Force, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.BoneName, EventInstigator, DamageCauser);
 	}
 	return 0;
 }
@@ -37,7 +35,11 @@ float IDamageableInterface::TakeRadialDamage(float DamageAmount, FVector Force,
 	FRadialDamageEvent const& RadialDamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	FDamageEvent DamageEvent;
-	TakeDamage(DamageAmount, Force, DamageEvent, EventInstigator, DamageCauser);
+	AActor* HitActor = Cast<AActor>(this);
+	FVector Direction = (HitActor->GetActorLocation() - RadialDamageEvent.Origin);
+	Direction.Normalize();
+	if (GetHealthComponent())
+		GetHealthComponent()->TakeDamage(DamageAmount, Direction * Force);
 	return 0;
 }
 

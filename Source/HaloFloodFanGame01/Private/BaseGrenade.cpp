@@ -103,11 +103,11 @@ void ABaseGrenade::Pickup(AHaloFloodFanGame01Character* Character)
 	
 }
 
-float ABaseGrenade::TakePointDamage(float DamageAmount, FVector Force, FPointDamageEvent const& PointDamageEvent,
-	AController* Controller, AActor* DamageCauser)
+float ABaseGrenade::TakePointDamage(FPointDamageEvent const& PointDamageEvent, FVector Force,
+                                    AController* Controller, AActor* DamageCauser)
 {
 	this->Arm(FMath::RandRange(0.25, 0.5));
-	return IDamageableInterface::TakePointDamage(DamageAmount, Force, PointDamageEvent, Controller, DamageCauser);
+	return IDamageableInterface::TakePointDamage(PointDamageEvent, Force, Controller, DamageCauser);
 }
 
 float ABaseGrenade::TakeRadialDamage(float DamageAmount, FVector Force, FRadialDamageEvent const& RadialDamageEvent,
