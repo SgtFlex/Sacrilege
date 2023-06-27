@@ -21,14 +21,13 @@
 void UHaloHUDWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-	UE_LOG(LogTemp, Warning, TEXT("Found Weapon"));
+	PlayerCharacter = Cast<AHaloFloodFanGame01Character>(GetOwningPlayer()->GetPawn());
 	SetFragCounter(PlayerCharacter->FragCount);
 	SetPlasmaCounter(PlayerCharacter->PlasmaCount);
 	SetSpikeCounter(PlayerCharacter->SpikeCount);
 	SetIncenCounter(PlayerCharacter->IncenCount);
 	if (PlayerCharacter->EquippedWep)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Found Weapon"));
 		UpdateHUDWeaponData(PlayerCharacter->EquippedWep, PlayerCharacter->HolsteredWeapon);
 	}
 	PlayerCharacter->WeaponsUpdated.AddDynamic(this, &UHaloHUDWidget::UpdateHUDWeaponData);
@@ -263,16 +262,20 @@ bool UHaloHUDWidget::Initialize()
 void UHaloHUDWidget::SetHealth_Implementation(float CurrentHealth, float MaxHealth)
 {
 	if (HealthBar) {
+		FNumberFormattingOptions NumberFormattingOptions;
+		NumberFormattingOptions.RoundingMode = ERoundingMode::FromZero;
 		HealthBar->SetPercent(CurrentHealth / MaxHealth);
-		HealthNum->SetText(FText::AsNumber(CurrentHealth));
+		HealthNum->SetText(FText::AsNumber(CurrentHealth, &NumberFormattingOptions));
 	}
 }
 
 void UHaloHUDWidget::SetShields_Implementation(float CurrentShields, float MaxShields)
 {
 	if (ShieldBar) {
+		FNumberFormattingOptions NumberFormattingOptions;
+		NumberFormattingOptions.RoundingMode = ERoundingMode::FromZero;
 		ShieldBar->SetPercent(CurrentShields / MaxShields);
-		ShieldNum->SetText(FText::AsNumber(CurrentShields));
+		ShieldNum->SetText(FText::AsNumber(CurrentShields, &NumberFormattingOptions));
 	}
 }
 

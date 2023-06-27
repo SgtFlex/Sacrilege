@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameFramework/GameMode.h"
 #include "GameFramework/GameModeBase.h"
 #include "HaloFloodFanGame01GameMode.generated.h"
 
@@ -24,7 +25,7 @@ struct FSquadStruct
 };
 
 UCLASS(minimalapi)
-class AHaloFloodFanGame01GameMode : public AGameModeBase
+class AHaloFloodFanGame01GameMode : public AGameMode
 {
 	GENERATED_BODY()
 

@@ -40,6 +40,7 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 float UHealthComponent::TakeDamage(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser, bool bIgnoreShields, bool bIgnoreHealthArmor, bool bIgnoreShieldArmor)
 {
+	if (GetHealth() <= 0) return 0;
 	if (ShieldAudioComponent) ShieldAudioComponent->Stop();
 	float DamageLeft = Damage;
 	//UE_LOG(LogTemp, Warning, TEXT("%s: %f %f TEST"), *GetOwner()->GetActorLabel(), GetHealth(), GetShields());
@@ -82,6 +83,7 @@ float UHealthComponent::TakeDamage(float Damage, FVector Force, FVector HitLocat
 void UHealthComponent::HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName)
 {
 	//UE_LOG(LogTemp, Warning, TEXT("Health depleted!"));
+	GetWorld()->GetTimerManager().ClearTimer(ShieldDelayTimerHandle);
 	OnHealthDepleted.Broadcast(Damage, Force, HitLocation, HitBoneName);
 }
 
@@ -178,7 +180,6 @@ void UHealthComponent::BreakShields()
 
 void UHealthComponent::StartShieldRegen()
 {
-	
 	if (ShieldStartRegenSFX) ShieldAudioComponent = UGameplayStatics::SpawnSoundAttached(ShieldStartRegenSFX, GetOwner()->GetRootComponent(), NAME_None,
 		FVector(ForceInit), FRotator::ZeroRotator, EAttachLocation::KeepRelativeOffset, false, 1, 1, ShieldStartRegenSFX->GetDuration() * Shields/MaxShields);
 	GetOwner()->GetWorldTimerManager().SetTimer(ShieldRegenTimer, this, &UHealthComponent::RegenShields, ShieldRegenTickRate, true);
@@ -186,12 +187,10 @@ void UHealthComponent::StartShieldRegen()
 
 void UHealthComponent::RegenShields()
 {
-	OnHealthUpdate.Broadcast(this);
-	
 	float ShieldRegenAmount = ShieldRegenRatePerSecond*ShieldRegenTickRate;
 	SetShields(FMath::Min(MaxShields, Shields + ShieldRegenAmount));
 	if (Shields >= MaxShields) StopShieldRegen();
-	
+	OnHealthUpdate.Broadcast(this);
 }
 
 void UHealthComponent::StopShieldRegen()

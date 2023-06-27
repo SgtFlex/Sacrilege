@@ -36,7 +36,6 @@ public:
 
 	
 	void HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName);
-
 public:
 	UPROPERTY(EditAnywhere, meta = (Category="Health"))
 	float Health = 100;

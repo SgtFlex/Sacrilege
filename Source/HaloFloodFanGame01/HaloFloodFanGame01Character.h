@@ -68,9 +68,18 @@ class AHaloFloodFanGame01Character : public ABaseCharacter
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* UseEquipmentAction;
+
+	UPROPERTY()
+	UEnhancedInputComponent* EnhancedInputComponent;
+
+	UPROPERTY()
+	FTimerHandle PossessionDelay;
 	
 public:
 	AHaloFloodFanGame01Character();
+
+	/** Property replication */
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:
 	virtual void BeginPlay();
@@ -110,7 +119,7 @@ public:
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
-	UHaloHUDWidget* GetPlayerHUD() const { return PlayerHUD; }
+	UUserWidget* GetPlayerHUD() const { return PlayerHUD; }
 protected:
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
@@ -132,6 +141,8 @@ protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	// End of APawn interface
+
+	void OnPossessed();
 	
 public:
 	UPROPERTY()
@@ -141,13 +152,13 @@ public:
 	FWeaponsUpdated WeaponsUpdated;
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<class UHaloHUDWidget> PlayerHUDClass;
+	TSubclassOf<class UUserWidget> PlayerHUDClass;
 
 	UPROPERTY(EditAnywhere, Category="Loadout")
 	TSubclassOf<class AGunBase> HolsteredGunClass;
 
 	UPROPERTY()
-	class UHaloHUDWidget* PlayerHUD;
+	class UUserWidget* PlayerHUD;
 
 	UPROPERTY(EditAnywhere, Category="Loadout")
 	int32 FragCount = 0;

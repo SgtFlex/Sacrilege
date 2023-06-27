@@ -4,20 +4,18 @@
 
 #include "BaseGrenade.h"
 #include "GunBase.h"
-#include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "FrameTypes.h"
-#include "HaloHUDWidget.h"
 #include "HealthComponent.h"
 #include "InteractableInterface.h"
 #include "Blueprint/UserWidget.h"
-#include "Components/TextBlock.h"
 #include "Components/TimelineComponent.h"
 #include "Engine/DamageEvents.h"
 #include "GameFramework/SpectatorPawn.h"
+#include "Net/UnrealNetwork.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -44,6 +42,15 @@ AHaloFloodFanGame01Character::AHaloFloodFanGame01Character()
 	Mesh1P->CastShadow = false;
 	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
+}
+
+void AHaloFloodFanGame01Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+
+
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	//DOREPLIFETIME(AHaloFloodFanGame01Character, EnhancedInputComponent);
 }
 
 void AHaloFloodFanGame01Character::BeginPlay()
@@ -81,7 +88,8 @@ FHitResult AHaloFloodFanGame01Character::GetPlayerAim()
 void AHaloFloodFanGame01Character::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	// Set up action bindings
-	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
+	EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
+	if (EnhancedInputComponent)
 	{
 		//Jumping
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
@@ -108,7 +116,16 @@ void AHaloFloodFanGame01Character::SetupPlayerInputComponent(class UInputCompone
 		EnhancedInputComponent->BindAction(ThrowGrenadeAction, ETriggerEvent::Triggered, this, &AHaloFloodFanGame01Character::ThrowEquippedGrenade);
 
 		EnhancedInputComponent->BindAction(UseEquipmentAction, ETriggerEvent::Triggered, this, &AHaloFloodFanGame01Character::UseEquipment);
+		UE_LOG(LogTemp, Warning, TEXT("Added inputs"));
+	} else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Missing EnhancedInputComponent!"));
 	}
+}
+
+void AHaloFloodFanGame01Character::OnPossessed()
+{
+	
 }
 
 void AHaloFloodFanGame01Character::Move(const FInputActionValue& Value)
@@ -117,7 +134,7 @@ void AHaloFloodFanGame01Character::Move(const FInputActionValue& Value)
 	FVector2D MovementVector = Value.Get<FVector2D>();
 	if (Controller != nullptr)
 	{
-		// add movement 
+		// add movement
 		AddMovementInput(GetActorForwardVector(), MovementVector.Y);
 		AddMovementInput(GetActorRightVector(), MovementVector.X);
 	}
@@ -274,25 +291,22 @@ void AHaloFloodFanGame01Character::PossessedBy(AController* NewController)
 	if (APlayerController* PC = Cast<APlayerController>(NewController))
 	{
 		PlayerController = PC;
+		check(IsLocallyControlled());
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 
-		if (IsLocallyControlled() && PlayerHUDClass && !PlayerHUD) {
-			check(PlayerController);
-			PlayerHUD = CreateWidget<UHaloHUDWidget>(PlayerController, PlayerHUDClass);
-			PlayerHUD->PlayerCharacter = this;
+		if (IsLocallyControlled() && PlayerHUDClass) {
+			PlayerHUD = CreateWidget<UUserWidget>(PlayerController, PlayerHUDClass);
 			PlayerHUD->AddToPlayerScreen();
 		}
-	}
-	
+	}	
 }
 
 void AHaloFloodFanGame01Character::UnPossessed()
 {
 	Super::UnPossessed();
-	
 	if (APlayerController* PC = Cast<APlayerController>(Controller))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
@@ -318,5 +332,4 @@ void AHaloFloodFanGame01Character::DropWeapon()
 void AHaloFloodFanGame01Character::SetFragCount(int32 NewFragCount)
 {
 	FragCount = NewFragCount;
-	if (PlayerHUD) PlayerHUD->SetFragCounter(FragCount);
 }

@@ -179,9 +179,6 @@ public:
 	TSubclassOf<UUserWidget> BulletWidget;
 
 private:
-	UPROPERTY()
-	UHaloHUDWidget* PlayerHUD;
-
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AActor> BulletImpactActor;
 };

@@ -7,6 +7,7 @@
 #include "GameFramework/PlayerController.h"
 #include "HaloPlayerController.generated.h"
 
+class UHaloHUDWidget;
 /**
  * 
  */
@@ -17,7 +18,15 @@ class HALOFLOODFANGAME01_API AHaloPlayerController : public APlayerController, p
 public:
 	AHaloPlayerController();
 
+	virtual void BeginPlay() override;
+
+	virtual void OnPossess(APawn* InPawn) override;
+
 private:
 	FGenericTeamId TeamId;
 	FGenericTeamId GetGenericTeamId() const;
+
+public:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UUserWidget> PlayerHUDClass;
 };

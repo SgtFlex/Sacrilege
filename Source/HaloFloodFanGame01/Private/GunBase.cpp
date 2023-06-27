@@ -1,7 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "GunBase.h"
-#include "HaloHUDWidget.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "VectorTypes.h"
@@ -42,21 +41,15 @@ void AGunBase::Tick(float DeltaTime)
 void AGunBase::Pickup(ABaseCharacter* Char)
 {
 	SetOwner(Char);
-	if (AHaloFloodFanGame01Character* PlayerChar = Cast<AHaloFloodFanGame01Character>(Char))
-	{
-		PlayerHUD = PlayerChar->GetPlayerHUD();
-	}
 }
 
 void AGunBase::Equip()
 {
-	PlayerHUD->SetCrosshairTexture(CrosshairTexture);
 }
 
 void AGunBase::Drop()
 {
 	SetOwner(nullptr);
-	PlayerHUD = nullptr;
 }
 
 void AGunBase::StartReload()

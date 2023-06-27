@@ -62,6 +62,8 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 float ABaseCharacter::TakePointDamage_Implementation(FPointDamageEvent const& PointDamageEvent, FVector Force, AController* EventInstigator, AActor* DamageCauser)
 {
+
+	float x = IDamageableInterface::TakePointDamage(PointDamageEvent, Force, EventInstigator, DamageCauser);
 	if (EventInstigator && Cast<ABaseAIController>(GetController()))
 	{
 		UAISense_Damage::ReportDamageEvent(GetWorld(), this, EventInstigator->GetPawn(), PointDamageEvent.Damage, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Location);
@@ -109,14 +111,16 @@ float ABaseCharacter::TakePointDamage_Implementation(FPointDamageEvent const& Po
 		}
 	}
 	
-	return IDamageableInterface::TakePointDamage(PointDamageEvent, Force, EventInstigator, DamageCauser);
+	return x;
 }
 
-// void ABaseCharacter::TakeDamage(float DamageAmount)
-// {
-// 	IDamageableInterface::TakeDamage(DamageAmount);
-// 	//HealthComponent->TakeDamage(DamageAmount, false, false, false);
-// }
+
+
+float ABaseCharacter::TakeDamage_Implementation(float DamageAmount, FVector Force, FDamageEvent const& DamageEvent,
+	AController* EventInstigator, AActor* DamageCauser)
+{
+	return IDamageableInterface::TakeDamage(DamageAmount, Force, DamageEvent, EventInstigator, DamageCauser);
+}
 
 void ABaseCharacter::HealthDepleted(float Damage, FVector DamageForce, FVector HitLocation, FName HitBoneName)
 {
@@ -154,8 +158,11 @@ void ABaseCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 	}
 	if (DamageCalculation > 5)
 	{
-		FPointDamageEvent PointDamageEvent = FPointDamageEvent(DamageCalculation, Hit, FVector(0,0,0), UDamageType::StaticClass());
-		TakePointDamage(PointDamageEvent, NormalImpulse, nullptr, nullptr);
+		//FPointDamageEvent PointDamageEvent = FPointDamageEvent(DamageCalculation, Hit, FVector(0,0,0), UDamageType::StaticClass());
+		FDamageEvent DamageEvent = FDamageEvent(UDamageType::StaticClass());
+		//TakePointDamage(PointDamageEvent, NormalImpulse, nullptr, nullptr);
+		
+		TakeDamage(DamageCalculation, NormalImpulse, DamageEvent, nullptr, nullptr);
 		float DecalSize = 100;
 		UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(DecalSize, DecalSize, DecalSize), GetMesh()->GetComponentLocation() + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), 0), FRotator(-90,0,FMath::RandRange(-180, 180)));
 	}
