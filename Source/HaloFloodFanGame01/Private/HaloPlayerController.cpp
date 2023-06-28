@@ -12,12 +12,13 @@
 AHaloPlayerController::AHaloPlayerController()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	TeamId = FGenericTeamId(1);
+	
 }
 
 void AHaloPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+	TeamId = FGenericTeamId(TeamNumber);
 
 	
 }

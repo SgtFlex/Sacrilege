@@ -239,6 +239,8 @@ void UHaloHUDWidget::UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* Holste
 	}
 }
 
+
+
 void UHaloHUDWidget::UpdateSetAndWaveCount(int Set, int Wave)
 {
 	SetCount->SetText(FText::AsNumber(Set));

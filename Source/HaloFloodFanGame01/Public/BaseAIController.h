@@ -29,6 +29,8 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	void OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
 
+	void UpdatedPerception(AActor* Actor, FAIStimulus Stimulus, bool AlertedByAllies = false);
+
 	UFUNCTION()
 	void HearingStimulusUpdated(AActor* Actor, FAIStimulus Stimulus);
 
@@ -37,6 +39,9 @@ public:
 
 	UFUNCTION()
 	void DamageStimulusUpdated(AActor* Actor, FAIStimulus Stimulus);
+
+	UFUNCTION()
+	void AlertAllies(float AlertRadius, AActor* Actor, FAIStimulus Stimulus);
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -73,4 +78,10 @@ public:
 	class UAISenseConfig_Damage* Damage;
 	UPROPERTY()
 	class UAISenseConfig_Team* Team;
+
+	UPROPERTY(EditAnywhere)
+	int TeamNumber = 2;
+
+	UPROPERTY(EditAnywhere)
+	TArray<AActor*> KnownEnemies;
 };

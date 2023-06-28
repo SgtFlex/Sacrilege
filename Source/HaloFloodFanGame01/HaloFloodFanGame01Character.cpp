@@ -242,9 +242,12 @@ void AHaloFloodFanGame01Character::ThrowEquippedGrenade_Implementation()
 	SetFragCount(FragCount-1);
 	FVector SpawnLoc = GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*200;
 	ABaseGrenade* Grenade = Cast<ABaseGrenade>(GetWorld()->SpawnActor(EquippedGrenadeClass, &SpawnLoc));
-	Grenade->SetArmed(true);
-	FVector Force = GetFirstPersonCameraComponent()->GetForwardVector() + FVector(0,0,0.1);
-	Grenade->Mesh->AddImpulse(Force*20000);
+	if (Grenade)
+	{
+		Grenade->SetArmed(true);
+		FVector Force = GetFirstPersonCameraComponent()->GetForwardVector() + FVector(0,0,0.1);
+		Grenade->Mesh->AddImpulse(Force*20000);
+	}
 }
 
 void AHaloFloodFanGame01Character::SwitchWeapon()

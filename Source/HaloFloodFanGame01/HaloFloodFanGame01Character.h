@@ -111,12 +111,14 @@ public:
 	
 	virtual void DropWeapon() override;
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void SetFragCount(int32 NewFragCount);
 
 	/** Returns Mesh1P subobject **/
+	UFUNCTION(BlueprintCallable)
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/
+	UFUNCTION(BlueprintCallable)
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
 	UUserWidget* GetPlayerHUD() const { return PlayerHUD; }

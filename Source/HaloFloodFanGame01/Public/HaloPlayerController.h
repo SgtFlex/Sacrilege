@@ -29,4 +29,7 @@ private:
 public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UUserWidget> PlayerHUDClass;
+
+	UPROPERTY(EditAnywhere)
+	int TeamNumber = 1;
 };

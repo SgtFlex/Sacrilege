@@ -122,7 +122,7 @@ float ABaseCharacter::TakeDamage_Implementation(float DamageAmount, FVector Forc
 	return IDamageableInterface::TakeDamage(DamageAmount, Force, DamageEvent, EventInstigator, DamageCauser);
 }
 
-void ABaseCharacter::HealthDepleted(float Damage, FVector DamageForce, FVector HitLocation, FName HitBoneName)
+void ABaseCharacter::HealthDepleted_Implementation(float Damage, FVector DamageForce, FVector HitLocation, FName HitBoneName)
 {
 	if (BloodDecalMaterial) UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(100, 100, 100), GetActorLocation(), FRotator(-90,0,0));
 	if (DeathSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), DeathSound, GetActorLocation());

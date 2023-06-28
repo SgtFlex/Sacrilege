@@ -42,26 +42,31 @@ void ABaseGrenade::Tick(float DeltaTime)
 void ABaseGrenade::Explode()
 {
 	FRadialDamageEvent RadialDamageEvent;
-	RadialDamageEvent.Params = FRadialDamageParams(MaxExplosionDamage, InnerExplosionRadius, OuterExplosionRadius, ExplosionDamageFalloff);
+	RadialDamageEvent.Params = FRadialDamageParams(MaxExplosionDamage, MinExplosionDamage, InnerExplosionRadius, OuterExplosionRadius, ExplosionDamageFalloff);
 	RadialDamageEvent.Origin = GetActorLocation();
 	if (ExplosionSFX) UGameplayStatics::PlaySoundAtLocation(GetWorld(), ExplosionSFX, GetActorLocation());
 	if (ExplosionPFX) UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ExplosionPFX, GetActorLocation());
-	TArray<FHitResult> HitActors;
+	TArray<FHitResult> HitResults;
 	FVector Origin = GetActorLocation();
 	FCollisionShape Sphere = FCollisionShape::MakeSphere(OuterExplosionRadius);
-	GetWorld()->SweepMultiByChannel(HitActors, Origin, Origin, FQuat(0,0,0,0), ECollisionChannel::ECC_Visibility, Sphere);
+	//GetWorld()->Sweep
+	TArray<TEnumAsByte<EObjectTypeQuery>> Objects;
+	TArray<AActor*> ActorsToIgnore;
+	TArray<AActor*> HitActors;
+	UKismetSystemLibrary::SphereOverlapActors(GetWorld(), Origin, OuterExplosionRadius, Objects, AActor::StaticClass(), ActorsToIgnore, HitActors);
+	//GetWorld()->SweepMultiByChannel(HitResults, Origin, Origin, FQuat(0,0,0,0), ECollisionChannel::ECC_Visibility, Sphere);
 	for (auto HitActor : HitActors)
 	{
-		FVector Force = HitActor.Component->GetComponentLocation() - GetActorLocation();
-		Force.Normalize();
-
-		if (HitActor.GetComponent()->IsSimulatingPhysics())
+		FVector Direction = HitActor->GetActorLocation() - GetActorLocation();
+		Direction.Normalize();
+		// if (HitResult.GetComponent()->IsSimulatingPhysics())
+		// {
+		// 	HitResult.GetComponent()->AddImpulse(Force*ExplosionForce, HitResult.BoneName);
+		// }
+		UE_LOG(LogTemp, Warning, TEXT("Hit actor: %s"), *HitActor->GetActorLabel());
+		if (IDamageableInterface* HitDamageable = Cast<IDamageableInterface>(HitActor))
 		{
-			HitActor.GetComponent()->AddImpulse(Force*ExplosionForce, HitActor.BoneName);
-		}
-		if (IDamageableInterface* HitDamageable = Cast<IDamageableInterface>(HitActor.GetActor()))
-		{
-			HitDamageable->TakeRadialDamage(MaxExplosionDamage, Force*ExplosionForce, RadialDamageEvent);
+			HitDamageable->TakeRadialDamage(ExplosionForce, RadialDamageEvent);
 		}
 	}
 	Destroy();
@@ -103,17 +108,18 @@ void ABaseGrenade::Pickup(AHaloFloodFanGame01Character* Character)
 	
 }
 
-float ABaseGrenade::TakePointDamage(FPointDamageEvent const& PointDamageEvent, FVector Force,
-                                    AController* Controller, AActor* DamageCauser)
+float ABaseGrenade::TakePointDamage(FPointDamageEvent const& PointDamageEvent, FVector Force, AController* Controller,
+	AActor* DamageCauser)
 {
 	this->Arm(FMath::RandRange(0.25, 0.5));
-	return IDamageableInterface::TakePointDamage(PointDamageEvent, Force, Controller, DamageCauser);
+	UE_LOG(LogTemp, Warning, TEXT("Logged point damage"));
+	return 0;
 }
 
-float ABaseGrenade::TakeRadialDamage(float DamageAmount, FVector Force, FRadialDamageEvent const& RadialDamageEvent,
-	AController* EventInstigator, AActor* DamageCauser)
+float ABaseGrenade::TakeDamage(float DamageAmount, FVector Force, FDamageEvent const& DamageEvent,
+                               AController* EventInstigator, AActor* DamageCauser)
 {
 	this->Arm(FMath::RandRange(0.25, 0.5));
-	return IDamageableInterface::
-		TakeRadialDamage(DamageAmount, Force, RadialDamageEvent, EventInstigator, DamageCauser);
+	UE_LOG(LogTemp, Warning, TEXT("Logged damage"));
+	return 0;
 }

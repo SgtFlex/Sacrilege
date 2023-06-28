@@ -85,7 +85,6 @@ public:
 	UFUNCTION()
 	void UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredGun);
 
-
 	void Test();
 	UFUNCTION()
 	void UpdateSetAndWaveCount(int Set, int Wave);
