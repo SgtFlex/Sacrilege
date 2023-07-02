@@ -15,7 +15,8 @@ class UHealthComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPickupWeapon);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDropWeapon);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnKilled);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnKilled, AController*, Instigator, AActor*, Causer);
+DECLARE_DELEGATE_OneParam(FTest, ABaseCharacter*);
 
 UCLASS()
 class HALOFLOODFANGAME01_API ABaseCharacter : public ACharacter, public IDamageableInterface
@@ -38,13 +39,13 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	UFUNCTION(BlueprintNativeEvent)
-	float TakePointDamage(FPointDamageEvent const& PointDamageEvent, FVector Force, AController* EventInstigator, AActor* DamageCauser) override;
+	float TakePointDamage(FPointDamageEvent const& PointDamageEvent, float Force, AController* EventInstigator, AActor* DamageCauser) override;
 
 	UFUNCTION(BlueprintNativeEvent)
 	float TakeDamage(float DamageAmount, FVector Force, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 	
 	UFUNCTION(BlueprintNativeEvent)
-	void HealthDepleted(float Damage, FVector Force, FVector HitLocation = FVector(0,0,0), FName HitBoneName = "") override;
+	void OnHealthDepleted(float Damage, FVector Force, FVector HitLocation = FVector(0,0,0), FName HitBoneName = "", AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit );
@@ -140,6 +141,8 @@ public:
 
 	UPROPERTY()
 	float StunAmount = 100;
+
+	//static FTest TestDelegate;
 
 protected:
 	UPROPERTY(EditDefaultsOnly)

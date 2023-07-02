@@ -9,8 +9,8 @@
 
 
 class UNiagaraSystem;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnHealthDepleted, float, Damage, FVector, Force, FVector, HitLocation,
-                                              FName, HitBoneName);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnHealthDepleted, float, Damage, FVector, Force, FVector, HitLocation,
+                                              FName, HitBoneName, AController*, EventInstigator, AActor*, DamageCauser);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthUpdate, UHealthComponent*, HealthComp);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -33,9 +33,8 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
 	float TakeDamage(float Damage, FVector Force = FVector(0,0,0), FVector HitLocation = FVector(0,0,0), FName HitBoneName = "", AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr, bool bIgnoreShields = false, bool bIgnoreHealthArmor = false, bool bIgnoreShieldArmor = false);
-
 	
-	void HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName);
+	void HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 public:
 	UPROPERTY(EditAnywhere, meta = (Category="Health"))
 	float Health = 100;

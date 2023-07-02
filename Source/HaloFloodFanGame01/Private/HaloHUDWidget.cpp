@@ -32,6 +32,7 @@ void UHaloHUDWidget::NativeConstruct()
 	}
 	PlayerCharacter->WeaponsUpdated.AddDynamic(this, &UHaloHUDWidget::UpdateHUDWeaponData);
 	PlayerCharacter->GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &UHaloHUDWidget::OnHealthUpdated);
+	Cast<AHaloFloodFanGame01GameMode>(UGameplayStatics::GetGameMode(GetWorld()))->OnScoreUpdated.AddDynamic(this, &UHaloHUDWidget::OnScoreUpdated);
 	if (AHaloFloodFanGame01GameMode* FirefightGamemode = Cast<AHaloFloodFanGame01GameMode>(UGameplayStatics::GetGameMode(GetWorld()))) FirefightGamemode->OnWaveStart.AddDynamic(this, &UHaloHUDWidget::UpdateSetAndWaveCount);
 }
 
@@ -154,6 +155,12 @@ void UHaloHUDWidget::UpdateHUDMagazineElements()
 	SetMagazineReserveCounter(PlayerCharacter->EquippedWep->CurMagazine);
 	SetAmmoReserveCounter(PlayerCharacter->EquippedWep->CurReserve);
 	SetAmmoGridBullets(PlayerCharacter->EquippedWep->CurMagazine, PlayerCharacter->EquippedWep->MaxMagazine);
+}
+
+void UHaloHUDWidget::OnScoreUpdated(int NewScore)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Updated"));
+	ScoreCounter->SetText(FText::AsNumber(NewScore));
 }
 
 void UHaloHUDWidget::SetCrosshairType(int type)

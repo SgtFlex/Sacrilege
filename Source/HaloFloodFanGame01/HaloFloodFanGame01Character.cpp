@@ -207,7 +207,7 @@ void AHaloFloodFanGame01Character::MeleeDamageCode()
 	PointDamageEvent.HitInfo = MeleeHit;
 	FVector Dir = MeleeHit.Location - MeleeHit.TraceStart;
 	Dir.Normalize();
-	HitActor->TakePointDamage(PointDamageEvent, Dir*MeleeForce);
+	HitActor->TakePointDamage(PointDamageEvent, MeleeForce);
 }
 
 void AHaloFloodFanGame01Character::MeleeUpdate(float Alpha)
@@ -215,7 +215,7 @@ void AHaloFloodFanGame01Character::MeleeUpdate(float Alpha)
 	SetActorLocation(FMath::Lerp(StartMeleeLoc, EndMeleeLoc, Alpha));
 }
 
-void AHaloFloodFanGame01Character::HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName)
+void AHaloFloodFanGame01Character::OnHealthDepleted_Implementation(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
 	if (PlayerController)
 	{
@@ -232,7 +232,7 @@ void AHaloFloodFanGame01Character::HealthDepleted(float Damage, FVector Force, F
 	// FTimerHandle RestartTimer;
 	// GetWorldTimerManager().SetTimer(RestartTimer, this, &AHaloFloodFanGame01Character::Attack, 5, false);
 	// GetWorldTimerManager().SetTimer(RestartTimer, UGameplayStatics::GetGameMode(GetWorld())->RestartPlayer(PC), 5, false);
-	Super::HealthDepleted(Damage, Force, HitLocation, HitBoneName);
+	Super::OnHealthDepleted_Implementation(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
 }
 
 void AHaloFloodFanGame01Character::ThrowEquippedGrenade_Implementation()
@@ -241,12 +241,13 @@ void AHaloFloodFanGame01Character::ThrowEquippedGrenade_Implementation()
 	if (FragCount<=0) return;
 	SetFragCount(FragCount-1);
 	FVector SpawnLoc = GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*200;
-	ABaseGrenade* Grenade = Cast<ABaseGrenade>(GetWorld()->SpawnActor(EquippedGrenadeClass, &SpawnLoc));
+	FRotator SpawnRot = GetFirstPersonCameraComponent()->GetForwardVector().Rotation();
+	ABaseGrenade* Grenade = Cast<ABaseGrenade>(GetWorld()->SpawnActor(EquippedGrenadeClass, &SpawnLoc, &SpawnRot));
 	if (Grenade)
 	{
 		Grenade->SetArmed(true);
 		FVector Force = GetFirstPersonCameraComponent()->GetForwardVector() + FVector(0,0,0.1);
-		Grenade->Mesh->AddImpulse(Force*20000);
+		//Grenade->Mesh->AddImpulse(Force*20000);
 	}
 }
 

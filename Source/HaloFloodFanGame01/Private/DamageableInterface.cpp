@@ -15,19 +15,20 @@ float IDamageableInterface::TakeDamage(float DamageAmount, FVector Force, FDamag
 {
 	if (GetHealthComponent())
 	{
-		GetHealthComponent()->TakeDamage(DamageAmount, Force);
+		
+		GetHealthComponent()->TakeDamage(DamageAmount, Force, FVector(0,0,0), FName(""), EventInstigator, DamageCauser);
 	}
 	return 0;
 }
 
-float IDamageableInterface::TakePointDamage(FPointDamageEvent const& PointDamageEvent, FVector Force,
+float IDamageableInterface::TakePointDamage(FPointDamageEvent const& PointDamageEvent, float Force,
                                             AController* EventInstigator, AActor* DamageCauser)
 {
-	TakeDamage(PointDamageEvent.Damage, Force, FDamageEvent(), EventInstigator, DamageCauser);
-	if (GetHealthComponent())
-	{
-		GetHealthComponent()->TakeDamage(PointDamageEvent.Damage, Force, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.BoneName, EventInstigator, DamageCauser);
-	}
+	TakeDamage(PointDamageEvent.Damage, PointDamageEvent.ShotDirection * Force, FDamageEvent(UDamageType::StaticClass()), EventInstigator, DamageCauser);
+	// if (GetHealthComponent())
+	// {
+	// 	GetHealthComponent()->TakeDamage(PointDamageEvent.Damage, PointDamageEvent.ShotDirection * Force, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.BoneName, EventInstigator, DamageCauser);
+	// }
 	return 0;
 }
 
@@ -38,14 +39,20 @@ float IDamageableInterface::TakeRadialDamage(float Force,
 	AActor* HitActor = Cast<AActor>(this);
 	FVector Direction = (HitActor->GetActorLocation() - RadialDamageEvent.Origin);
 	Direction.Normalize();
-	if (GetHealthComponent())
-		GetHealthComponent()->TakeDamage(RadialDamageEvent.Params.BaseDamage, Direction * Force);
+	TakeDamage(RadialDamageEvent.Params.BaseDamage, Direction * Force, FDamageEvent(UDamageType::StaticClass()));
+	// if (GetHealthComponent())
+	// {
+	//  GetHealthComponent()->TakeDamage(RadialDamageEvent.Params.BaseDamage, Direction * Force);
+	// 	TakeDamage(RadialDamageEvent.Params.BaseDamage, Direction * Force, FDamageEvent(UDamageType::StaticClass()));
+	// }
+		
+	
 	return 0;
 }
-
-void IDamageableInterface::HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName)
-{
-}
+//
+// void IDamageableInterface::HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName)
+// {
+// }
 
 UHealthComponent* IDamageableInterface::GetHealthComponent()
 {

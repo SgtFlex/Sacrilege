@@ -57,7 +57,7 @@ void AHaloFloodFanGame01Projectile::OnOverlap(UPrimitiveComponent* OverlappedCom
 	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && (DamageableActor))
 	{
 		FPointDamageEvent PointDamageEvent = FPointDamageEvent(Damage, SweepResult, Direction, UDamageType::StaticClass());
-		DamageableActor->TakePointDamage(PointDamageEvent, Direction*Force, GetInstigator()->GetController(), this);
+		DamageableActor->TakePointDamage(PointDamageEvent, Force, GetInstigator()->GetController(), this);
 	}
 	if (OverlappedComponent->IsSimulatingPhysics())
 	{

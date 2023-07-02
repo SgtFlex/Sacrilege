@@ -21,7 +21,6 @@ AHaloFloodFanGame01GameMode::AHaloFloodFanGame01GameMode()
 void AHaloFloodFanGame01GameMode::BeginPlay()
 {
 	Super::BeginPlay();
-	
 	TArray<AActor*> OutActors;
 	
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AHaloSpawner::StaticClass(), OutActors);
@@ -31,11 +30,21 @@ void AHaloFloodFanGame01GameMode::BeginPlay()
 	}
 	AvailableSpawners = Spawners;
 	StartSet();
+	//ABaseCharacter::TestDelegate.BindSP(this, &AHaloFloodFanGame01GameMode::TestFunc);
 }
 
-void AHaloFloodFanGame01GameMode::OnEnemyKilled()
+void AHaloFloodFanGame01GameMode::OnEnemyKilled(AController* EventInstigator, AActor* DamageCauser)
 {
+	
+	if (APlayerController* PlayerController = Cast<APlayerController>(EventInstigator))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Enemy killed"));
+		PlayerScore += 1;
+		PlayerResource += 1;
+		OnScoreUpdated.Broadcast(PlayerScore);
+	}
 	CurrentEnemyCount--;
+	
 
 	if (curWave != maxWave)
 	{
@@ -182,6 +191,21 @@ void AHaloFloodFanGame01GameMode::OnSpawnerAvailable(AHaloSpawner* Spawner)
 void AHaloFloodFanGame01GameMode::GameFinished()
 {
 	UGameplayStatics::OpenLevel(GetWorld(), FName(UGameplayStatics::GetCurrentLevelName(GetWorld())));
+}
+
+int AHaloFloodFanGame01GameMode::GetPlayerResource(APlayerController* PlayerController)
+{
+	return PlayerResource;
+}
+
+void AHaloFloodFanGame01GameMode::TestFunc(ABaseCharacter* Character)
+{
+	UE_LOG(LogTemp, Warning, TEXT("ENEMY KILLED"));
+}
+
+int AHaloFloodFanGame01GameMode::GetPlayerScore(APlayerController* PlayerController)
+{
+	return PlayerScore;
 }
 
 UAudioComponent* AHaloFloodFanGame01GameMode::GetSoundtrackComponent()

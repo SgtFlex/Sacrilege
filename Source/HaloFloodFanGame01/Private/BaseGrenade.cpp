@@ -39,7 +39,7 @@ void ABaseGrenade::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void ABaseGrenade::Explode()
+void ABaseGrenade::Explode_Implementation()
 {
 	FRadialDamageEvent RadialDamageEvent;
 	RadialDamageEvent.Params = FRadialDamageParams(MaxExplosionDamage, MinExplosionDamage, InnerExplosionRadius, OuterExplosionRadius, ExplosionDamageFalloff);
@@ -72,19 +72,26 @@ void ABaseGrenade::Explode()
 	Destroy();
 }
 
-void ABaseGrenade::SetArmed(bool bNewArmed)
+void ABaseGrenade::SetArmed(bool NewArmed)
 {
-	bArmed = bNewArmed;
-	if (bArmed)
-		PickupComponent->SetEnabled(false);
-	else
-		PickupComponent->SetEnabled(true);
+	bArmed = NewArmed;
+	PickupComponent->SetEnabled(!bArmed);
 }
 
 void ABaseGrenade::Arm(float ArmTime)
 {
-	if (!ArmTime) ArmTime = FuseTime;
-	GetWorldTimerManager().SetTimer(FuseTimer, this, &ABaseGrenade::Explode, ArmTime);
+	if (ArmTime > 0)
+	{
+		if (!GetWorldTimerManager().TimerExists(FuseTimer) || ArmTime < GetWorldTimerManager().GetTimerRemaining(FuseTimer))
+		{
+			bArmed = true;
+			GetWorldTimerManager().SetTimer(FuseTimer, this, &ABaseGrenade::Explode, ArmTime);
+		}
+	} else
+	{
+		Explode();
+	}
+	
 }
 
 void ABaseGrenade::NotifyHit(UPrimitiveComponent* MyComp, AActor* Other, UPrimitiveComponent* OtherComp,
@@ -93,7 +100,7 @@ void ABaseGrenade::NotifyHit(UPrimitiveComponent* MyComp, AActor* Other, UPrimit
 	if (!bArmed) return
 	Super::NotifyHit(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, Hit);
 	Mesh->SetNotifyRigidBodyCollision(false);
-	Arm();
+	Arm(FuseTime);
 }
 
 void ABaseGrenade::Pickup(AHaloFloodFanGame01Character* Character)
@@ -108,18 +115,9 @@ void ABaseGrenade::Pickup(AHaloFloodFanGame01Character* Character)
 	
 }
 
-float ABaseGrenade::TakePointDamage(FPointDamageEvent const& PointDamageEvent, FVector Force, AController* Controller,
-	AActor* DamageCauser)
-{
-	this->Arm(FMath::RandRange(0.25, 0.5));
-	UE_LOG(LogTemp, Warning, TEXT("Logged point damage"));
-	return 0;
-}
-
 float ABaseGrenade::TakeDamage(float DamageAmount, FVector Force, FDamageEvent const& DamageEvent,
                                AController* EventInstigator, AActor* DamageCauser)
 {
 	this->Arm(FMath::RandRange(0.25, 0.5));
-	UE_LOG(LogTemp, Warning, TEXT("Logged damage"));
 	return 0;
 }

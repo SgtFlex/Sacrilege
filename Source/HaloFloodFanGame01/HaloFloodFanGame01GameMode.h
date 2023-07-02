@@ -11,6 +11,7 @@ class ABaseCharacter;
 class AHaloSpawner;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWaveStart, int, CurrentSet, int, CurrentWave);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreUpdated, int, NewScore);
 
 USTRUCT(BlueprintType)
 struct FSquadStruct
@@ -35,7 +36,7 @@ public:
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
-	void OnEnemyKilled();
+	void OnEnemyKilled(AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 	int GetCurrentWave();
 	void StartSet();
 	void FinishSet();
@@ -47,26 +48,49 @@ public:
 	void OnSpawnerAvailable(AHaloSpawner* Spawner);
 	void GameFinished();
 
+	UFUNCTION(BlueprintGetter)
+	int GetPlayerResource(APlayerController* PlayerController);
+
+	UFUNCTION()
+	void TestFunc(ABaseCharacter* Character);
+
+	UFUNCTION(BlueprintGetter)
+	int GetPlayerScore(APlayerController* PlayerController);
+
 	UFUNCTION()
 	UAudioComponent* GetSoundtrackComponent();
 
 	FTimerHandle SetFinishDelayTimer;
+
+	FOnScoreUpdated OnScoreUpdated;
 
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintAssignable)
 	FOnWaveStart OnWaveStart;
 
-	
-private:
+	UPROPERTY(BlueprintReadOnly)
 	int curWave = 0;
-	int maxWave = 3;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int maxWave = 5;
+	UPROPERTY(BlueprintReadOnly)
 	int curSet = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int maxSet = 3;
+
+	UPROPERTY(BlueprintReadWrite)
+	int PlayerResource = 0;
+
+	UPROPERTY(BlueprintReadWrite)
+	int PlayerScore = 0;
+private:
+	
 
 	int MaxWavePool = 5;
 	int CurWavePool = 5;
 	int MaxSquadCost = 1;
+	
+	
 	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

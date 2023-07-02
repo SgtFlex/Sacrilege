@@ -26,7 +26,7 @@ void UHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	// ...
-	
+
 }
 
 
@@ -43,7 +43,6 @@ float UHealthComponent::TakeDamage(float Damage, FVector Force, FVector HitLocat
 	if (GetHealth() <= 0) return 0;
 	if (ShieldAudioComponent) ShieldAudioComponent->Stop();
 	float DamageLeft = Damage;
-	//UE_LOG(LogTemp, Warning, TEXT("%s: %f %f TEST"), *GetOwner()->GetActorLabel(), GetHealth(), GetShields());
 	if (MaxShields > 0 && GetWorld())
 	{
 		GetOwner()->GetWorldTimerManager().ClearTimer(ShieldRegenTimer);
@@ -71,20 +70,17 @@ float UHealthComponent::TakeDamage(float Damage, FVector Force, FVector HitLocat
 		SetHealth(Health - DamageLeft);
 		if (Health <= 0)
 		{
-			//UE_LOG(LogTemp, Warning, TEXT("Health depleted"));
-			HealthDepleted(Damage, Force, HitLocation, HitBoneName);
+			HealthDepleted(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
 		}
 	}
-	//UE_LOG(LogTemp, Warning, TEXT("%s: %f"), *GetOwner()->GetActorLabel(), Health);
 	OnHealthUpdate.Broadcast(this);
 	return Damage;
 }
 
-void UHealthComponent::HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName)
+void UHealthComponent::HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
-	//UE_LOG(LogTemp, Warning, TEXT("Health depleted!"));
 	GetWorld()->GetTimerManager().ClearTimer(ShieldDelayTimerHandle);
-	OnHealthDepleted.Broadcast(Damage, Force, HitLocation, HitBoneName);
+	OnHealthDepleted.Broadcast(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
 }
 
 float UHealthComponent::GetHealth() const

@@ -172,7 +172,7 @@ void AGunBase::Fire_Implementation()
 					FPointDamageEvent PointDamageEvent = FPointDamageEvent(Damage * FalloffCurve->GetFloatValue(Hit.Distance/Range), Hit, HitDir, UDamageType::StaticClass());
 					
 					if (APawn* OwningPawn = Cast<APawn>(GetOwner()))
-						HitActor->TakePointDamage(PointDamageEvent, HitDir*Force, OwningPawn->GetController(), this);
+						HitActor->TakePointDamage(PointDamageEvent, Force, OwningPawn->GetController(), this);
 				}
 			}
 			

@@ -138,7 +138,7 @@ protected:
 	UFUNCTION()
 	void MeleeUpdate(float Alpha);
 
-	virtual void HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName) override;
+	void OnHealthDepleted_Implementation(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;

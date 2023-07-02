@@ -21,7 +21,7 @@ class HALOFLOODFANGAME01_API UHaloHUDWidget : public UUserWidget
 	GENERATED_BODY()
 
 	virtual void NativeConstruct() override;
-
+	
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 public:
@@ -63,6 +63,9 @@ public:
 	UFUNCTION()
 	void UpdateHUDMagazineElements(); //Maybe clean this up later
 
+	UFUNCTION()
+	void OnScoreUpdated(int NewScore);
+
 	UFUNCTION(BlueprintNativeEvent)
 	void SetMagazineReserveCounter(int32 MagazineCount);
 
@@ -85,7 +88,6 @@ public:
 	UFUNCTION()
 	void UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredGun);
 
-	void Test();
 	UFUNCTION()
 	void UpdateSetAndWaveCount(int Set, int Wave);
 
@@ -150,6 +152,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UTextBlock* IncenCounter;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	class UTextBlock* ScoreCounter;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UTextBlock* AmmoReserveCounter;

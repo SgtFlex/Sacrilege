@@ -63,10 +63,6 @@ public:
 
 	virtual void GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon) override;
 
-	void OnPossessed(AController* Controller);
-	
-	void OnUnpossessed(AController* OldController);
-
 public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UCameraShakeBase> FiringCameraShake;
@@ -76,19 +72,19 @@ public:
 	TSubclassOf<AActor> ProjectileClass;
 
 	//Damage of the hitscan applied to the hit actor
-	UPROPERTY(EditAnywhere, meta = (Category="Attributes|Hitscan", EditCondition="!ProjectileClass"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes|Hitscan", EditCondition="!ProjectileClass"))
 	float Damage = 15;
 
 	//Force of the hitscan applied to the hit component if it simulates physics
-	UPROPERTY(EditAnywhere, meta = (Category="Attributes|Hitscan", EditCondition="!ProjectileClass"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes|Hitscan", EditCondition="!ProjectileClass"))
 	float Force = 1000;
 
 	//Fire rate of the gun in bullets per minute
-	UPROPERTY(EditAnywhere, meta = (Category="Attributes"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
 	float FireRate = 500;
 
 	//Amount of hitscan/projectiles that are fired simultaneously
-	UPROPERTY(EditAnywhere, meta = (Category="Attributes"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
 	int32 Multishot = 1;
 
 	//Controls how many bullets are fired when the trigger is pulled. 0 means full auto, 1 means semi auto, 2+ is burst fire of whatever amount is provided
@@ -100,7 +96,7 @@ public:
 	float BurstRetriggerDelay = 0.15f;
 
 	//Amount of seconds required to reload the gun
-	UPROPERTY(EditAnywhere, meta = (Category="Attributes"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
 	float ReloadSpeed = 3;
 	
 	FTimerHandle ReloadTimer;
@@ -129,19 +125,19 @@ public:
 	UCurveFloat* FalloffCurve;
 
 	//The maximum bullets in a magazine
-	UPROPERTY(EditAnywhere, meta = (Category="Attributes"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
 	int32 MaxMagazine = 32;
 
 	//The amount of bullets the weapon spawns with in a magazine
-	UPROPERTY(EditAnywhere, meta = (Category="Attributes"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
 	int32 CurMagazine = MaxMagazine;
 
 	//The maximum amount of bullets the weapon can have in reserve.
-	UPROPERTY(EditAnywhere, meta = (Category="Attributes"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
 	int32 MaxReserve = 160;
 
 	//The amount of bullets this weapon spawns with in reserve
-	UPROPERTY(EditAnywhere, meta = (Category="Attributes"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
 	int32 CurReserve = MaxReserve;
 	
 	UPROPERTY(EditAnywhere, meta = (Category="SFX"))

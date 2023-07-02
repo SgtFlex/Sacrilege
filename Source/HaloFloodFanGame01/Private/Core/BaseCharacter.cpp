@@ -44,7 +44,7 @@ void ABaseCharacter::BeginPlay()
 	}
 	//UE_LOG(LogTemp, Warning, TEXT("Char: %s %f"), *GetActorLabel(), GetHealthComponent()->GetHealth());
 	//if (GetHealthComponent()) UE_LOG(LogTemp, Warning, TEXT("%s's Health component is owned by %s (Should be %s)"), *GetActorLabel(), *GetHealthComponent()->GetOwner()->GetActorLabel(), *GetActorLabel());
-	if (GetHealthComponent()) GetHealthComponent()->OnHealthDepleted.AddDynamic(this, &ABaseCharacter::HealthDepleted);
+	if (GetHealthComponent()) GetHealthComponent()->OnHealthDepleted.AddDynamic(this, &ABaseCharacter::OnHealthDepleted);
 }
 
 // Called every frame
@@ -60,9 +60,8 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 }
 
-float ABaseCharacter::TakePointDamage_Implementation(FPointDamageEvent const& PointDamageEvent, FVector Force, AController* EventInstigator, AActor* DamageCauser)
+float ABaseCharacter::TakePointDamage_Implementation(FPointDamageEvent const& PointDamageEvent, float Force, AController* EventInstigator, AActor* DamageCauser)
 {
-
 	float x = IDamageableInterface::TakePointDamage(PointDamageEvent, Force, EventInstigator, DamageCauser);
 	if (EventInstigator && Cast<ABaseAIController>(GetController()))
 	{
@@ -73,7 +72,7 @@ float ABaseCharacter::TakePointDamage_Implementation(FPointDamageEvent const& Po
 	{
 		if (HurtAnim)
 		{
-			StunAmount = StunAmount + (Force.Length()/50);
+			StunAmount = StunAmount + (Force/50);
 			if (StunAmount >= 100  && !GetMesh()->GetAnimInstance()->Montage_IsPlaying(HurtAnim))
 			{
 				Stun();
@@ -122,7 +121,7 @@ float ABaseCharacter::TakeDamage_Implementation(float DamageAmount, FVector Forc
 	return IDamageableInterface::TakeDamage(DamageAmount, Force, DamageEvent, EventInstigator, DamageCauser);
 }
 
-void ABaseCharacter::HealthDepleted_Implementation(float Damage, FVector DamageForce, FVector HitLocation, FName HitBoneName)
+void ABaseCharacter::OnHealthDepleted_Implementation(float Damage, FVector DamageForce, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
 	if (BloodDecalMaterial) UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(100, 100, 100), GetActorLocation(), FRotator(-90,0,0));
 	if (DeathSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), DeathSound, GetActorLocation());
@@ -133,9 +132,11 @@ void ABaseCharacter::HealthDepleted_Implementation(float Damage, FVector DamageF
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->AddImpulseAtLocation(DamageForce, HitLocation, HitBoneName);
-	OnKilled.Broadcast();
+	OnKilled.Broadcast(EventInstigator, DamageCauser);
+	if (EventInstigator) UE_LOG(LogTemp, Warning, TEXT("%s"), *EventInstigator->GetActorLabel());
 	GetWorld()->GetTimerManager().SetTimer(RagdollTimer, this, &ABaseCharacter::RagdollSettled, 1);
 	if (GetController()) GetController()->Destroy();
+	//TestDelegate.Execute(this);
 	if (EquippedWep)
 		DropWeapon();
 	

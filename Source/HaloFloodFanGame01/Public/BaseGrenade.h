@@ -66,17 +66,18 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	virtual void Explode();
+	UFUNCTION(BlueprintNativeEvent)
+	void Explode();
 
-	virtual void SetArmed(bool bNewArmed);
+	void SetArmed(bool NewArmed = false);
 
-	void Arm(float ArmTime = NULL);
+	void Arm(float ArmTime = 4);
 
 	virtual void NotifyHit(UPrimitiveComponent* MyComp, AActor* Other, UPrimitiveComponent* OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult& Hit) override;
 
 	virtual void Pickup(AHaloFloodFanGame01Character* Character) override;
 
-	virtual float TakePointDamage(FPointDamageEvent const& PointDamageEvent, FVector Force, AController*, AActor* DamageCauser) override;
+	// virtual float TakePointDamage(FPointDamageEvent const& PointDamageEvent, FVector Force, AController*, AActor* DamageCauser) override;
 
 	//virtual float TakeRadialDamage(float Force, FRadialDamageEvent const& RadialDamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
