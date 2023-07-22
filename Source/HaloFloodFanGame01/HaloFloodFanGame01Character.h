@@ -11,6 +11,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "HaloFloodFanGame01Character.generated.h"
 
+class IInteractableInterface;
+class USphereComponent;
+class UBoxComponent;
 class UHaloHUDWidget;
 class ABaseGrenade;
 class UInputComponent;
@@ -35,6 +38,9 @@ class AHaloFloodFanGame01Character : public ABaseCharacter
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
+
+	UPROPERTY(EditAnywhere)
+	USphereComponent* InteractionSphere;
 
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
@@ -64,6 +70,9 @@ class AHaloFloodFanGame01Character : public ABaseCharacter
 	class UInputAction* ReloadAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* SwitchGrenadeAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* ThrowGrenadeAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
@@ -80,6 +89,12 @@ public:
 
 	/** Property replication */
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	UFUNCTION()
+	virtual void OnInteractionSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+
+	UFUNCTION()
+	virtual void OnInteractionSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 protected:
 	virtual void BeginPlay();
@@ -102,6 +117,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void Interact();
+
+	UFUNCTION(BlueprintCallable)
+	void SwitchGrenadeType();
 
 	virtual void PossessedBy(AController* NewController) override;
 
@@ -172,6 +190,9 @@ public:
 	int32 IncenCount = 0;
 
 private:
+	UPROPERTY()
+	AActor* InteractableActor;
+	
 	FTimerHandle ShieldDelayTimerHandle;
 
 	FTimeline MeleeTimeline;
@@ -181,6 +202,7 @@ private:
 
 	FHitResult PlayerAim;
 
+	int CurGrenadeTypeI = 0;
 	
 
 protected:

@@ -8,6 +8,7 @@
 #include "GameFramework/Actor.h"
 #include "BaseGrenade.generated.h"
 
+class UProjectileMovementComponent;
 class UPickupComponent;
 class UNiagaraSystem;
 UCLASS()
@@ -57,6 +58,9 @@ public:
 	UPROPERTY(EditAnywhere)
 	UPickupComponent* PickupComponent;
 
+	UPROPERTY(EditAnywhere)
+	UProjectileMovementComponent* ProjectileMovementComponent;
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -81,5 +85,5 @@ public:
 
 	//virtual float TakeRadialDamage(float Force, FRadialDamageEvent const& RadialDamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
-	virtual float TakeDamage(float DamageAmount, FVector Force, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	virtual float CustomOnTakeAnyDamage(float DamageAmount, FVector Force, AController* EventInstigator, AActor* DamageCauser) override;
 };

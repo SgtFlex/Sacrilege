@@ -41,7 +41,7 @@ void AHaloFloodFanGame01GameMode::OnEnemyKilled(AController* EventInstigator, AA
 		UE_LOG(LogTemp, Warning, TEXT("Enemy killed"));
 		PlayerScore += 1;
 		PlayerResource += 1;
-		OnScoreUpdated.Broadcast(PlayerScore);
+		OnScoreUpdated.Broadcast(PlayerController, PlayerScore, PlayerResource);
 	}
 	CurrentEnemyCount--;
 	
@@ -91,14 +91,17 @@ void AHaloFloodFanGame01GameMode::StartSet()
 	curSet++;
 	curWave = 0;
 	StartWave();
-	SoundtrackComponent->SetSound(Soundtracks[FMath::RandRange(0, Soundtracks.Num()-1)]);
-	SoundtrackComponent->FadeIn(3, 0.3);
+	if (bEnableMusic)
+	{
+		SoundtrackComponent->SetSound(Soundtracks[FMath::RandRange(0, Soundtracks.Num()-1)]);
+		SoundtrackComponent->FadeIn(3, 0.3);
+	}
 }
 
 void AHaloFloodFanGame01GameMode::FinishSet()
 {
 	MaxSquadCost = (MaxSquadCost + 1) * 2;
-	GetSoundtrackComponent()->FadeOut(10, 0);
+	if (bEnableMusic) GetSoundtrackComponent()->FadeOut(10, 0);
 	GetWorldTimerManager().SetTimer(SetFinishDelayTimer, this, &AHaloFloodFanGame01GameMode::StartSet, 10);
 }
 
@@ -196,6 +199,11 @@ void AHaloFloodFanGame01GameMode::GameFinished()
 int AHaloFloodFanGame01GameMode::GetPlayerResource(APlayerController* PlayerController)
 {
 	return PlayerResource;
+}
+
+int AHaloFloodFanGame01GameMode::SetPlayerResource(APlayerController* PlayerController, int NewPlayerResource)
+{
+	return PlayerResource = NewPlayerResource;
 }
 
 void AHaloFloodFanGame01GameMode::TestFunc(ABaseCharacter* Character)

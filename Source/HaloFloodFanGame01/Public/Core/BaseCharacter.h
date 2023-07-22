@@ -18,6 +18,17 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDropWeapon);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnKilled, AController*, Instigator, AActor*, Causer);
 DECLARE_DELEGATE_OneParam(FTest, ABaseCharacter*);
 
+USTRUCT()
+struct FGrenadeStruct
+{
+	GENERATED_BODY()
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<ABaseGrenade> GrenadeClass;
+	UPROPERTY(EditAnywhere)
+	int GrenadeAmount;
+	
+};
+
 UCLASS()
 class HALOFLOODFANGAME01_API ABaseCharacter : public ACharacter, public IDamageableInterface
 {
@@ -39,10 +50,10 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	UFUNCTION(BlueprintNativeEvent)
-	float TakePointDamage(FPointDamageEvent const& PointDamageEvent, float Force, AController* EventInstigator, AActor* DamageCauser) override;
-
+	float CustomOnTakeAnyDamage(float DamageAmount, FVector Force, AController* EventInstigator, AActor* DamageCauser) override;
+	
 	UFUNCTION(BlueprintNativeEvent)
-	float TakeDamage(float DamageAmount, FVector Force, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	float CustomTakePointDamage(FPointDamageEvent const& PointDamageEvent, float Force, AController* EventInstigator, AActor* DamageCauser) override;
 	
 	UFUNCTION(BlueprintNativeEvent)
 	void OnHealthDepleted(float Damage, FVector Force, FVector HitLocation = FVector(0,0,0), FName HitBoneName = "", AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
@@ -120,6 +131,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category="Loadout")
 	TSubclassOf<ABaseGrenade> EquippedGrenadeClass;
+
+	UPROPERTY(EditAnywhere)
+	TMap<TSubclassOf<ABaseGrenade>, int> GrenadeInventory;
 
 	UPROPERTY(EditAnywhere)
 	UAnimMontage* FiringAnim;

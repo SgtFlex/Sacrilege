@@ -78,6 +78,8 @@ public:
 	class UAISenseConfig_Damage* Damage;
 	UPROPERTY()
 	class UAISenseConfig_Team* Team;
+	UPROPERTY()
+	class UAISenseConfig_Touch* Touch;
 
 	UPROPERTY(EditAnywhere)
 	int TeamNumber = 2;

@@ -11,7 +11,7 @@ class ABaseCharacter;
 class AHaloSpawner;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWaveStart, int, CurrentSet, int, CurrentWave);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreUpdated, int, NewScore);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnScoreUpdated, APlayerController*, PlayerController, int, NewScore, int, NewResource);
 
 USTRUCT(BlueprintType)
 struct FSquadStruct
@@ -51,6 +51,9 @@ public:
 	UFUNCTION(BlueprintGetter)
 	int GetPlayerResource(APlayerController* PlayerController);
 
+	UFUNCTION(BlueprintCallable)
+	int SetPlayerResource(APlayerController* PlayerController, int NewPlayerResource);
+
 	UFUNCTION()
 	void TestFunc(ABaseCharacter* Character);
 
@@ -62,6 +65,7 @@ public:
 
 	FTimerHandle SetFinishDelayTimer;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, BlueprintAssignable)
 	FOnScoreUpdated OnScoreUpdated;
 
 public:
@@ -90,7 +94,8 @@ private:
 	int CurWavePool = 5;
 	int MaxSquadCost = 1;
 	
-	
+	UPROPERTY(EditDefaultsOnly)
+	bool bEnableMusic = true;
 	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

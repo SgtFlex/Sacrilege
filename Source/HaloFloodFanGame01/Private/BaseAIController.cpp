@@ -16,6 +16,7 @@
 #include "Perception/AISenseConfig_Hearing.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "Perception/AISenseConfig_Team.h"
+#include "Perception/AISenseConfig_Touch.h"
 
 ABaseAIController::ABaseAIController()
 {
@@ -26,11 +27,13 @@ ABaseAIController::ABaseAIController()
 	Hearing = CreateDefaultSubobject<UAISenseConfig_Hearing>(TEXT("Hearing Config"));
 	Damage = CreateDefaultSubobject<UAISenseConfig_Damage>(TEXT("Damage Config"));
 	Team = CreateDefaultSubobject<UAISenseConfig_Team>(TEXT("Team Config"));
+	Touch = CreateDefaultSubobject<UAISenseConfig_Touch>(TEXT("Touch Config"));
 
 	AIPerceptionComponent->ConfigureSense(*Sight);
 	AIPerceptionComponent->ConfigureSense(*Hearing);
 	AIPerceptionComponent->ConfigureSense(*Damage);
 	AIPerceptionComponent->ConfigureSense(*Team);
+	AIPerceptionComponent->ConfigureSense(*Touch);
 	AIPerceptionComponent->SetDominantSense(*Sight->GetSenseImplementation());
 }
 
@@ -74,8 +77,11 @@ ETeamAttitude::Type ABaseAIController::GetTeamAttitudeTowards(const AActor& Othe
 
 void ABaseAIController::UpdatedPerception(AActor* Actor, FAIStimulus Stimulus, bool AlertedByAllies)
 {
+	
 	if (GetTeamAttitudeTowards(*Actor)!=ETeamAttitude::Hostile)
 		return;
+
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *Stimulus.Type.Name.ToString());
 
 	TArray<AActor*> PerceivedActors;
 	if (AIPerceptionComponent && Sight) AIPerceptionComponent->GetCurrentlyPerceivedActors(Sight->GetSenseImplementation(), PerceivedActors);
@@ -136,7 +142,7 @@ void ABaseAIController::AlertAllies(float AlertRadius, AActor* Actor, FAIStimulu
 				if (AIController->TeamNumber == TeamNumber)
 				{
 					AIController->UpdatedPerception(Actor, Stimulus, true);
-					UE_LOG(LogTemp, Warning, TEXT("%s"), *FoundActor->GetActorLabel())
+					//UE_LOG(LogTemp, Warning, TEXT("%s"), *FoundActor->GetActorLabel())
 				}
 			}
 		}

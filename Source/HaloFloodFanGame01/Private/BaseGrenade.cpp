@@ -8,6 +8,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "PickupComponent.h"
 #include "Engine/DamageEvents.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 #include "HaloFloodFanGame01/HaloFloodFanGame01Character.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -22,7 +23,8 @@ ABaseGrenade::ABaseGrenade()
 	Mesh->SetNotifyRigidBodyCollision(true);
 
 	PickupComponent = CreateDefaultSubobject<UPickupComponent>("PickupComp");
-	PickupComponent->SetupAttachment(Mesh);
+
+	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>("ProjectileMovementComp");
 	RootComponent = Mesh;
 }
 
@@ -63,10 +65,10 @@ void ABaseGrenade::Explode_Implementation()
 		// {
 		// 	HitResult.GetComponent()->AddImpulse(Force*ExplosionForce, HitResult.BoneName);
 		// }
-		UE_LOG(LogTemp, Warning, TEXT("Hit actor: %s"), *HitActor->GetActorLabel());
+		//UE_LOG(LogTemp, Warning, TEXT("Hit actor: %s"), *HitActor->GetActorLabel());
 		if (IDamageableInterface* HitDamageable = Cast<IDamageableInterface>(HitActor))
 		{
-			HitDamageable->TakeRadialDamage(ExplosionForce, RadialDamageEvent);
+			HitDamageable->CustomTakeRadialDamage(ExplosionForce, RadialDamageEvent, GetInstigator()->GetController(), this);
 		}
 	}
 	Destroy();
@@ -106,16 +108,20 @@ void ABaseGrenade::NotifyHit(UPrimitiveComponent* MyComp, AActor* Other, UPrimit
 void ABaseGrenade::Pickup(AHaloFloodFanGame01Character* Character)
 {
 	IPickupInterface::Pickup(Character);
-
-	if (Character->FragCount < 4)
+	if (!Character->GrenadeInventory.Contains(this->GetClass())) return;
+	UE_LOG(LogTemp, Warning, TEXT("Found grenade"));
+	int& GrenadeAmount = *Character->GrenadeInventory.Find(this->GetClass());
+	if (GrenadeAmount < 4)
 	{
-		Character->SetFragCount(Character->FragCount+1);
+		GrenadeAmount += 1;
+		UE_LOG(LogTemp, Warning, TEXT("%d"), GrenadeAmount);
 		Destroy();
 	}
 	
+	
 }
 
-float ABaseGrenade::TakeDamage(float DamageAmount, FVector Force, FDamageEvent const& DamageEvent,
+float ABaseGrenade::CustomOnTakeAnyDamage(float DamageAmount, FVector Force,
                                AController* EventInstigator, AActor* DamageCauser)
 {
 	this->Arm(FMath::RandRange(0.25, 0.5));

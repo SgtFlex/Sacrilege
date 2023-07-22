@@ -42,6 +42,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	UNiagaraSystem* HitPFX;
 
+private:
+	UPROPERTY()
+	FTimerHandle DespawnTimerHandle;
+
+	UPROPERTY()
+	UAudioComponent* IdleSoundComponent;
+
 public:
 	AHaloFloodFanGame01Projectile();
 
@@ -50,6 +57,9 @@ public:
 	UFUNCTION()
 	void OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 
+	UFUNCTION(BlueprintNativeEvent)
+	void OnProjectileOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+	
 	/** Returns CollisionComp subobject **/
 	USphereComponent* GetCollisionComp() const { return CollisionComp; }
 	/** Returns ProjectileMovement subobject **/

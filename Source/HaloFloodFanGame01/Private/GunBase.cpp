@@ -8,6 +8,7 @@
 #include "Engine/DamageEvents.h"
 #include "HaloFloodFanGame01/HaloFloodFanGame01Character.h"
 #include "Perception/AISense_Hearing.h"
+#include "Perception/AISense_Sight.h"
 
 
 // Sets default values
@@ -99,7 +100,7 @@ void AGunBase::Fire_Implementation()
 	CurMagazine--;
 	ABaseCharacter* OwningChar = Cast<ABaseCharacter>(GetOwner());
 	if (!OwningChar) return;
-	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, OwningChar);
+	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, OwningChar, 0.0f);
 	if (OwningChar->FiringAnim) OwningChar->GetMesh()->GetAnimInstance()->Montage_Play(OwningChar->FiringAnim);
 	if (AHaloFloodFanGame01Character* Char = Cast<AHaloFloodFanGame01Character>(GetOwner()))
 	{
@@ -116,7 +117,7 @@ void AGunBase::Fire_Implementation()
 		if (ProjectileClass)
 		{
 			FVector Location = Mesh->DoesSocketExist("Muzzle") ? Mesh->GetSocketLocation("Muzzle") : GetActorLocation() + GetActorForwardVector()*50000.0f;
-			FRotator Rotation = OwningChar->GetBaseAimRotation();
+			FRotator Rotation = OwningChar->GetBaseAimRotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
 			FActorSpawnParameters ActorSpawnParameters;
 			ActorSpawnParameters.Owner = this;
 			ActorSpawnParameters.Instigator = Cast<ABaseCharacter>(this->GetOwner());
@@ -132,12 +133,17 @@ void AGunBase::Fire_Implementation()
 			EyeRotation = EyeRotation + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
 			TraceEnd = TraceStart + EyeRotation.Vector()*Range;
 			FCollisionQueryParams CollisionParameters;
+			TArray<AActor*> ActorsToIgnore;
+			ActorsToIgnore.Add(this);
+			ActorsToIgnore.Add(GetOwner());
 			CollisionParameters.AddIgnoredActor(this);
 			CollisionParameters.AddIgnoredActor(GetAttachParentActor());
-			GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParameters);
+			//GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParameters);
+			UKismetSystemLibrary::SphereTraceSingle(GetWorld(), TraceStart, TraceEnd, 20, UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Camera), false, ActorsToIgnore, EDrawDebugTrace::None, Hit, true, FLinearColor::Red, FLinearColor::Green, 5);
 			TraceHit = Hit.bBlockingHit;
 			//DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor(255, 0, 0), false, 3);
 			IDamageableInterface* HitActor = Cast<IDamageableInterface>(Hit.GetActor());
+			
 			if (Mesh->DoesSocketExist("Muzzle") && TrailPFX)
 			{
 				FVector TrailEnd = (TraceHit) ? Hit.ImpactPoint : TraceEnd;
@@ -146,7 +152,8 @@ void AGunBase::Fire_Implementation()
 			}
 			if (Hit.bBlockingHit)
 			{
-				
+				if (HitSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, Hit.Location);
+				UAISense_Hearing::ReportNoiseEvent(GetWorld(), Hit.Location, 1.0f, OwningChar);
 				FVector ForceVector = (TraceEnd-TraceStart);
 				ForceVector.Normalize();
 			
@@ -172,7 +179,7 @@ void AGunBase::Fire_Implementation()
 					FPointDamageEvent PointDamageEvent = FPointDamageEvent(Damage * FalloffCurve->GetFloatValue(Hit.Distance/Range), Hit, HitDir, UDamageType::StaticClass());
 					
 					if (APawn* OwningPawn = Cast<APawn>(GetOwner()))
-						HitActor->TakePointDamage(PointDamageEvent, Force, OwningPawn->GetController(), this);
+						HitActor->CustomTakePointDamage(PointDamageEvent, Force, OwningPawn->GetController(), this);
 				}
 			}
 			

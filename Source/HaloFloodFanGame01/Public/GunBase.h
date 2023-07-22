@@ -146,6 +146,9 @@ public:
 	UPROPERTY(EditAnywhere, meta = (Category="SFX"))
 	USoundBase* ReloadSound;
 
+	UPROPERTY(EditAnywhere, meta = (Category="SFX"))
+	USoundBase* HitSound;
+
 	UPROPERTY(EditAnywhere, meta = (Category="HUD"))
 	UTexture2D* CrosshairTexture;
 	
