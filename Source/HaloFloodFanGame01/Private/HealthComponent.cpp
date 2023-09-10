@@ -9,6 +9,7 @@
 #include "Core/BaseCharacter.h"
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values for this component's properties
 UHealthComponent::UHealthComponent()
@@ -20,6 +21,14 @@ UHealthComponent::UHealthComponent()
 	// ...
 }
 
+void UHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	// Here we list the variables we want to replicate
+	DOREPLIFETIME(UHealthComponent, Health);
+	DOREPLIFETIME(UHealthComponent, Shields);
+}
 
 // Called when the game starts
 void UHealthComponent::BeginPlay()
@@ -41,46 +50,87 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 float UHealthComponent::TakeDamage(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser, bool bIgnoreShields, bool bIgnoreHealthArmor, bool bIgnoreShieldArmor)
 {
 	if (GetHealth() <= 0) return 0;
-	if (ShieldAudioComponent) ShieldAudioComponent->Stop();
-	float DamageLeft = Damage;
-	if (MaxShields > 0 && GetWorld())
+
+	if (GetOwner()->HasAuthority())
 	{
+		float DamageLeft = Damage;
+		if (MaxShields > 0)
+		{
+			if (ShieldAudioComponent) ShieldAudioComponent->Stop();
+			GetOwner()->GetWorldTimerManager().ClearTimer(ShieldRegenTimer);
+			GetOwner()->GetWorldTimerManager().SetTimer(ShieldDelayTimerHandle, this, &UHealthComponent::StartShieldRegen, ShieldRegenDelay);
+		}
+		if (Shields > 0)
+		{
+			DamageLeft = Damage - Shields;
+			SetShields(Shields - Damage);
+			if (Shields <= 0)
+			{
+				BreakShields();
+			} else
+			{
+				if (ShieldMat)
+				{
+					UMeshComponent* MeshComp = Cast<UMeshComponent>(GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
+					MeshComp->SetOverlayMaterial(ShieldMat);
+					UMaterialInstanceDynamic* ShieldMatDynamic = UMaterialInstanceDynamic::Create(ShieldMat, this->GetOwner());
+					ShieldMatDynamic->SetScalarParameterValue(FName("Intensity"), 40 * (Shields/MaxShields));
+				}
+			}
+		}
+		if (Health > 0 && Shields <= 0)
+		{
+			if (SetHealth(Health - DamageLeft) <= 0)
+			{
+				HealthDepleted(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
+			}
+		}
+		
+		OnHealthUpdate.Broadcast(this);
+		Multi_TakeDamage(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
+	}
+	
+	return Damage;
+}
+
+void UHealthComponent::Server_TakeDamage_Implementation(float Damage, FVector Force, FVector HitLocation,
+	FName HitBoneName, AController* EventInstigator, AActor* DamageCauser, bool bIgnoreShields, bool bIgnoreHealthArmor,
+	bool bIgnoreShieldArmor)
+{
+	Multi_TakeDamage(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
+}
+
+void UHealthComponent::Multi_TakeDamage_Implementation(float Damage, FVector Force, FVector HitLocation,
+	FName HitBoneName, AController* EventInstigator, AActor* DamageCauser, bool bIgnoreShields, bool bIgnoreHealthArmor,
+	bool bIgnoreShieldArmor)
+{
+	//if (GetHealth() <= 0) return;
+	UE_LOG(LogTemp, Warning, TEXT("Called TakeDamage on: %s. New Health: %f"), *UEnum::GetValueAsString(GetOwnerRole()), GetHealth());
+	if (MaxShields > 0)
+	{
+		if (ShieldAudioComponent) ShieldAudioComponent->Stop();
 		GetOwner()->GetWorldTimerManager().ClearTimer(ShieldRegenTimer);
 		GetOwner()->GetWorldTimerManager().SetTimer(ShieldDelayTimerHandle, this, &UHealthComponent::StartShieldRegen, ShieldRegenDelay);
 	}
-		
-	if (Shields > 0)
+
+	if (GetHealth() <= 0)
 	{
-		DamageLeft = Damage - Shields;
-		
-		 if (ShieldMat)
-		 {
-		 	UMeshComponent* MeshComp = Cast<UMeshComponent>(GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
-		 	MeshComp->SetOverlayMaterial(ShieldMat);
-		 	UMaterialInstanceDynamic* ShieldMatDynamic = UMaterialInstanceDynamic::Create(ShieldMat, this->GetOwner());
-		 	ShieldMatDynamic->SetScalarParameterValue(FName("Intensity"), 40 * (Shields/MaxShields));
-		 }
-		if (SetShields(Shields - Damage) <= 0)
-		{
-			BreakShields();
-		}
-	} 
-	if (Shields <= 0 && Health > 0)
-	{
-		SetHealth(Health - DamageLeft);
-		if (Health <= 0)
-		{
-			HealthDepleted(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
-		}
+		UE_LOG(LogTemp, Warning, TEXT("Health reached 0 on: %s"), *UEnum::GetValueAsString(GetOwnerRole()));
+		HealthDepleted(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
 	}
 	OnHealthUpdate.Broadcast(this);
-	return Damage;
 }
 
 void UHealthComponent::HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Called HealthDepleted on: %s"), *UEnum::GetValueAsString(GetOwnerRole()));
 	GetWorld()->GetTimerManager().ClearTimer(ShieldDelayTimerHandle);
 	OnHealthDepleted.Broadcast(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
+}
+
+bool UHealthComponent::IsAlive()
+{
+	return (Health > 0);
 }
 
 float UHealthComponent::GetHealth() const
@@ -88,9 +138,9 @@ float UHealthComponent::GetHealth() const
 	return Health;
 }
 
-void UHealthComponent::SetHealth(float NewHealth)
+float UHealthComponent::SetHealth(float NewHealth)
 {
-	this->Health = FMath::Clamp(NewHealth, 0, MaxHealth);
+	return this->Health = FMath::Clamp(NewHealth, 0, MaxHealth);
 }
 
 float UHealthComponent::GetMaxHealth() const

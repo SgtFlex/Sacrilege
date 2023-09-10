@@ -38,7 +38,7 @@ void AHaloFloodFanGame01GameMode::OnEnemyKilled(AController* EventInstigator, AA
 	
 	if (APlayerController* PlayerController = Cast<APlayerController>(EventInstigator))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Enemy killed"));
+		
 		PlayerScore += 1;
 		PlayerResource += 1;
 		OnScoreUpdated.Broadcast(PlayerController, PlayerScore, PlayerResource);

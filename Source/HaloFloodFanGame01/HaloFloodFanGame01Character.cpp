@@ -17,6 +17,7 @@
 #include "Engine/DamageEvents.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "GameFramework/SpectatorPawn.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -83,11 +84,24 @@ void AHaloFloodFanGame01Character::BeginPlay()
 	InteractionSphere->OnComponentBeginOverlap.AddDynamic(this, &AHaloFloodFanGame01Character::OnInteractionSphereBeginOverlap);
 	InteractionSphere->OnComponentEndOverlap.AddDynamic(this, &AHaloFloodFanGame01Character::OnInteractionSphereEndOverlap);
 
-	if (HolsteredGunClass)
-		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(HolsteredGunClass)));
+	if (HolsteredWeaponClass)
+		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(HolsteredWeaponClass)));
 
 	//Add Input Mapping Context
-	
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		PlayerController = PC;
+		//check(IsLocallyControlled());
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		{
+			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+		}
+
+		if (IsLocallyControlled() && PlayerHUDClass) {
+			PlayerHUD = CreateWidget<UUserWidget>(PlayerController, PlayerHUDClass);
+			PlayerHUD->AddToPlayerScreen();
+		}
+	}
 }
 
 void AHaloFloodFanGame01Character::Tick(float DeltaSeconds)
@@ -100,6 +114,9 @@ void AHaloFloodFanGame01Character::Tick(float DeltaSeconds)
 	FCollisionQueryParams CollisionParameters;
 	CollisionParameters.AddIgnoredActor(this);
 	GetWorld()->LineTraceSingleByChannel(PlayerAim, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParameters);
+	// FRotator Rot = GetFirstPersonCameraComponent()->GetComponentRotation();
+	// Rot.Pitch = UKismetMathLibrary::NormalizeAxis(RemoteViewPitch);
+	// FirstPersonCameraComponent->SetWorldRotation(Rot);
 }
 
 FHitResult AHaloFloodFanGame01Character::GetPlayerAim()
@@ -113,6 +130,7 @@ FHitResult AHaloFloodFanGame01Character::GetPlayerAim()
 void AHaloFloodFanGame01Character::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	// Set up action bindings
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
 	if (EnhancedInputComponent)
 	{
@@ -143,16 +161,7 @@ void AHaloFloodFanGame01Character::SetupPlayerInputComponent(class UInputCompone
 		EnhancedInputComponent->BindAction(ThrowGrenadeAction, ETriggerEvent::Triggered, this, &AHaloFloodFanGame01Character::ThrowEquippedGrenade);
 
 		EnhancedInputComponent->BindAction(UseEquipmentAction, ETriggerEvent::Triggered, this, &AHaloFloodFanGame01Character::UseEquipment);
-		UE_LOG(LogTemp, Warning, TEXT("Added inputs"));
-	} else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Missing EnhancedInputComponent!"));
 	}
-}
-
-void AHaloFloodFanGame01Character::OnPossessed()
-{
-	
 }
 
 void AHaloFloodFanGame01Character::Move(const FInputActionValue& Value)
@@ -170,8 +179,9 @@ void AHaloFloodFanGame01Character::Move(const FInputActionValue& Value)
 void AHaloFloodFanGame01Character::Look(const FInputActionValue& Value)
 {
 	// input is a Vector2D
+	
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
-
+	Server_Look(LookAxisVector.Y);
 	if (Controller != nullptr)
 	{
 		// add yaw and pitch input to controller
@@ -180,9 +190,22 @@ void AHaloFloodFanGame01Character::Look(const FInputActionValue& Value)
 	}
 }
 
+void AHaloFloodFanGame01Character::Server_Look_Implementation(float Pitch)
+{
+	Multi_Look(Pitch);
+}
+
 FVector StartMeleeLoc;
 FVector EndMeleeLoc;
 FHitResult MeleeHit;
+
+void AHaloFloodFanGame01Character::Multi_Look_Implementation(float Pitch)
+{
+	FRotator Rotation = GetFirstPersonCameraComponent()->GetComponentRotation();
+	Rotation.Pitch = Pitch;
+	GetFirstPersonCameraComponent()->SetWorldRotation(Rotation);
+}
+
 void AHaloFloodFanGame01Character::Melee_Implementation()
 {
 	FVector TraceStart = GetFirstPersonCameraComponent()->GetComponentLocation();
@@ -267,10 +290,12 @@ void AHaloFloodFanGame01Character::ThrowEquippedGrenade_Implementation()
 	if (!EquippedGrenadeClass) return;
 	if (FragCount<=0) return;
 	SetFragCount(FragCount-1);
-	FVector SpawnLoc = GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*200;
-	FRotator SpawnRot = GetFirstPersonCameraComponent()->GetForwardVector().Rotation();
-	ABaseGrenade* Grenade = Cast<ABaseGrenade>(GetWorld()->SpawnActor(EquippedGrenadeClass, &SpawnLoc, &SpawnRot));
-	if (Grenade)
+	const FVector SpawnLoc = GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*200;
+	const FRotator SpawnRot = GetFirstPersonCameraComponent()->GetForwardVector().Rotation();
+	FActorSpawnParameters ActorSpawnParameters;
+	ActorSpawnParameters.Instigator = this;
+	ActorSpawnParameters.Owner = this;
+	if (ABaseGrenade* Grenade = Cast<ABaseGrenade>(GetWorld()->SpawnActor(EquippedGrenadeClass, &SpawnLoc, &SpawnRot, ActorSpawnParameters)))
 	{
 		Grenade->SetArmed(true);
 		FVector Direction = GetFirstPersonCameraComponent()->GetForwardVector() + FVector(0,0,0.15);
@@ -284,16 +309,16 @@ void AHaloFloodFanGame01Character::ThrowEquippedGrenade_Implementation()
 void AHaloFloodFanGame01Character::SwitchWeapon()
 {
 	
-	if (!EquippedWep || !HolsteredWeapon)
+	if (!EquippedWeapon || !HolsteredWeapon)
 		return;
-	EquippedWep->ReleaseTrigger();
-	AGunBase* TempGun = EquippedWep;
-	EquippedWep = HolsteredWeapon;
+	EquippedWeapon->ReleaseTrigger();
+	AGunBase* TempGun = EquippedWeapon;
+	EquippedWeapon = HolsteredWeapon;
 	HolsteredWeapon = TempGun;
 	HolsteredWeapon->SetActorHiddenInGame(true);
-	EquippedWep->SetActorHiddenInGame(false);
-	EquippedWep->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
-	WeaponsUpdated.Broadcast(EquippedWep, HolsteredWeapon);
+	EquippedWeapon->SetActorHiddenInGame(false);
+	EquippedWeapon->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
+	WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
 }
 
 void AHaloFloodFanGame01Character::Interact()
@@ -332,23 +357,15 @@ void AHaloFloodFanGame01Character::SwitchGrenadeType()
 	}
 }
 
+void AHaloFloodFanGame01Character::ControllerChanged(AController* OldController, AController* NewController)
+{
+	
+}
+
 void AHaloFloodFanGame01Character::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-	if (APlayerController* PC = Cast<APlayerController>(NewController))
-	{
-		PlayerController = PC;
-		check(IsLocallyControlled());
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
-		}
-
-		if (IsLocallyControlled() && PlayerHUDClass) {
-			PlayerHUD = CreateWidget<UUserWidget>(PlayerController, PlayerHUDClass);
-			PlayerHUD->AddToPlayerScreen();
-		}
-	}	
+	
 }
 
 void AHaloFloodFanGame01Character::UnPossessed()
@@ -366,14 +383,23 @@ void AHaloFloodFanGame01Character::UnPossessed()
 void AHaloFloodFanGame01Character::PickupWeapon(AGunBase* Gun)
 {
 	Super::PickupWeapon(Gun);
-	EquippedWep->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
-	WeaponsUpdated.Broadcast(EquippedWep, HolsteredWeapon);
+	if (EquippedWeapon)
+	{
+		if (IsLocallyControlled())
+		{
+			EquippedWeapon->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
+		}
+		WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
+	} else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Invalid pickup for player"));
+	}
 }
 
 void AHaloFloodFanGame01Character::DropWeapon()
 {
 	Super::DropWeapon();
-	WeaponsUpdated.Broadcast(EquippedWep, HolsteredWeapon);
+	WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
 }
 
 void AHaloFloodFanGame01Character::SetFragCount(int32 NewFragCount)

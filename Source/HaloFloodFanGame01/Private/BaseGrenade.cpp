@@ -68,6 +68,7 @@ void ABaseGrenade::Explode_Implementation()
 		//UE_LOG(LogTemp, Warning, TEXT("Hit actor: %s"), *HitActor->GetActorLabel());
 		if (IDamageableInterface* HitDamageable = Cast<IDamageableInterface>(HitActor))
 		{
+			//UE_LOG(LogTemp, Warning, TEXT("%s"), *GetInstigator()->GetController()->GetActorLabel());
 			HitDamageable->CustomTakeRadialDamage(ExplosionForce, RadialDamageEvent, GetInstigator()->GetController(), this);
 		}
 	}
@@ -109,12 +110,10 @@ void ABaseGrenade::Pickup(AHaloFloodFanGame01Character* Character)
 {
 	IPickupInterface::Pickup(Character);
 	if (!Character->GrenadeInventory.Contains(this->GetClass())) return;
-	UE_LOG(LogTemp, Warning, TEXT("Found grenade"));
 	int& GrenadeAmount = *Character->GrenadeInventory.Find(this->GetClass());
 	if (GrenadeAmount < 4)
 	{
 		GrenadeAmount += 1;
-		UE_LOG(LogTemp, Warning, TEXT("%d"), GrenadeAmount);
 		Destroy();
 	}
 	
@@ -124,6 +123,7 @@ void ABaseGrenade::Pickup(AHaloFloodFanGame01Character* Character)
 float ABaseGrenade::CustomOnTakeAnyDamage(float DamageAmount, FVector Force,
                                AController* EventInstigator, AActor* DamageCauser)
 {
+	if (EventInstigator) SetInstigator(EventInstigator->GetPawn());
 	this->Arm(FMath::RandRange(0.25, 0.5));
 	return 0;
 }

@@ -61,7 +61,6 @@ public:
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit );
 	
-	UFUNCTION(BlueprintGetter)
 	virtual UHealthComponent* GetHealthComponent() override;
 
 	UFUNCTION(BlueprintNativeEvent)
@@ -88,6 +87,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void PickupWeapon(AGunBase* Gun);
 
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable)
+	virtual void Server_PickupWeapon(AGunBase* Gun);
+	
+	UFUNCTION(NetMulticast, Reliable, BlueprintCallable)
+    virtual void Multi_PickupWeapon(AGunBase* Gun);
+
 	UFUNCTION(BlueprintCallable)
 	virtual void DropWeapon();
 
@@ -109,12 +114,16 @@ public:
 	UHealthComponent* HealthComponent;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Loadout", meta=(AllowPrivateAccess=true))
-	TSubclassOf<AGunBase> SpawnWeapon;
+	TSubclassOf<AGunBase> SpawnWeaponClass;
 
-	UPROPERTY(BlueprintReadOnly)
-	class AGunBase* EquippedWep;
+	
+	UPROPERTY(EditAnywhere, Category="Loadout")
+	TSubclassOf<class AGunBase> HolsteredWeaponClass;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Replicated)
+	AGunBase* EquippedWeapon;
+
+	UPROPERTY(BlueprintReadOnly, Replicated)
 	AGunBase* HolsteredWeapon;
 
 	UPROPERTY(EditAnywhere)

@@ -21,16 +21,16 @@ AGunBase::AGunBase()
 	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
 	Mesh->SetSimulatePhysics(true);
 	RootComponent = Mesh;
+
+	bReplicates = true;
 }
 
 // Called when the game starts or when spawned
 void AGunBase::BeginPlay()
 {
 	Super::BeginPlay();
-
 	CurMagazine = MaxMagazine;
-	CurReserve = MaxReserve;
-	
+	CurReserve = MaxReserve;	
 }
 
 // Called every frame
@@ -63,6 +63,21 @@ void AGunBase::StartReload()
 
 void AGunBase::PullTrigger_Implementation()
 {
+	Server_PullTrigger();
+}
+
+void AGunBase::Server_PullTrigger_Implementation()
+{
+	Multi_PullTrigger();
+}
+
+bool AGunBase::Server_PullTrigger_Validate()
+{
+	return true;
+}
+
+void AGunBase::Multi_PullTrigger_Implementation()
+{
 	if (GetWorldTimerManager().TimerExists(BurstRetriggerHandle))
 		return;
 	BulletsFired = 0;
@@ -70,10 +85,35 @@ void AGunBase::PullTrigger_Implementation()
 	GetWorldTimerManager().SetTimer(BurstRetriggerHandle, BurstRetriggerDelay, false);
 }
 
-void AGunBase::ReleaseTrigger_Implementation()
+bool AGunBase::Multi_PullTrigger_Validate()
+{
+	return true;
+}
+
+void AGunBase::Server_ReleaseTrigger_Implementation()
+{
+	Multi_ReleaseTrigger();
+}
+
+bool AGunBase::Server_ReleaseTrigger_Validate()
+{
+	return true;
+}
+
+void AGunBase::Multi_ReleaseTrigger_Implementation()
 {
 	if (BulletsFired >= BurstAmount)
 		GetWorldTimerManager().ClearTimer(FireHandle);
+}
+
+bool AGunBase::Multi_ReleaseTrigger_Validate()
+{
+	return true;
+}
+
+void AGunBase::ReleaseTrigger_Implementation()
+{
+	Server_ReleaseTrigger();
 }
 
 void AGunBase::OnInteract_Implementation(AHaloFloodFanGame01Character* Character)
@@ -88,6 +128,7 @@ void AGunBase::GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon)
 
 	Text = InteractText;
 	Icon = InteractIcon;
+	
 }
 
 void AGunBase::Fire_Implementation()
@@ -97,21 +138,19 @@ void AGunBase::Fire_Implementation()
 		ReleaseTrigger();
 		return;
 	}
+
+	if (AHaloFloodFanGame01Character* Char = Cast<AHaloFloodFanGame01Character>(GetOwner()))
+		if (FiringCameraShake && Char->IsLocallyControlled())
+			Cast<APlayerController>(Char->GetController())->PlayerCameraManager->StartCameraShake(FiringCameraShake, 1, ECameraShakePlaySpace::CameraLocal);
+	if (FiringSound)
+		UGameplayStatics::SpawnSoundAttached(FiringSound, GetRootComponent());
+	if (Mesh->DoesSocketExist("Muzzle") && MuzzlePFX)
+		UNiagaraComponent* BulletPFX = UNiagaraFunctionLibrary::SpawnSystemAttached(MuzzlePFX, Mesh, "Muzzle", FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
 	CurMagazine--;
 	ABaseCharacter* OwningChar = Cast<ABaseCharacter>(GetOwner());
 	if (!OwningChar) return;
 	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, OwningChar, 0.0f);
 	if (OwningChar->FiringAnim) OwningChar->GetMesh()->GetAnimInstance()->Montage_Play(OwningChar->FiringAnim);
-	if (AHaloFloodFanGame01Character* Char = Cast<AHaloFloodFanGame01Character>(GetOwner()))
-	{
-		if (FiringCameraShake)
-			Cast<APlayerController>(Char->GetController())->PlayerCameraManager->StartCameraShake(FiringCameraShake, 1, ECameraShakePlaySpace::CameraLocal);
-	}
-	if (FiringSound) UGameplayStatics::SpawnSoundAttached(FiringSound, GetRootComponent());
-	if (Mesh->DoesSocketExist("Muzzle") && MuzzlePFX)
-	{
-		UNiagaraComponent* BulletPFX = UNiagaraFunctionLibrary::SpawnSystemAttached(MuzzlePFX, Mesh, "Muzzle", FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
-	}
 	for (int i = 0; i < Multishot; ++i)
 	{
 		if (ProjectileClass)
@@ -124,13 +163,15 @@ void AGunBase::Fire_Implementation()
 			GetWorld()->SpawnActor(ProjectileClass, &Location, &Rotation, ActorSpawnParameters);
 		} else
 		{
+			
 			bool TraceHit = false;
 			FHitResult Hit;
 			FVector TraceStart;
 			FVector TraceEnd;
 			FRotator EyeRotation;
 			OwningChar->GetActorEyesViewPoint(TraceStart, EyeRotation);
-			EyeRotation = EyeRotation + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
+			// OwningChar->GetActorEyesViewPoint(TraceStart, EyeRotation);
+			EyeRotation = OwningChar->GetBaseAimRotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);;
 			TraceEnd = TraceStart + EyeRotation.Vector()*Range;
 			FCollisionQueryParams CollisionParameters;
 			TArray<AActor*> ActorsToIgnore;
@@ -202,4 +243,3 @@ void AGunBase::FinishReload_Implementation()
 	CurReserve = CurReserve - AmountGrabbed;
 	OnReload.Broadcast();
 }
-

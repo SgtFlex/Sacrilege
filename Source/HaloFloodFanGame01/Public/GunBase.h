@@ -7,6 +7,19 @@
 #include "GameFramework/Actor.h"
 #include "GunBase.generated.h"
 
+USTRUCT()
+struct FHitScanTrace
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FVector_NetQuantize TraceStart;
+
+	UPROPERTY()
+	FVector_NetQuantize TraceEnd;
+	
+};
+
 class UHaloHUDWidget;
 class ABaseCharacter;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFire);
@@ -47,6 +60,12 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	void Fire();
 
+	// UFUNCTION(Server, Reliable, WithValidation)
+	// void Server_Fire();
+	//
+	// UFUNCTION(NetMulticast, Reliable, WithValidation)
+	// void Multi_Fire();
+
 	UFUNCTION()
 	void StartReload();
 
@@ -56,12 +75,26 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	void PullTrigger();
 
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_PullTrigger();
+
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+	void Multi_PullTrigger();
+
 	UFUNCTION(BlueprintNativeEvent)
 	void ReleaseTrigger();
+	
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_ReleaseTrigger();
+
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+	void Multi_ReleaseTrigger();
 	
 	virtual void OnInteract_Implementation(AHaloFloodFanGame01Character* Character) override;
 
 	virtual void GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon) override;
+
+	
 
 public:
 	UPROPERTY(EditAnywhere)
@@ -176,7 +209,7 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, meta = (Category="HUD"))
 	TSubclassOf<UUserWidget> BulletWidget;
-
+	
 private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AActor> BulletImpactActor;

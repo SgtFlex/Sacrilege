@@ -33,10 +33,19 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
 	float TakeDamage(float Damage, FVector Force = FVector(0,0,0), FVector HitLocation = FVector(0,0,0), FName HitBoneName = "", AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr, bool bIgnoreShields = false, bool bIgnoreHealthArmor = false, bool bIgnoreShieldArmor = false);
+
+	UFUNCTION(Server, Reliable)
+	void Server_TakeDamage(float Damage, FVector Force = FVector(0,0,0), FVector HitLocation = FVector(0,0,0), FName HitBoneName = "", AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr, bool bIgnoreShields = false, bool bIgnoreHealthArmor = false, bool bIgnoreShieldArmor = false);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multi_TakeDamage(float Damage, FVector Force = FVector(0,0,0), FVector HitLocation = FVector(0,0,0), FName HitBoneName = "", AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr, bool bIgnoreShields = false, bool bIgnoreHealthArmor = false, bool bIgnoreShieldArmor = false);
 	
 	void HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	bool IsAlive();
 public:
-	UPROPERTY(EditAnywhere, meta = (Category="Health"))
+	UPROPERTY(EditAnywhere, meta = (Category="Health"), Replicated)
 	float Health = 100;
 	UPROPERTY(EditAnywhere, meta = (Category="Health"))
 	float MaxHealth = 100;
@@ -50,7 +59,7 @@ public:
 	float HealthArmor = 0;
 	UPROPERTY(EditAnywhere, meta = (Category="Health"))
 	float MaxHealthArmor = 100;
-	UPROPERTY(EditAnywhere, meta = (Category="Shields"))
+	UPROPERTY(EditAnywhere, meta = (Category="Shields"), Replicated)
 	float Shields = 100;
 	UPROPERTY(EditAnywhere, meta = (Category="Shields"))
 	float MaxShields = 100;
@@ -99,7 +108,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	float GetHealth() const;
 	UFUNCTION(BlueprintCallable)
-	void SetHealth(float NewHealth);
+	float SetHealth(float NewHealth);
 	UFUNCTION(BlueprintCallable)
 	float GetMaxHealth() const;
 	UFUNCTION(BlueprintCallable)

@@ -22,6 +22,8 @@ class HALOFLOODFANGAME01_API ABaseAIController : public AAIController
 public:
 	virtual void BeginPlay() override;
 
+	virtual void UpdateControlRotation(float DeltaTime, bool bUpdatePawn) override;
+
 	void BeginPlayDelayed();
 	
 	virtual ETeamAttitude::Type GetTeamAttitudeTowards(const AActor& Other) const override;

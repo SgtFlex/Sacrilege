@@ -34,7 +34,6 @@ float IDamageableInterface::CustomTakePointDamage(FPointDamageEvent const& Point
 	CustomOnTakeAnyDamage(PointDamageEvent.Damage, PointDamageEvent.ShotDirection * Force, EventInstigator, DamageCauser);
 	if (GetHealthComponent())
 	{
-		
 		GetHealthComponent()->TakeDamage(PointDamageEvent.Damage, PointDamageEvent.ShotDirection * Force, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.BoneName, EventInstigator, DamageCauser);
 	}
 	return 0;
@@ -48,11 +47,11 @@ float IDamageableInterface::CustomTakeRadialDamage(float Force,
 	FVector Direction = (HitActor->GetActorLocation() - RadialDamageEvent.Origin);
 	Direction.Normalize();
 	CustomOnTakeAnyDamage(RadialDamageEvent.Params.BaseDamage, Direction * Force, EventInstigator, DamageCauser);
+	//if (EventInstigator) UE_LOG(LogTemp, Warning, TEXT("Enemy took radial damage. EventInstigator: %s"), *EventInstigator->GetActorLabel());
 	//TakeDamage(RadialDamageEvent.Params.BaseDamage, Direction * Force, FDamageEvent(UDamageType::StaticClass()));
 	if (GetHealthComponent())
 	{
-		
-		GetHealthComponent()->TakeDamage(RadialDamageEvent.Params.BaseDamage, Direction * Force);
+		GetHealthComponent()->TakeDamage(RadialDamageEvent.Params.BaseDamage, Direction * Force, FVector(0,0,0), FName(""), EventInstigator, DamageCauser);
 		//TakeDamage(RadialDamageEvent.Params.BaseDamage, Direction * Force, FDamageEvent(UDamageType::StaticClass()));
 	}
 		
@@ -66,5 +65,5 @@ float IDamageableInterface::CustomTakeRadialDamage(float Force,
 
 UHealthComponent* IDamageableInterface::GetHealthComponent()
 {
-	return 0;
+	return nullptr;
 }

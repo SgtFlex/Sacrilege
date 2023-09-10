@@ -26,9 +26,9 @@ void UHaloHUDWidget::NativeConstruct()
 	SetPlasmaCounter(PlayerCharacter->PlasmaCount);
 	SetSpikeCounter(PlayerCharacter->SpikeCount);
 	SetIncenCounter(PlayerCharacter->IncenCount);
-	if (PlayerCharacter->EquippedWep)
+	if (PlayerCharacter->EquippedWeapon)
 	{
-		UpdateHUDWeaponData(PlayerCharacter->EquippedWep, PlayerCharacter->HolsteredWeapon);
+		UpdateHUDWeaponData(PlayerCharacter->EquippedWeapon, PlayerCharacter->HolsteredWeapon);
 	}
 	PlayerCharacter->WeaponsUpdated.AddDynamic(this, &UHaloHUDWidget::UpdateHUDWeaponData);
 	PlayerCharacter->GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &UHaloHUDWidget::OnHealthUpdated);
@@ -152,9 +152,9 @@ void UHaloHUDWidget::SetMagazineReserveCounter_Implementation(int32 MagazineCoun
 
 void UHaloHUDWidget::UpdateHUDMagazineElements()
 {
-	SetMagazineReserveCounter(PlayerCharacter->EquippedWep->CurMagazine);
-	SetAmmoReserveCounter(PlayerCharacter->EquippedWep->CurReserve);
-	SetAmmoGridBullets(PlayerCharacter->EquippedWep->CurMagazine, PlayerCharacter->EquippedWep->MaxMagazine);
+	SetMagazineReserveCounter(PlayerCharacter->EquippedWeapon->CurMagazine);
+	SetAmmoReserveCounter(PlayerCharacter->EquippedWeapon->CurReserve);
+	SetAmmoGridBullets(PlayerCharacter->EquippedWeapon->CurMagazine, PlayerCharacter->EquippedWeapon->MaxMagazine);
 }
 
 void UHaloHUDWidget::OnScoreUpdated(int NewScore)

@@ -17,6 +17,7 @@
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "Net/UnrealNetwork.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISense_Damage.h"
 #include "Perception/AISense_Touch.h"
@@ -30,7 +31,9 @@ ABaseCharacter::ABaseCharacter()
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 	
 	GetCapsuleComponent()->SetNotifyRigidBodyCollision(true);
-	
+
+	SetReplicates(true);
+	SetReplicateMovement(true);
 }
 
 // Called when the game starts or when spawned
@@ -38,19 +41,29 @@ void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ABaseCharacter::OnHit);
-	if (SpawnWeapon)
+
+	if (SpawnWeaponClass && HasAuthority())
 	{
-		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(SpawnWeapon)));
+		UE_LOG(LogTemp, Warning, TEXT("Spawned weapon!"));
+		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(SpawnWeaponClass)));
 	}
+
 	//UE_LOG(LogTemp, Warning, TEXT("Char: %s %f"), *GetActorLabel(), GetHealthComponent()->GetHealth());
 	//if (GetHealthComponent()) UE_LOG(LogTemp, Warning, TEXT("%s's Health component is owned by %s (Should be %s)"), *GetActorLabel(), *GetHealthComponent()->GetOwner()->GetActorLabel(), *GetActorLabel());
-	if (GetHealthComponent()) GetHealthComponent()->OnHealthDepleted.AddDynamic(this, &ABaseCharacter::OnHealthDepleted);
+	if (GetHealthComponent()) GetHealthComponent()->OnHealthDepleted.AddDynamic(this, &ABaseCharacter::OnHealthDepleted);	
 }
 
 // Called every frame
 void ABaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+void ABaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ABaseCharacter, EquippedWeapon);
 }
 
 // Called to bind functionality to input
@@ -139,11 +152,11 @@ void ABaseCharacter::OnHealthDepleted_Implementation(float Damage, FVector Damag
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->AddImpulseAtLocation(DamageForce, HitLocation, HitBoneName);
 	OnKilled.Broadcast(EventInstigator, DamageCauser);
-	//if (EventInstigator) UE_LOG(LogTemp, Warning, TEXT("%s"), *EventInstigator->GetActorLabel());
+	
 	GetWorld()->GetTimerManager().SetTimer(RagdollTimer, this, &ABaseCharacter::RagdollSettled, 1);
 	if (GetController()) GetController()->Destroy();
 	//TestDelegate.Execute(this);
-	if (EquippedWep)
+	if (EquippedWeapon)
 		DropWeapon();
 	
 }
@@ -153,7 +166,7 @@ void ABaseCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 {
 	LaunchCharacter(NormalImpulse/100, true, true);
 	float DamageCalculation;
-	if (OtherActor)
+	if (OtherActor && OtherComp)
 	{
 		UAISense_Touch::ReportTouchEvent(GetWorld(), this, OtherActor, Hit.Location);
 		float VelocityDifference = FMath::Abs(OtherActor->GetVelocity().Length() - this->GetVelocity().Length());
@@ -227,30 +240,31 @@ void ABaseCharacter::UseEquipment()
 
 void ABaseCharacter::PrimaryAttack_Pull()
 {
-	if (EquippedWep)
-		EquippedWep->PullTrigger();
+	if (EquippedWeapon)
+		EquippedWeapon->PullTrigger();
 }
 
 void ABaseCharacter::PrimaryAttack_Release()
 {
-	if (EquippedWep)
-		EquippedWep->ReleaseTrigger();
+	if (EquippedWeapon)
+		EquippedWeapon->ReleaseTrigger();
 }
 
 void ABaseCharacter::ReloadInput()
 {
-	if (EquippedWep) EquippedWep->StartReload();
+	if (EquippedWeapon) EquippedWeapon->StartReload();
 }
 
 void ABaseCharacter::PickupWeapon(AGunBase* Gun)
 {
+	
 	Gun->Mesh->SetSimulatePhysics(false);
 	Gun->SetActorEnableCollision(false);
 	Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
 	Gun->Pickup(this);
-	if (!EquippedWep)
+	if (!EquippedWeapon)
 	{
-		EquippedWep = Gun;
+		EquippedWeapon = Gun;
 	} else if (!HolsteredWeapon)
 	{
 		HolsteredWeapon = Gun;
@@ -258,21 +272,36 @@ void ABaseCharacter::PickupWeapon(AGunBase* Gun)
 	} else
 	{
 		DropWeapon();
-		EquippedWep = Gun;
+		EquippedWeapon = Gun;
 	}
-	
+}
+
+void ABaseCharacter::Server_PickupWeapon_Implementation(AGunBase* Gun)
+{
+	PickupWeapon(Gun);
+}
+
+bool ABaseCharacter::Server_PickupWeapon_Validate(AGunBase* Gun)
+{
+	return true;
+}
+
+void ABaseCharacter::Multi_PickupWeapon_Implementation(AGunBase* Gun)
+{
+	PickupWeapon(Gun);
 }
 
 void ABaseCharacter::DropWeapon()
 {
-	EquippedWep->ReleaseTrigger();
-	EquippedWep->Drop();
-	EquippedWep->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	UE_LOG(LogTemp, Warning, TEXT("Dropped weapon"));
+	EquippedWeapon->ReleaseTrigger();
+	EquippedWeapon->Drop();
+	EquippedWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	//EquippedWep->SetActorLocation(this->Mesh1P->GetSocketLocation("GripPoint"));
-	EquippedWep->SetActorEnableCollision(true);
-	EquippedWep->Mesh->SetSimulatePhysics(true);
+	EquippedWeapon->SetActorEnableCollision(true);
+	EquippedWeapon->Mesh->SetSimulatePhysics(true);
 	//EquippedWep->Mesh->AddImpulse(FirstPersonCameraComponent->GetForwardVector()*5000);
-	EquippedWep = nullptr;
+	EquippedWeapon = nullptr;
 }
 
 void ABaseCharacter::RagdollSettled()

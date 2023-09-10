@@ -123,7 +123,10 @@ public:
 
 	virtual void PossessedBy(AController* NewController) override;
 
+	
 	virtual void UnPossessed() override;
+
+	void ControllerChanged(AController* OldController, AController* NewController);
 	
 	virtual void PickupWeapon(AGunBase* Gun) override;
 	
@@ -147,6 +150,12 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
+	UFUNCTION(Server, Unreliable)
+	void Server_Look(float Pitch);
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multi_Look(float Pitch);
+
 	UFUNCTION(BlueprintCallable)
 	virtual void Melee_Implementation() override;
 
@@ -161,8 +170,6 @@ protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	// End of APawn interface
-
-	void OnPossessed();
 	
 public:
 	UPROPERTY()
@@ -174,8 +181,6 @@ public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UUserWidget> PlayerHUDClass;
 
-	UPROPERTY(EditAnywhere, Category="Loadout")
-	TSubclassOf<class AGunBase> HolsteredGunClass;
 
 	UPROPERTY()
 	class UUserWidget* PlayerHUD;
