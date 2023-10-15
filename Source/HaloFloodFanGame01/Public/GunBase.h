@@ -69,6 +69,12 @@ public:
 	UFUNCTION()
 	void StartReload();
 
+	UFUNCTION(Server, Reliable)
+	void Server_StartReload();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multi_StartReload();
+
 	UFUNCTION(BlueprintNativeEvent)
 	void FinishReload();
 

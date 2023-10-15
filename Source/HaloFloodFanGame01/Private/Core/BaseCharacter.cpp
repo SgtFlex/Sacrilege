@@ -99,7 +99,7 @@ float ABaseCharacter::CustomTakePointDamage_Implementation(FPointDamageEvent con
 		}
 		if (BloodPFX)
 		{
-			UNiagaraComponent* BloodNiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(BloodPFX, GetMesh(), PointDamageEvent.HitInfo.BoneName, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Normal.Rotation(), EAttachLocation::KeepWorldPosition, true);
+			UNiagaraComponent* BloodNiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(BloodPFX, GetMesh(), PointDamageEvent.HitInfo.BoneName, PointDamageEvent.HitInfo.ImpactPoint, PointDamageEvent.HitInfo.Normal.Rotation(), EAttachLocation::KeepWorldPosition, true);
 			BloodNiagaraComponent->SetNiagaraVariableActor("Character", this);
 		}
 		if (BloodSplatterMat)
@@ -257,7 +257,21 @@ void ABaseCharacter::ReloadInput()
 
 void ABaseCharacter::PickupWeapon(AGunBase* Gun)
 {
-	
+	Server_PickupWeapon(Gun);
+}
+
+void ABaseCharacter::Server_PickupWeapon_Implementation(AGunBase* Gun)
+{
+	Multi_PickupWeapon(Gun);
+}
+
+bool ABaseCharacter::Server_PickupWeapon_Validate(AGunBase* Gun)
+{
+	return true;
+}
+
+void ABaseCharacter::Multi_PickupWeapon_Implementation(AGunBase* Gun)
+{
 	Gun->Mesh->SetSimulatePhysics(false);
 	Gun->SetActorEnableCollision(false);
 	Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
@@ -274,21 +288,6 @@ void ABaseCharacter::PickupWeapon(AGunBase* Gun)
 		DropWeapon();
 		EquippedWeapon = Gun;
 	}
-}
-
-void ABaseCharacter::Server_PickupWeapon_Implementation(AGunBase* Gun)
-{
-	PickupWeapon(Gun);
-}
-
-bool ABaseCharacter::Server_PickupWeapon_Validate(AGunBase* Gun)
-{
-	return true;
-}
-
-void ABaseCharacter::Multi_PickupWeapon_Implementation(AGunBase* Gun)
-{
-	PickupWeapon(Gun);
 }
 
 void ABaseCharacter::DropWeapon()

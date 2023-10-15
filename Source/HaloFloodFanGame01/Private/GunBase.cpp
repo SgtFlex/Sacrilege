@@ -55,6 +55,16 @@ void AGunBase::Drop()
 
 void AGunBase::StartReload()
 {
+	Server_StartReload();
+}
+
+void AGunBase::Server_StartReload_Implementation()
+{
+	Multi_StartReload();
+}
+
+void AGunBase::Multi_StartReload_Implementation()
+{
 	if (bReloading || CurReserve <= 0 || CurMagazine == MaxMagazine) return;
 	bReloading = true;
 	GetWorld()->GetTimerManager().SetTimer(ReloadTimer, this, &AGunBase::FinishReload, ReloadSpeed, false);

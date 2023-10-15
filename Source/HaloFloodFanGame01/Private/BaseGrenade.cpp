@@ -69,7 +69,8 @@ void ABaseGrenade::Explode_Implementation()
 		if (IDamageableInterface* HitDamageable = Cast<IDamageableInterface>(HitActor))
 		{
 			//UE_LOG(LogTemp, Warning, TEXT("%s"), *GetInstigator()->GetController()->GetActorLabel());
-			HitDamageable->CustomTakeRadialDamage(ExplosionForce, RadialDamageEvent, GetInstigator()->GetController(), this);
+			AController* InstigatorController = GetInstigator()!= nullptr ? GetInstigator()->GetController() : nullptr;
+			HitDamageable->CustomTakeRadialDamage(ExplosionForce, RadialDamageEvent, InstigatorController, this);
 		}
 	}
 	Destroy();
