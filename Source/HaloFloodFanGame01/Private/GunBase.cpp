@@ -23,6 +23,7 @@ AGunBase::AGunBase()
 	RootComponent = Mesh;
 
 	bReplicates = true;
+	
 }
 
 // Called when the game starts or when spawned
@@ -30,7 +31,8 @@ void AGunBase::BeginPlay()
 {
 	Super::BeginPlay();
 	CurMagazine = MaxMagazine;
-	CurReserve = MaxReserve;	
+	CurReserve = MaxReserve;
+	InteractIcon = WeaponIcon;
 }
 
 // Called every frame

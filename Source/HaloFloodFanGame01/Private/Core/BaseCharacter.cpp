@@ -194,7 +194,7 @@ UHealthComponent* ABaseCharacter::GetHealthComponent()
 
 void ABaseCharacter::EquipGrenadeType_Implementation(TSubclassOf<ABaseGrenade> Grenade)
 {
-	EquippedGrenadeClass = Grenade;
+	// EquippedGrenadeClass = Grenade;
 }
 
 void ABaseCharacter::Melee_Implementation()
@@ -223,11 +223,12 @@ void ABaseCharacter::Melee_Implementation()
 
 void ABaseCharacter::ThrowEquippedGrenade_Implementation()
 {
-	if (!EquippedGrenadeClass) return;
+	if (GrenadeInventory[CurGrenadeTypeI].GrenadeAmount <= 0) return;
+	OnGrenadeInvetoryUpdated.Broadcast(GrenadeInventory);
 	FVector EyesLoc;
 	FRotator EyesRot;
 	GetActorEyesViewPoint(EyesLoc, EyesRot);
-	ABaseGrenade* Grenade = Cast<ABaseGrenade>(GetWorld()->SpawnActor(EquippedGrenadeClass, &EyesLoc));
+	ABaseGrenade* Grenade = Cast<ABaseGrenade>(GetWorld()->SpawnActor(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, &EyesLoc));
 	Grenade->SetArmed(true);
 	FVector Force = GetBaseAimRotation().Vector() + FVector(0,0,0.1);
 	Grenade->Mesh->AddImpulse(Force*20000);

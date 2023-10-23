@@ -7,7 +7,7 @@
 #include "DamageableInterface.generated.h"
 
 // This class does not need to be modified.
-UINTERFACE(MinimalAPI, meta=(CannotImplementInterfaceInBlueprint))
+UINTERFACE(MinimalAPI, meta = (CannotImplementInterfaceInBlueprint))
 class UDamageableInterface : public UInterface
 {
 	GENERATED_BODY()
@@ -21,7 +21,7 @@ class HALOFLOODFANGAME01_API IDamageableInterface
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	virtual float CustomOnTakeAnyDamage(float DamageAmount, FVector Force, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 	
 	UFUNCTION(BlueprintCallable)

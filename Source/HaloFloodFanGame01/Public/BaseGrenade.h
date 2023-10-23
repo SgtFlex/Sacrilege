@@ -8,6 +8,7 @@
 #include "GameFramework/Actor.h"
 #include "BaseGrenade.generated.h"
 
+class UImage;
 class UProjectileMovementComponent;
 class UPickupComponent;
 class UNiagaraSystem;
@@ -23,8 +24,10 @@ public:
 	UPROPERTY(EditAnywhere)
 	float FuseTime = 2;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bArmed = false;
+
+	bool FuseStarted = false;
 
 	UPROPERTY(EditAnywhere)
 	float InnerExplosionRadius = 300;
@@ -58,8 +61,11 @@ public:
 	UPROPERTY(EditAnywhere)
 	UPickupComponent* PickupComponent;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	UProjectileMovementComponent* ProjectileMovementComponent;
+
+	UPROPERTY(EditAnywhere)
+	UTexture2D* GrenadeIcon;
 
 
 protected:
@@ -77,13 +83,16 @@ public:
 
 	void Arm(float ArmTime = 4);
 
-	virtual void NotifyHit(UPrimitiveComponent* MyComp, AActor* Other, UPrimitiveComponent* OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult& Hit) override;
-
+	UFUNCTION(BlueprintNativeEvent)
+	void OnCollide(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit );
+	
+	UFUNCTION()
 	virtual void Pickup(AHaloFloodFanGame01Character* Character) override;
 
 	// virtual float TakePointDamage(FPointDamageEvent const& PointDamageEvent, FVector Force, AController*, AActor* DamageCauser) override;
 
 	//virtual float TakeRadialDamage(float Force, FRadialDamageEvent const& RadialDamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
+	UFUNCTION()
 	virtual float CustomOnTakeAnyDamage(float DamageAmount, FVector Force, AController* EventInstigator, AActor* DamageCauser) override;
 };

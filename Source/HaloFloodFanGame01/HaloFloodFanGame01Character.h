@@ -24,6 +24,7 @@ class UAnimMontage;
 class USoundBase;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponsUpdated, AGunBase*, NewGun, AGunBase*, OldGun);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractableChanged, AActor*, Interactable);
 
 
 UCLASS(config=Game)
@@ -121,6 +122,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SwitchGrenadeType();
 
+	void SwitchGrenadeType(int Index);
+
 	virtual void PossessedBy(AController* NewController) override;
 
 	
@@ -178,6 +181,9 @@ public:
 	UPROPERTY()
 	FWeaponsUpdated WeaponsUpdated;
 
+	UPROPERTY()
+	FOnInteractableChanged OnInteractableChanged;
+
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UUserWidget> PlayerHUDClass;
 
@@ -207,7 +213,7 @@ private:
 
 	FHitResult PlayerAim;
 
-	int CurGrenadeTypeI = 0;
+	
 	
 
 protected:

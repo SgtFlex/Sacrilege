@@ -21,11 +21,15 @@ ABaseGrenade::ABaseGrenade()
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
 	Mesh->SetSimulatePhysics(true);
 	Mesh->SetNotifyRigidBodyCollision(true);
+	SetRootComponent(Mesh);
 
-	PickupComponent = CreateDefaultSubobject<UPickupComponent>("PickupComp");
+	
 
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>("ProjectileMovementComp");
-	RootComponent = Mesh;
+
+	PickupComponent = CreateDefaultSubobject<UPickupComponent>("PickupComp");
+	PickupComponent->SetupAttachment(GetRootComponent());
+	PickupComponent->SetEnabled(false);
 }
 
 // Called when the game starts or when spawned
@@ -80,10 +84,19 @@ void ABaseGrenade::SetArmed(bool NewArmed)
 {
 	bArmed = NewArmed;
 	PickupComponent->SetEnabled(!bArmed);
+	if (NewArmed)
+	{
+		Mesh->OnComponentHit.AddDynamic(this, &ABaseGrenade::OnCollide);
+	} else
+	{
+		Mesh->OnComponentHit.RemoveDynamic(this, &ABaseGrenade::OnCollide);
+	}
 }
 
 void ABaseGrenade::Arm(float ArmTime)
 {
+	if (FuseStarted) return;
+	FuseStarted = true;
 	if (ArmTime > 0)
 	{
 		if (!GetWorldTimerManager().TimerExists(FuseTimer) || ArmTime < GetWorldTimerManager().GetTimerRemaining(FuseTimer))
@@ -98,33 +111,46 @@ void ABaseGrenade::Arm(float ArmTime)
 	
 }
 
-void ABaseGrenade::NotifyHit(UPrimitiveComponent* MyComp, AActor* Other, UPrimitiveComponent* OtherComp,
-                             bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult& Hit)
+void ABaseGrenade::OnCollide_Implementation(UPrimitiveComponent* HitComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (!bArmed) return
-	Super::NotifyHit(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, Hit);
-	Mesh->SetNotifyRigidBodyCollision(false);
+	if (!bArmed) return;
 	Arm(FuseTime);
 }
 
 void ABaseGrenade::Pickup(AHaloFloodFanGame01Character* Character)
 {
 	IPickupInterface::Pickup(Character);
-	if (!Character->GrenadeInventory.Contains(this->GetClass())) return;
-	int& GrenadeAmount = *Character->GrenadeInventory.Find(this->GetClass());
-	if (GrenadeAmount < 4)
+	bool FoundGrenade = false;
+	for (int i = 0; i < Character->GrenadeInventory.Num(); i++)
 	{
-		GrenadeAmount += 1;
-		Destroy();
+		if (Character->GrenadeInventory[i].GrenadeClass == GetClass())
+		{
+			FoundGrenade = true;
+			if (Character->GrenadeInventory[i].GrenadeAmount < 4)
+			{
+				Character->GrenadeInventory[i].GrenadeAmount++;
+				Destroy();
+			}
+		}
 	}
 	
-	
+	if (!FoundGrenade)
+	{
+		FGrenadeStruct GrenadeType;
+		GrenadeType.GrenadeClass = GetClass();
+		GrenadeType.GrenadeAmount = 1;
+		Character->GrenadeInventory.Add(GrenadeType);
+		Destroy();
+	}
+	Character->OnGrenadeInvetoryUpdated.Broadcast(Character->GrenadeInventory);
 }
 
 float ABaseGrenade::CustomOnTakeAnyDamage(float DamageAmount, FVector Force,
                                AController* EventInstigator, AActor* DamageCauser)
 {
+	IDamageableInterface::CustomOnTakeAnyDamage(DamageAmount, Force, EventInstigator, DamageCauser);
 	if (EventInstigator) SetInstigator(EventInstigator->GetPawn());
 	this->Arm(FMath::RandRange(0.25, 0.5));
-	return 0;
+	return DamageAmount;
 }

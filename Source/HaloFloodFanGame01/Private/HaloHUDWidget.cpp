@@ -3,6 +3,7 @@
 
 #include "HaloHUDWidget.h"
 
+#include "GrenadeWidget.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/GridPanel.h"
@@ -11,27 +12,33 @@
 #include "GunBase.h"
 #include "HealthComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Components/GridSlot.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Components/UniformGridSlot.h"
 #include "Components/VerticalBox.h"
 #include "HaloFloodFanGame01/HaloFloodFanGame01Character.h"
 #include "HaloFloodFanGame01/HaloFloodFanGame01GameMode.h"
+#include "BaseGrenade.h"
 
 void UHaloHUDWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 	PlayerCharacter = Cast<AHaloFloodFanGame01Character>(GetOwningPlayer()->GetPawn());
-	SetFragCounter(PlayerCharacter->FragCount);
-	SetPlasmaCounter(PlayerCharacter->PlasmaCount);
-	SetSpikeCounter(PlayerCharacter->SpikeCount);
-	SetIncenCounter(PlayerCharacter->IncenCount);
+	// SetFragCounter(PlayerCharacter->FragCount);
+	// SetPlasmaCounter(PlayerCharacter->PlasmaCount);
+	// SetSpikeCounter(PlayerCharacter->SpikeCount);
+	// SetIncenCounter(PlayerCharacter->IncenCount);
 	if (PlayerCharacter->EquippedWeapon)
 	{
 		UpdateHUDWeaponData(PlayerCharacter->EquippedWeapon, PlayerCharacter->HolsteredWeapon);
 	}
 	PlayerCharacter->WeaponsUpdated.AddDynamic(this, &UHaloHUDWidget::UpdateHUDWeaponData);
+	PlayerCharacter->OnInteractableChanged.AddDynamic(this, &UHaloHUDWidget::UpdateInteractable);
 	PlayerCharacter->GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &UHaloHUDWidget::OnHealthUpdated);
+	PlayerCharacter->OnGrenadeInvetoryUpdated.AddDynamic(this, &UHaloHUDWidget::UpdateGrenadeInventory);
+	PlayerCharacter->OnGrenadeTypeSwitched.AddDynamic(this, &UHaloHUDWidget::UHaloHUDWidget::UpdateSelectedGrenadeType);
+	UpdateGrenadeInventory(PlayerCharacter->GrenadeInventory);
 	//Cast<AHaloFloodFanGame01GameMode>(UGameplayStatics::GetGameMode(GetWorld()))->OnScoreUpdated.AddDynamic(this, &UHaloHUDWidget::OnScoreUpdated);
 	if (AHaloFloodFanGame01GameMode* FirefightGamemode = Cast<AHaloFloodFanGame01GameMode>(UGameplayStatics::GetGameMode(GetWorld()))) FirefightGamemode->OnWaveStart.AddDynamic(this, &UHaloHUDWidget::UpdateSetAndWaveCount);
 }
@@ -55,8 +62,8 @@ void UHaloHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	SetCompassDirection(PlayerCharacter->GetFirstPersonCameraComponent()->GetComponentRotation().Yaw);
 
 	//if (PlayerCharacter && PlayerCharacter->EquippedWep && PlayerCharacter->EquippedWep->CrosshairTexture) Crosshair->SetBrushFromTexture(PlayerCharacter->EquippedWep->CrosshairTexture);
-	SetFragCounter(PlayerCharacter->FragCount);
-	IInteractableInterface* IntActor = Cast<IInteractableInterface>(PlayerAim.GetActor());
+	//SetFragCounter(PlayerCharacter->FragCount);
+	/*IInteractableInterface* IntActor = Cast<IInteractableInterface>(PlayerAim.GetActor());
 	if (PlayerAim.bBlockingHit && IsValid(PlayerAim.GetActor()) && IntActor)
 	{
 		FText IntText;
@@ -66,19 +73,65 @@ void UHaloHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		SetCanInteract(true);
 	}
 	else 
-		SetCanInteract(false);
+		SetCanInteract(false);*/
 }
 
 void UHaloHUDWidget::SetInteractInfo(FText InfoText, UTexture2D* Icon)
 {
 	if (Icon)
 	{
+		//InteractIcon->SetVisibility(ESlateVisibility::Visible);
 		InteractIcon->SetBrushFromTexture(Icon);
-		InteractIcon->SetVisibility(ESlateVisibility::Visible);
+		
 	}
 	else
 	{
-		InteractIcon->SetVisibility(ESlateVisibility::Hidden);
+		//InteractIcon->SetVisibility(ESlateVisibility::Hidden);
+	}
+
+	if (!InfoText.IsEmpty())
+	{
+		InteractActionWidget->SetText(InfoText);
+	} else
+	{
+		InteractActionWidget->SetText(FText::FromString("Interact"));
+	}
+}
+
+void UHaloHUDWidget::UpdateSelectedGrenadeType(TSubclassOf<ABaseGrenade> GrenadeClass)
+{
+	if (SelectedGrenadeType) GrenadeWidgetMap[SelectedGrenadeType]->SelectionBorder->SetVisibility(ESlateVisibility::Hidden);
+	SelectedGrenadeType = GrenadeClass;
+	GrenadeWidgetMap[GrenadeClass]->SelectionBorder->SetVisibility(ESlateVisibility::Visible);
+}
+
+void UHaloHUDWidget::UpdateGrenadeInventory(TArray<FGrenadeStruct> GrenadeInventory)
+{
+	for (auto GrenadeStruct : GrenadeInventory)
+	{
+		if (!GrenadeWidgetMap.Contains(GrenadeStruct.GrenadeClass))
+		{
+			if (UGrenadeWidget* GrenadeWidget = Cast<UGrenadeWidget>(CreateWidget(FragHUD, GrenadeWidgetClass)))
+			{
+				GrenadeWidgetMap.Add(GrenadeStruct.GrenadeClass, GrenadeWidget);
+				GrenadeWidget->GrenadeImage->SetBrushFromTexture(GrenadeStruct.GrenadeClass.GetDefaultObject()->GrenadeIcon);
+				if (FragHUD)
+				{
+					UUniformGridSlot* GridSlot = Cast<UUniformGridSlot>(FragHUD->AddChildToUniformGrid(GrenadeWidget));
+					GridSlot->SetVerticalAlignment(EVerticalAlignment::VAlign_Fill);
+				}
+			}
+		}
+		GrenadeWidgetMap[GrenadeStruct.GrenadeClass]->GrenadeCounter->SetText(FText::AsNumber(GrenadeStruct.GrenadeAmount));
+	}
+
+	//Reorder the widgets
+	for (int i = 0; i < FragHUD->GetChildrenCount(); i++)
+	{
+		if (UUniformGridSlot* GridSlot = Cast<UUniformGridSlot>(FragHUD->GetChildAt(i)->Slot))
+		{
+			GridSlot->SetColumn(i);
+		}
 	}
 }
 
@@ -246,6 +299,22 @@ void UHaloHUDWidget::UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* Holste
 	}
 }
 
+void UHaloHUDWidget::UpdateInteractable(AActor* Actor)
+{
+	if (IInteractableInterface* Interactable = Cast<IInteractableInterface>(Actor))
+	{
+		FText IntText;
+		UTexture2D* IntIcon;
+		SetCanInteract(true);
+		
+		Interactable->Execute_GetInteractInfo(Actor, IntText, IntIcon);
+		SetInteractInfo(IntText, IntIcon);
+	} else
+	{
+		SetCanInteract(false);
+	}
+	
+}
 
 
 void UHaloHUDWidget::UpdateSetAndWaveCount(int Set, int Wave)
@@ -297,28 +366,28 @@ void UHaloHUDWidget::SetCanInteract_Implementation(bool CanInteract)
 	else
 		InteractBoxWidget->SetVisibility(ESlateVisibility::Hidden);
 }
-void UHaloHUDWidget::SetFragCounter_Implementation(int32 NewFragCount)
-{
-	if (FragCounter)
-		FragCounter->SetText(FText::AsNumber(NewFragCount));
-}
-
-void UHaloHUDWidget::SetPlasmaCounter_Implementation(int32 NewPlasmaCount)
-{
-	if (PlasmaCounter)
-		PlasmaCounter->SetText(FText::AsNumber(NewPlasmaCount));
-}
-
-void UHaloHUDWidget::SetSpikeCounter_Implementation(int32 NewSpikeCount)
-{
-	if (SpikeCounter)
-		SpikeCounter->SetText(FText::AsNumber(NewSpikeCount));
-}
-
-void UHaloHUDWidget::SetIncenCounter_Implementation(int32 NewIncenCount)
-{
-	if (IncenCounter)
-		IncenCounter->SetText(FText::AsNumber(NewIncenCount));
-}
+// void UHaloHUDWidget::SetFragCounter_Implementation(int32 NewFragCount)
+// {
+// 	if (FragCounter)
+// 		FragCounter->SetText(FText::AsNumber(NewFragCount));
+// }
+//
+// void UHaloHUDWidget::SetPlasmaCounter_Implementation(int32 NewPlasmaCount)
+// {
+// 	if (PlasmaCounter)
+// 		PlasmaCounter->SetText(FText::AsNumber(NewPlasmaCount));
+// }
+//
+// void UHaloHUDWidget::SetSpikeCounter_Implementation(int32 NewSpikeCount)
+// {
+// 	if (SpikeCounter)
+// 		SpikeCounter->SetText(FText::AsNumber(NewSpikeCount));
+// }
+//
+// void UHaloHUDWidget::SetIncenCounter_Implementation(int32 NewIncenCount)
+// {
+// 	if (IncenCounter)
+// 		IncenCounter->SetText(FText::AsNumber(NewIncenCount));
+// }
 
 

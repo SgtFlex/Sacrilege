@@ -15,19 +15,26 @@ class UHealthComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPickupWeapon);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDropWeapon);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnKilled, AController*, Instigator, AActor*, Causer);
 DECLARE_DELEGATE_OneParam(FTest, ABaseCharacter*);
+
 
 USTRUCT()
 struct FGrenadeStruct
 {
 	GENERATED_BODY()
+	
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<ABaseGrenade> GrenadeClass;
+	
 	UPROPERTY(EditAnywhere)
 	int GrenadeAmount;
 	
 };
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrenadeInvetoryUpdated, TArray<FGrenadeStruct>, GrenadeInventory);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrenadeTypeSwitched, TSubclassOf<ABaseGrenade>, GrenadeClass);
 
 UCLASS()
 class HALOFLOODFANGAME01_API ABaseCharacter : public ACharacter, public IDamageableInterface
@@ -109,6 +116,12 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnDropWeapon OnDropWeapon;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnGrenadeInvetoryUpdated OnGrenadeInvetoryUpdated;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnGrenadeTypeSwitched OnGrenadeTypeSwitched;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Stats", meta=(AllowPrivateAccess=true))
 	UHealthComponent* HealthComponent;
@@ -137,12 +150,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	USoundBase* DeathSound;
-
-	UPROPERTY(EditAnywhere, Category="Loadout")
-	TSubclassOf<ABaseGrenade> EquippedGrenadeClass;
+	//
+	// UPROPERTY(EditAnywhere, Category="Loadout")
+	// TSubclassOf<ABaseGrenade> EquippedGrenadeClass;
 
 	UPROPERTY(EditAnywhere)
-	TMap<TSubclassOf<ABaseGrenade>, int> GrenadeInventory;
+	TArray<FGrenadeStruct> GrenadeInventory;
 
 	UPROPERTY(EditAnywhere)
 	UAnimMontage* FiringAnim;
@@ -166,6 +179,8 @@ public:
 	float StunAmount = 100;
 
 	//static FTest TestDelegate;
+
+	int CurGrenadeTypeI = 0;
 
 protected:
 	UPROPERTY(EditDefaultsOnly)

@@ -64,16 +64,16 @@ void AHaloFloodFanGame01Character::GetLifetimeReplicatedProps(TArray<FLifetimePr
 void AHaloFloodFanGame01Character::OnInteractionSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 	bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (Cast<IInteractableInterface>(OtherActor))
-	{
-		InteractableActor = OtherActor;
-	}
+	// if (Cast<IInteractableInterface>(OtherActor))
+	// {
+	// 	InteractableActor = OtherActor;
+	// }
 }
 
 void AHaloFloodFanGame01Character::OnInteractionSphereEndOverlap(UPrimitiveComponent* OverlappedComponent,
 	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	InteractableActor = nullptr;
+	//InteractableActor = nullptr;
 }
 
 void AHaloFloodFanGame01Character::BeginPlay()
@@ -83,7 +83,7 @@ void AHaloFloodFanGame01Character::BeginPlay()
 
 	InteractionSphere->OnComponentBeginOverlap.AddDynamic(this, &AHaloFloodFanGame01Character::OnInteractionSphereBeginOverlap);
 	InteractionSphere->OnComponentEndOverlap.AddDynamic(this, &AHaloFloodFanGame01Character::OnInteractionSphereEndOverlap);
-
+	
 	if (HolsteredWeaponClass)
 		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(HolsteredWeaponClass)));
 
@@ -114,6 +114,35 @@ void AHaloFloodFanGame01Character::Tick(float DeltaSeconds)
 	FCollisionQueryParams CollisionParameters;
 	CollisionParameters.AddIgnoredActor(this);
 	GetWorld()->LineTraceSingleByChannel(PlayerAim, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParameters);
+
+	TArray<AActor*> Actors;
+	InteractionSphere->GetOverlappingActors(Actors);
+	AActor* FoundActor = nullptr;
+	if (!Actors.IsEmpty())
+	{
+		float ClosestDist = 0;
+		for (auto Actor : Actors)
+		{
+			if (Cast<IInteractableInterface>(Actor) && (ClosestDist == 0 || GetDistanceTo(Actor) < ClosestDist))
+			{
+				ClosestDist = GetDistanceTo(Actor);
+				FoundActor = Actor;
+				
+			}
+		}
+	}
+
+	if (FoundActor)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Closest int actor: %s"), *FoundActor->GetActorLabel());
+	}
+
+	if (InteractableActor != FoundActor)
+	{
+		InteractableActor = FoundActor;
+		UE_LOG(LogTemp, Warning, TEXT("Updated Interactable Actor"));
+		OnInteractableChanged.Broadcast(InteractableActor);
+	}
 	// FRotator Rot = GetFirstPersonCameraComponent()->GetComponentRotation();
 	// Rot.Pitch = UKismetMathLibrary::NormalizeAxis(RemoteViewPitch);
 	// FirstPersonCameraComponent->SetWorldRotation(Rot);
@@ -287,22 +316,37 @@ void AHaloFloodFanGame01Character::OnHealthDepleted_Implementation(float Damage,
 
 void AHaloFloodFanGame01Character::ThrowEquippedGrenade_Implementation()
 {
-	if (!EquippedGrenadeClass) return;
-	if (FragCount<=0) return;
-	SetFragCount(FragCount-1);
-	const FVector SpawnLoc = GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*200;
+	if (GrenadeInventory.Num() <= 0) return;
+	
+	//if (GrenadeInventory[CurGrenadeTypeI].GrenadeAmount <= 0) return;
+	GrenadeInventory[CurGrenadeTypeI].GrenadeAmount -= 1;
+	
+	// if (!EquippedGrenadeClass) return;
+	// if (FragCount<=0) return;
+	// SetFragCount(FragCount-1);
+	const FVector SpawnLoc = GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*300;
 	const FRotator SpawnRot = GetFirstPersonCameraComponent()->GetForwardVector().Rotation();
 	FActorSpawnParameters ActorSpawnParameters;
 	ActorSpawnParameters.Instigator = this;
 	ActorSpawnParameters.Owner = this;
-	if (ABaseGrenade* Grenade = Cast<ABaseGrenade>(GetWorld()->SpawnActor(EquippedGrenadeClass, &SpawnLoc, &SpawnRot, ActorSpawnParameters)))
+	UE_LOG(LogTemp, Warning, TEXT("Throwing grenade type: %s"), *GrenadeInventory[CurGrenadeTypeI].GrenadeClass->GetDefaultObjectName().ToString());
+	//GetWorld()->SpawnActor(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, &SpawnLoc, &SpawnRot, ActorSpawnParameters);
+	if (ABaseGrenade* Grenade = Cast<ABaseGrenade>(GetWorld()->SpawnActor(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, &SpawnLoc, &SpawnRot, ActorSpawnParameters)))
 	{
 		Grenade->SetArmed(true);
 		FVector Direction = GetFirstPersonCameraComponent()->GetForwardVector() + FVector(0,0,0.15);
 		Direction.Normalize();
 		//Grenade->ProjectileMovementComponent->AddForce(Direction*100000.0f);
 		Grenade->ProjectileMovementComponent->Velocity = (Direction*2000.0f);
+		
 		//Grenade->Mesh->AddImpulse(Force*20000);
+
+		if (GrenadeInventory[CurGrenadeTypeI].GrenadeAmount <= 0)
+		{
+			GrenadeInventory.RemoveAt(CurGrenadeTypeI);
+			SwitchGrenadeType(CurGrenadeTypeI);
+		}
+		OnGrenadeInvetoryUpdated.Broadcast(GrenadeInventory);
 	}
 }
 
@@ -323,38 +367,43 @@ void AHaloFloodFanGame01Character::SwitchWeapon()
 
 void AHaloFloodFanGame01Character::Interact()
 {
-	// FHitResult Hit;
-	// FVector TraceStart = FirstPersonCameraComponent->GetComponentLocation();
-	// FVector TraceEnd = FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector()*1000.0f;
-	// FCollisionQueryParams CollisionParameters;
-	// CollisionParameters.AddIgnoredActor(this);
-	// GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParameters);
-
-	if (InteractableActor)
+	FHitResult Hit;
+	FVector TraceStart = FirstPersonCameraComponent->GetComponentLocation();
+	FVector TraceEnd = FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector()*1000.0f;
+	FCollisionQueryParams CollisionParameters;
+	CollisionParameters.AddIgnoredActor(this);
+	GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParameters);
+	if (Hit.bBlockingHit)
 	{
-		if (UKismetSystemLibrary::DoesImplementInterface(InteractableActor, UInteractableInterface::StaticClass()))
+		if (UKismetSystemLibrary::DoesImplementInterface(Hit.GetActor(), UInteractableInterface::StaticClass()))
 		{
-			
-			IInteractableInterface::Execute_OnInteract(InteractableActor, this);
-			//IntFace->Execute_OnInteract(Hit.GetActor(), this);
+			IInteractableInterface::Execute_OnInteract(Hit.GetActor(), this);
+		}
+	} else
+	{
+		if (InteractableActor)
+		{
+			if (UKismetSystemLibrary::DoesImplementInterface(InteractableActor, UInteractableInterface::StaticClass()))
+			{
+				IInteractableInterface::Execute_OnInteract(InteractableActor, this);
+			}
 		}
 	}
 }
 
 void AHaloFloodFanGame01Character::SwitchGrenadeType()
 {
-	switch (CurGrenadeTypeI)
-	{
-	default:
-	case 0:
-		break;
-	case 1:
-		break;
-	case 2:
-		break;
-	case 3:
-		break;
-	}
+	SwitchGrenadeType(CurGrenadeTypeI+1);
+}
+
+void AHaloFloodFanGame01Character::SwitchGrenadeType(int Index = 0)
+{
+	if (GrenadeInventory.Num() <= 0) return;
+	
+	CurGrenadeTypeI = Index;
+	CurGrenadeTypeI = CurGrenadeTypeI % (GrenadeInventory.Num());
+	OnGrenadeTypeSwitched.Broadcast(GrenadeInventory[CurGrenadeTypeI].GrenadeClass);
+	UE_LOG(LogTemp, Warning, TEXT("Switched grenade to: %s"), *GrenadeInventory[CurGrenadeTypeI].GrenadeClass->GetDefaultObjectName().ToString());
 }
 
 void AHaloFloodFanGame01Character::ControllerChanged(AController* OldController, AController* NewController)

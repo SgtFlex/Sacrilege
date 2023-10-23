@@ -8,6 +8,10 @@
 #include "HaloHUDWidget.generated.h"
 
 
+class ABaseGrenade;
+class UUniformGridPanel;
+class UGrenadeWidget;
+struct FGrenadeStruct;
 class UListView;
 class UTextBlock;
 class UHealthComponent;
@@ -37,17 +41,25 @@ public:
 	UFUNCTION()
 	void SetInteractInfo(FText InfoText, UTexture2D* Icon = nullptr);
 
-	UFUNCTION(BlueprintNativeEvent)
-	void SetFragCounter(int32 NewFragCount);
+	UFUNCTION() 
+	void UpdateSelectedGrenadeType(TSubclassOf<ABaseGrenade> GrenadeClass);
 
-	UFUNCTION(BlueprintNativeEvent)
-	void SetPlasmaCounter(int32 NewPlasmaCount);
+	UFUNCTION()
+	void UpdateGrenadeInventory(TArray<FGrenadeStruct> GrenadeInventory);
 
-	UFUNCTION(BlueprintNativeEvent)
-	void SetSpikeCounter(int32 NewSpikeCount);
+	
 
-	UFUNCTION(BlueprintNativeEvent)
-	void SetIncenCounter(int32 NewIncenCount);
+	// UFUNCTION(BlueprintNativeEvent)
+	// void SetFragCounter(int32 NewFragCount);
+	//
+	// UFUNCTION(BlueprintNativeEvent)
+	// void SetPlasmaCounter(int32 NewPlasmaCount);
+	//
+	// UFUNCTION(BlueprintNativeEvent)
+	// void SetSpikeCounter(int32 NewSpikeCount);
+	//
+	// UFUNCTION(BlueprintNativeEvent)
+	// void SetIncenCounter(int32 NewIncenCount);
 
 	UFUNCTION(BlueprintNativeEvent)
 	void SetCompassDirection(float Yaw);
@@ -89,6 +101,9 @@ public:
 	void UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredGun);
 
 	UFUNCTION()
+	void UpdateInteractable(AActor* Actor);
+
+	UFUNCTION()
 	void UpdateSetAndWaveCount(int Set, int Wave);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
@@ -106,7 +121,13 @@ public:
 	UWidget* WeaponHUD;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	UWidget* FragHUD;
+	UUniformGridPanel* FragHUD;
+
+	UPROPERTY()
+	TArray<UGrenadeWidget*> GrenadeWidgets;
+
+	UPROPERTY()
+	TMap<TSubclassOf<ABaseGrenade>, UGrenadeWidget*> GrenadeWidgetMap;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UWidget* HealthHUD;
@@ -141,17 +162,22 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UUniformGridPanel* AmmoGrid;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	class UTextBlock* FragCounter;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<UUserWidget> GrenadeWidgetClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	class UTextBlock* PlasmaCounter;
+	TSubclassOf<ABaseGrenade> SelectedGrenadeType;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	class UTextBlock* SpikeCounter;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	class UTextBlock* IncenCounter;
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	// class UTextBlock* FragCounter;
+	//
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	// class UTextBlock* PlasmaCounter;
+	//
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	// class UTextBlock* SpikeCounter;
+	//
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	// class UTextBlock* IncenCounter;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UTextBlock* ScoreCounter;
