@@ -205,6 +205,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UImage* InteractIcon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	class UTextBlock* InteractName;
+
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CompassDirection;

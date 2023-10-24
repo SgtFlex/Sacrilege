@@ -54,8 +54,6 @@ void ABaseGrenade::Explode_Implementation()
 	if (ExplosionPFX) UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ExplosionPFX, GetActorLocation());
 	TArray<FHitResult> HitResults;
 	FVector Origin = GetActorLocation();
-	FCollisionShape Sphere = FCollisionShape::MakeSphere(OuterExplosionRadius);
-	//GetWorld()->Sweep
 	TArray<TEnumAsByte<EObjectTypeQuery>> Objects;
 	TArray<AActor*> ActorsToIgnore;
 	TArray<AActor*> HitActors;
@@ -75,6 +73,14 @@ void ABaseGrenade::Explode_Implementation()
 			//UE_LOG(LogTemp, Warning, TEXT("%s"), *GetInstigator()->GetController()->GetActorLabel());
 			AController* InstigatorController = GetInstigator()!= nullptr ? GetInstigator()->GetController() : nullptr;
 			HitDamageable->CustomTakeRadialDamage(ExplosionForce, RadialDamageEvent, InstigatorController, this);
+		}
+		if (UPrimitiveComponent* PrimComponent = Cast<UPrimitiveComponent>(HitActor->GetRootComponent()))
+		{
+			if (PrimComponent->IsSimulatingPhysics())
+			{
+				PrimComponent->AddImpulse((HitActor->GetActorLocation() - GetActorLocation()).GetSafeNormal() * ExplosionForce);
+			}
+			
 		}
 	}
 	Destroy();

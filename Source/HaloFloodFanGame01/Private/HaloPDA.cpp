@@ -80,7 +80,6 @@ AActor* AHaloPDA::StartBuildPreview(TSubclassOf<AActor> ActorToPreview)
 	bIsPreviewing = true;
 	FVector SpawnLoc = UKismetMathLibrary::GetForwardVector(Pawn->GetBaseAimRotation()) * 500.0f;
 	AActor* SpawnedActor = GetWorld()->SpawnActor(ActorToPreview, &SpawnLoc);
-	
 	if (SpawnedActor)
 	{
 		TArray<UActorComponent*> SpawnedActorComponenets;
@@ -100,8 +99,8 @@ AActor* AHaloPDA::StartBuildPreview(TSubclassOf<AActor> ActorToPreview)
 		}
 	}
 	
-
-	return PreviewActor = SpawnedActor;
+	PreviewActor = SpawnedActor;
+	return PreviewActor;
 }
 
 void AHaloPDA::StopBuildPreview()
@@ -123,9 +122,14 @@ AActor* AHaloPDA::BuildItem(FBuyable Buyable)
 	AHaloFloodFanGame01GameMode* GameMode = Cast<AHaloFloodFanGame01GameMode>(UGameplayStatics::GetGameMode(GetWorld()));
 	if (CanBuildItem(Buyable))
 	{
-		GameMode->SetPlayerResource(PlayerController, GameMode->GetPlayerResource(PlayerController) - Buyable.Cost);
-		FTransform Transform = PreviewActor->GetTransform();
-		AActor* SpawnedBuyable = GetWorld()->SpawnActor(Buyable.SpawnableActor, &Transform);
+		
+		AActor* SpawnedBuyable = nullptr;
+		if (PreviewActor)
+		{
+			FTransform Transform = PreviewActor->GetTransform();
+			SpawnedBuyable = GetWorld()->SpawnActor(Buyable.SpawnableActor, &Transform);
+		}
+		if (SpawnedBuyable) GameMode->SetPlayerResource(PlayerController, GameMode->GetPlayerResource(PlayerController) - Buyable.Cost);
 		return SpawnedBuyable;
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Too broke!"));

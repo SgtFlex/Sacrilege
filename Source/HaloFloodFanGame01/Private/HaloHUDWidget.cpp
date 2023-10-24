@@ -309,6 +309,7 @@ void UHaloHUDWidget::UpdateInteractable(AActor* Actor)
 		
 		Interactable->Execute_GetInteractInfo(Actor, IntText, IntIcon);
 		SetInteractInfo(IntText, IntIcon);
+		InteractName->SetText(FText::FromString(Actor->GetActorLabel()));
 	} else
 	{
 		SetCanInteract(false);
