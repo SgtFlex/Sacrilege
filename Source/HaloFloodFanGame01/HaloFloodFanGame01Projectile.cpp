@@ -71,7 +71,7 @@ void AHaloFloodFanGame01Projectile::OnProjectileOverlapped_Implementation(UPrimi
 	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && (DamageableActor))
 	{
 		FPointDamageEvent PointDamageEvent = FPointDamageEvent(Damage, SweepResult, Direction, UDamageType::StaticClass());
-		DamageableActor->CustomTakePointDamage(PointDamageEvent, Force, GetInstigator()->GetController(), this);
+		DamageableActor->CustomTakePointDamage(PointDamageEvent, Force, GetInstigatorController(), this);
 	}
 	
 	AGunBase* Gun = Cast<AGunBase>(GetOwner());

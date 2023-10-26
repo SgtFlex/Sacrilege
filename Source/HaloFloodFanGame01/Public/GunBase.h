@@ -218,5 +218,5 @@ public:
 	
 private:
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<AActor> BulletImpactActor;
+	TSubclassOf<AActor> BulletImpactClass;
 };
