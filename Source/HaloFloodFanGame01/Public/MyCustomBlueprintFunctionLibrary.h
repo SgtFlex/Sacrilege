@@ -25,5 +25,5 @@ public:
 	static AActor* FireProjectile(const UObject* WorldContextObject, FVector StartLocation, FVector Direction, TSubclassOf<AActor> ActorToSpawn);
 
 	UFUNCTION(BlueprintCallable, meta=(WorldContext="WorldContextObject"))
-	static TArray<AActor*> FireExplosion(const UObject* WorldContextObject, FVector Location, FRadialDamageEvent RadialDamageEvent);
+	static void FireExplosion(const UObject* WorldContextObject, TArray<AActor*>& ActorsToIgnore, FVector Location = FVector(0,0,0), float BaseDamage = 50, float MinimumDamage = 10, float OuterRadius = 500, float InnerRadius = 100, float DamageFalloff = 0, float Force = 100, AActor* DamageCauser = nullptr, AController* EventInstigator = nullptr);
 };

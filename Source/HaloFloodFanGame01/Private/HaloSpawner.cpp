@@ -65,7 +65,7 @@ TArray<ABaseCharacter*> AHaloSpawner::SpawnSquad(TMap<TSubclassOf<ABaseCharacter
 			ABaseCharacter* Char = GetWorld()->SpawnActor<ABaseCharacter>(elem.Key, Loc, Rot);
 			if (Char)
 			{
-				Char->GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &AHaloSpawner::OnUnitKilled);
+				Char->Execute_GetHealthComponent(Char)->OnHealthUpdate.AddDynamic(this, &AHaloSpawner::OnUnitKilled);
 				SpawnedChars.Add(Char);
 				if (SmartObj)
 				{

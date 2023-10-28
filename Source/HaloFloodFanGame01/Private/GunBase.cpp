@@ -159,7 +159,7 @@ void AGunBase::Fire_Implementation()
 	if (FiringSound)
 		UGameplayStatics::SpawnSoundAttached(FiringSound, GetRootComponent());
 	if (Mesh->DoesSocketExist("Muzzle") && MuzzlePFX)
-		UNiagaraComponent* BulletPFX = UNiagaraFunctionLibrary::SpawnSystemAttached(MuzzlePFX, Mesh, "Muzzle", FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
+		UNiagaraFunctionLibrary::SpawnSystemAttached(MuzzlePFX, Mesh, "Muzzle", FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
 	CurMagazine--;
 	ABaseCharacter* OwningChar = Cast<ABaseCharacter>(GetOwner());
 	if (!OwningChar) return;

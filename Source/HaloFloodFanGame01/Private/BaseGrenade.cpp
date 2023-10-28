@@ -5,6 +5,7 @@
 
 #include "DamageableInterface.h"
 #include "HaloHUDWidget.h"
+#include "MyCustomBlueprintFunctionLibrary.h"
 #include "NiagaraFunctionLibrary.h"
 #include "PickupComponent.h"
 #include "Engine/DamageEvents.h"
@@ -47,42 +48,10 @@ void ABaseGrenade::Tick(float DeltaTime)
 
 void ABaseGrenade::Explode_Implementation()
 {
-	FRadialDamageEvent RadialDamageEvent;
-	RadialDamageEvent.Params = FRadialDamageParams(MaxExplosionDamage, MinExplosionDamage, InnerExplosionRadius, OuterExplosionRadius, ExplosionDamageFalloff);
-	RadialDamageEvent.Origin = GetActorLocation();
 	if (ExplosionSFX) UGameplayStatics::PlaySoundAtLocation(GetWorld(), ExplosionSFX, GetActorLocation());
 	if (ExplosionPFX) UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ExplosionPFX, GetActorLocation());
-	TArray<FHitResult> HitResults;
-	FVector Origin = GetActorLocation();
-	TArray<TEnumAsByte<EObjectTypeQuery>> Objects;
 	TArray<AActor*> ActorsToIgnore;
-	TArray<AActor*> HitActors;
-	UKismetSystemLibrary::SphereOverlapActors(GetWorld(), Origin, OuterExplosionRadius, Objects, AActor::StaticClass(), ActorsToIgnore, HitActors);
-	//GetWorld()->SweepMultiByChannel(HitResults, Origin, Origin, FQuat(0,0,0,0), ECollisionChannel::ECC_Visibility, Sphere);
-	for (auto HitActor : HitActors)
-	{
-		FVector Direction = HitActor->GetActorLocation() - GetActorLocation();
-		Direction.Normalize();
-		// if (HitResult.GetComponent()->IsSimulatingPhysics())
-		// {
-		// 	HitResult.GetComponent()->AddImpulse(Force*ExplosionForce, HitResult.BoneName);
-		// }
-		//UE_LOG(LogTemp, Warning, TEXT("Hit actor: %s"), *HitActor->GetActorLabel());
-		if (IDamageableInterface* HitDamageable = Cast<IDamageableInterface>(HitActor))
-		{
-			//UE_LOG(LogTemp, Warning, TEXT("%s"), *GetInstigator()->GetController()->GetActorLabel());
-			AController* InstigatorController = GetInstigator()!= nullptr ? GetInstigator()->GetController() : nullptr;
-			HitDamageable->CustomTakeRadialDamage(ExplosionForce, RadialDamageEvent, InstigatorController, this);
-		}
-		if (UPrimitiveComponent* PrimComponent = Cast<UPrimitiveComponent>(HitActor->GetRootComponent()))
-		{
-			if (PrimComponent->IsSimulatingPhysics())
-			{
-				PrimComponent->AddImpulse((HitActor->GetActorLocation() - GetActorLocation()).GetSafeNormal() * ExplosionForce);
-			}
-			
-		}
-	}
+	UMyCustomBlueprintFunctionLibrary::FireExplosion(GetWorld(), ActorsToIgnore, GetActorLocation(), MaxExplosionDamage, MinExplosionDamage, OuterExplosionRadius, InnerExplosionRadius, ExplosionDamageFalloff, ExplosionForce, this, Cast<APawn>(GetOwner())->GetController());
 	Destroy();
 }
 

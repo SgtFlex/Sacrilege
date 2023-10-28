@@ -50,7 +50,7 @@ void ABaseCharacter::BeginPlay()
 
 	//UE_LOG(LogTemp, Warning, TEXT("Char: %s %f"), *GetActorLabel(), GetHealthComponent()->GetHealth());
 	//if (GetHealthComponent()) UE_LOG(LogTemp, Warning, TEXT("%s's Health component is owned by %s (Should be %s)"), *GetActorLabel(), *GetHealthComponent()->GetOwner()->GetActorLabel(), *GetActorLabel());
-	if (GetHealthComponent()) GetHealthComponent()->OnHealthDepleted.AddDynamic(this, &ABaseCharacter::OnHealthDepleted);	
+	if (Execute_GetHealthComponent(this)) Execute_GetHealthComponent(this)->OnHealthDepleted.AddDynamic(this, &ABaseCharacter::OnHealthDepleted);	
 }
 
 // Called every frame
@@ -87,7 +87,7 @@ float ABaseCharacter::CustomTakePointDamage_Implementation(FPointDamageEvent con
 		UAISense_Damage::ReportDamageEvent(GetWorld(), this, EventInstigator->GetPawn(), PointDamageEvent.Damage, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Location);
 	}
 	
-	if (GetHealthComponent()->GetShields() <= 0)
+	if (IDamageableInterface::Execute_GetHealthComponent(this)->GetShields() <= 0)
 	{
 		if (HurtAnim)
 		{
@@ -110,7 +110,7 @@ float ABaseCharacter::CustomTakePointDamage_Implementation(FPointDamageEvent con
 		if (BloodDecalMaterial)
 		{
 			float DecalSize = FMath::RandRange(10, 130);
-			if (GetHealthComponent()->GetHealth() > 0)
+			if (IDamageableInterface::Execute_GetHealthComponent(this)->GetHealth() > 0)
 			{
 				FHitResult HitResult;
 				FCollisionQueryParams QueryParams;
@@ -181,13 +181,13 @@ void ABaseCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 		FDamageEvent DamageEvent = FDamageEvent(UDamageType::StaticClass());
 		//TakePointDamage(PointDamageEvent, NormalImpulse, nullptr, nullptr);
 		
-		CustomTakeDamage(DamageCalculation, NormalImpulse, DamageEvent, nullptr, nullptr);
+		IDamageableInterface::Execute_CustomTakeDamage(this, DamageCalculation, NormalImpulse, DamageEvent, nullptr, nullptr);
 		float DecalSize = 100;
 		UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(DecalSize, DecalSize, DecalSize), GetMesh()->GetComponentLocation() + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), 0), FRotator(-90,0,FMath::RandRange(-180, 180)));
 	}
 }
 
-UHealthComponent* ABaseCharacter::GetHealthComponent()
+UHealthComponent* ABaseCharacter::GetHealthComponent_Implementation()
 {
 	return HealthComponent;
 }

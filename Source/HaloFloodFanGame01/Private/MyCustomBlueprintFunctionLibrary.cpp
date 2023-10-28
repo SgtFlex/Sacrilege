@@ -52,9 +52,31 @@ AActor* UMyCustomBlueprintFunctionLibrary::FireProjectile(const UObject* WorldCo
 }
 
 
-TArray<AActor*> UMyCustomBlueprintFunctionLibrary::FireExplosion(const UObject* WorldContextObject, FVector Location, FRadialDamageEvent RadialDamageEvent)
+void UMyCustomBlueprintFunctionLibrary::FireExplosion(const UObject* WorldContextObject, TArray<AActor*>& ActorsToIgnore, FVector Location, float BaseDamage, float MinimumDamage, float OuterRadius, float InnerRadius, float DamageFalloff, float Force, AActor* DamageCauser, AController* EventInstigator)
 {
 	TArray<AActor*> Actors;
 
-	return Actors;
+	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull))
+	{
+		FRadialDamageEvent RadialDamageEvent;
+		RadialDamageEvent.Params = FRadialDamageParams(BaseDamage, MinimumDamage, InnerRadius, OuterRadius, DamageFalloff);
+		RadialDamageEvent.Origin = Location;
+		TArray<TEnumAsByte<EObjectTypeQuery>> Objects;
+		TArray<AActor*> HitActors;
+		UKismetSystemLibrary::SphereOverlapActors(World, Location, OuterRadius, Objects, AActor::StaticClass(), ActorsToIgnore, HitActors);
+		for (auto HitActor : HitActors)
+		{
+			if (IDamageableInterface* HitDamageable = Cast<IDamageableInterface>(HitActor))
+			{
+				HitActor->CustomTakeRadialDamage(Force, RadialDamageEvent, EventInstigator, DamageCauser);
+			}
+			if (UPrimitiveComponent* PrimComponent = Cast<UPrimitiveComponent>(HitActor->GetRootComponent()))
+			{
+				if (PrimComponent->IsSimulatingPhysics())
+				{
+					PrimComponent->AddImpulse((HitActor->GetActorLocation() - Location).GetSafeNormal() * Force);
+				}
+			}
+		}
+	}
 }
