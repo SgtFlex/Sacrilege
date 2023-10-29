@@ -59,7 +59,8 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	float CustomOnTakeAnyDamage(float DamageAmount, FVector Force, AController* EventInstigator, AActor* DamageCauser) override;
 	
-	virtual float CustomTakePointDamage_Implementation(FPointDamageEvent const& PointDamageEvent, float Force, AController* EventInstigator, AActor* DamageCauser) override;
+	UFUNCTION(BlueprintNativeEvent)
+	float CustomTakePointDamage(FPointDamageEvent const& PointDamageEvent, float Force, AController* EventInstigator, AActor* DamageCauser) override;
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void OnHealthDepleted(float Damage, FVector Force, FVector HitLocation = FVector(0,0,0), FName HitBoneName = "", AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
@@ -67,7 +68,7 @@ public:
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit );
 	
-	virtual UHealthComponent* GetHealthComponent_Implementation() override;
+	virtual UHealthComponent* GetHealthComponent() override;
 
 	UFUNCTION(BlueprintNativeEvent)
 	void Melee();

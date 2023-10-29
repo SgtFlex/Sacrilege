@@ -35,7 +35,7 @@ void UHaloHUDWidget::NativeConstruct()
 	}
 	PlayerCharacter->WeaponsUpdated.AddDynamic(this, &UHaloHUDWidget::UpdateHUDWeaponData);
 	PlayerCharacter->OnInteractableChanged.AddDynamic(this, &UHaloHUDWidget::UpdateInteractable);
-	PlayerCharacter->Execute_GetHealthComponent(PlayerCharacter)->OnHealthUpdate.AddDynamic(this, &UHaloHUDWidget::OnHealthUpdated);
+	PlayerCharacter->GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &UHaloHUDWidget::OnHealthUpdated);
 	PlayerCharacter->OnGrenadeInvetoryUpdated.AddDynamic(this, &UHaloHUDWidget::UpdateGrenadeInventory);
 	PlayerCharacter->OnGrenadeTypeSwitched.AddDynamic(this, &UHaloHUDWidget::UHaloHUDWidget::UpdateSelectedGrenadeType);
 	UpdateGrenadeInventory(PlayerCharacter->GrenadeInventory);
