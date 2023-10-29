@@ -32,12 +32,11 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	virtual float CustomTakeRadialDamage(float Force, FRadialDamageEvent const& RadialDamageEvent, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
-	//
-	// UFUNCTION(BlueprintCallable)
-	// virtual void HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName);
 
 	UFUNCTION(BlueprintCallable)
 	virtual UHealthComponent* GetHealthComponent();
+
+	float ChangeHealth(float Damage, FVector Force = FVector(0,0,0), FVector HitLocation = FVector(0,0,0), FName HitBoneName = "", AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr, bool bIgnoreShields = false, bool bIgnoreHealthArmor = false, bool bIgnoreShieldArmor = false);
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 };
