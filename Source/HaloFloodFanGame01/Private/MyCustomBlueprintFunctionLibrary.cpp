@@ -68,7 +68,7 @@ void UMyCustomBlueprintFunctionLibrary::FireExplosion(const UObject* WorldContex
 		{
 			if (IDamageableInterface* HitDamageable = Cast<IDamageableInterface>(HitActor))
 			{
-				HitActor->CustomTakeRadialDamage(Force, RadialDamageEvent, EventInstigator, DamageCauser);
+				HitDamageable->CustomTakeRadialDamage(Force, RadialDamageEvent, EventInstigator, DamageCauser);
 			}
 			if (UPrimitiveComponent* PrimComponent = Cast<UPrimitiveComponent>(HitActor->GetRootComponent()))
 			{
