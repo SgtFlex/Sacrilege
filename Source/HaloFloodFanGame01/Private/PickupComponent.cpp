@@ -5,7 +5,7 @@
 
 #include "PickupInterface.h"
 #include "Components/BoxComponent.h"
-#include "HaloFloodFanGame01/HaloFloodFanGame01Character.h"
+#include "HaloFloodFanGame01/PlayerCharacter.h"
 
 // Sets default values for this component's properties
 UPickupComponent::UPickupComponent()
@@ -41,7 +41,7 @@ void UPickupComponent::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AA
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	IPickupInterface* Owner = Cast<IPickupInterface>(GetOwner());
-	if (AHaloFloodFanGame01Character* PlayerChar = Cast<AHaloFloodFanGame01Character>(OtherActor))
+	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(OtherActor))
 		Owner->Pickup(PlayerChar);
 }
 

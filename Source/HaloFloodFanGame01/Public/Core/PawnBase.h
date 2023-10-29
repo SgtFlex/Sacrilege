@@ -4,12 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
-#include "BasePawn.generated.h"
+#include "PawnBase.generated.h"
 
 class ASmartObject;
 class UCapsuleComponent;
 UCLASS()
-class HALOFLOODFANGAME01_API ABasePawn : public APawn
+class HALOFLOODFANGAME01_API APawnBase : public APawn
 {
 	GENERATED_BODY()
 
@@ -22,7 +22,7 @@ protected:
 
 public:
 	// Sets default values for this pawn's properties
-	ABasePawn();
+	APawnBase();
 
 protected:
 	// Called when the game starts or when spawned

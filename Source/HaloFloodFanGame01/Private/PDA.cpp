@@ -1,18 +1,18 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "HaloPDA.h"
+#include "PDA.h"
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Components/WidgetComponent.h"
-#include "HaloFloodFanGame01/HaloFloodFanGame01Character.h"
-#include "HaloFloodFanGame01/HaloFloodFanGame01GameMode.h"
+#include "HaloFloodFanGame01/PlayerCharacter.h"
+#include "HaloFloodFanGame01/FirefightGamemode.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
-AHaloPDA::AHaloPDA()
+APDA::APDA()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -25,10 +25,10 @@ AHaloPDA::AHaloPDA()
 }
 
 // Called when the game starts or when spawned
-void AHaloPDA::BeginPlay()
+void APDA::BeginPlay()
 {
 	Super::BeginPlay();
-	Pawn = Cast<AHaloFloodFanGame01Character>(GetOwner());
+	Pawn = Cast<APlayerCharacter>(GetOwner());
 	PlayerController = Cast<APlayerController>(Pawn->GetController());
 	
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
@@ -39,18 +39,18 @@ void AHaloPDA::BeginPlay()
 		UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent);
 		if (EnhancedInputComponent)
 		{
-			EnhancedInputComponent->BindAction(NavigateInputAction, ETriggerEvent::Triggered, this, &AHaloPDA::Navigate);
+			EnhancedInputComponent->BindAction(NavigateInputAction, ETriggerEvent::Triggered, this, &APDA::Navigate);
 
-			EnhancedInputComponent->BindAction(SelectInputAction, ETriggerEvent::Triggered, this, &AHaloPDA::Select);
+			EnhancedInputComponent->BindAction(SelectInputAction, ETriggerEvent::Triggered, this, &APDA::Select);
 
-			EnhancedInputComponent->BindAction(ClosePDAAction, ETriggerEvent::Triggered, this, &AHaloPDA::ClosePDA);
+			EnhancedInputComponent->BindAction(ClosePDAAction, ETriggerEvent::Triggered, this, &APDA::ClosePDA);
 
 			UE_LOG(LogTemp, Warning, TEXT("Added binds"));
 		}
 	}
 }
 
-void AHaloPDA::EndPlay(const EEndPlayReason::Type EndPlayReason)
+void APDA::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
 
@@ -62,7 +62,7 @@ void AHaloPDA::EndPlay(const EEndPlayReason::Type EndPlayReason)
 }
 
 // Called every frame
-void AHaloPDA::Tick(float DeltaTime)
+void APDA::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
@@ -74,7 +74,7 @@ void AHaloPDA::Tick(float DeltaTime)
 	}
 }
 
-AActor* AHaloPDA::StartBuildPreview(TSubclassOf<AActor> ActorToPreview)
+AActor* APDA::StartBuildPreview(TSubclassOf<AActor> ActorToPreview)
 {
 	if (bIsPreviewing) StopBuildPreview();
 	bIsPreviewing = true;
@@ -103,23 +103,23 @@ AActor* AHaloPDA::StartBuildPreview(TSubclassOf<AActor> ActorToPreview)
 	return PreviewActor;
 }
 
-void AHaloPDA::StopBuildPreview()
+void APDA::StopBuildPreview()
 {
 	if (!bIsPreviewing) return;
 	bIsPreviewing = false;
 	if (PreviewActor) PreviewActor->Destroy();
 }
 
-bool AHaloPDA::CanBuildItem(FBuyable Buyable)
+bool APDA::CanBuildItem(FBuyable Buyable)
 {
-	AHaloFloodFanGame01GameMode* GameMode = Cast<AHaloFloodFanGame01GameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+	AFirefightGameMode* GameMode = Cast<AFirefightGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
 	return GameMode->GetPlayerResource(PlayerController) >= Buyable.Cost;
 }
 
-AActor* AHaloPDA::BuildItem(FBuyable Buyable)
+AActor* APDA::BuildItem(FBuyable Buyable)
 {
 	UE_LOG(LogTemp, Warning, TEXT("build item request"));
-	AHaloFloodFanGame01GameMode* GameMode = Cast<AHaloFloodFanGame01GameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+	AFirefightGameMode* GameMode = Cast<AFirefightGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
 	if (CanBuildItem(Buyable))
 	{
 		
@@ -136,17 +136,17 @@ AActor* AHaloPDA::BuildItem(FBuyable Buyable)
 	return nullptr;
 }
 
-void AHaloPDA::ClosePDA(const FInputActionValue& InputActionValue)
+void APDA::ClosePDA(const FInputActionValue& InputActionValue)
 {
 	Destroy();
 }
 
-void AHaloPDA::Navigate_Implementation(const FInputActionValue& InputActionValue)
+void APDA::Navigate_Implementation(const FInputActionValue& InputActionValue)
 {
 	
 }
 
-void AHaloPDA::Select_Implementation(const FInputActionValue& InputActionValue)
+void APDA::Select_Implementation(const FInputActionValue& InputActionValue)
 {
 	
 }

@@ -1,15 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "BaseAIController.h"
+#include "AIControllerBase.h"
 
 #include "NavigationSystem.h"
 #include "SmartObject.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "Core/BaseCharacter.h"
-#include "Core/BasePawn.h"
+#include "Core/CharacterBase.h"
+#include "Core/PawnBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Perception/AISenseConfig.h"
 #include "Perception/AISenseConfig_Damage.h"
@@ -18,7 +18,7 @@
 #include "Perception/AISenseConfig_Team.h"
 #include "Perception/AISenseConfig_Touch.h"
 
-ABaseAIController::ABaseAIController()
+AAIControllerBase::AAIControllerBase()
 {
 	AIPerceptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("PerceptionComp"));
 	BlackboardComp = CreateDefaultSubobject<UBlackboardComponent>(TEXT("BlackboardComp"));
@@ -37,15 +37,15 @@ ABaseAIController::ABaseAIController()
 	AIPerceptionComponent->SetDominantSense(*Sight->GetSenseImplementation());
 }
 
-void ABaseAIController::BeginPlay()
+void AAIControllerBase::BeginPlay()
 {
 	Super::BeginPlay();
-	AIPerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(this, &ABaseAIController::OnPerceptionUpdated);
-	GetWorldTimerManager().SetTimer(Delay, this, &ABaseAIController::BeginPlayDelayed, 0.1f, false);
+	AIPerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(this, &AAIControllerBase::OnPerceptionUpdated);
+	GetWorldTimerManager().SetTimer(Delay, this, &AAIControllerBase::BeginPlayDelayed, 0.1f, false);
 	BehaviorTreeComp->StartLogic();
 }
 
-void ABaseAIController::UpdateControlRotation(float DeltaTime, bool bUpdatePawn)
+void AAIControllerBase::UpdateControlRotation(float DeltaTime, bool bUpdatePawn)
 {
 	//Super::UpdateControlRotation(DeltaTime, bUpdatePawn);
 
@@ -85,9 +85,9 @@ void ABaseAIController::UpdateControlRotation(float DeltaTime, bool bUpdatePawn)
 	}
 }
 
-void ABaseAIController::BeginPlayDelayed()
+void AAIControllerBase::BeginPlayDelayed()
 {
-	ABaseCharacter* Char = Cast<ABaseCharacter>(GetPawn());
+	ACharacterBase* Char = Cast<ACharacterBase>(GetPawn());
 	SetGenericTeamId(FGenericTeamId(TeamNumber));
 	if (Char)
 	{
@@ -100,7 +100,7 @@ void ABaseAIController::BeginPlayDelayed()
 	}
 }
 
-ETeamAttitude::Type ABaseAIController::GetTeamAttitudeTowards(const AActor& Other) const
+ETeamAttitude::Type AAIControllerBase::GetTeamAttitudeTowards(const AActor& Other) const
 {
 	if (const APawn* OtherPawn = Cast<APawn>(&Other)) {
 
@@ -115,7 +115,7 @@ ETeamAttitude::Type ABaseAIController::GetTeamAttitudeTowards(const AActor& Othe
 	//return Super::GetTeamAttitudeTowards(Other);
 }
 
-void ABaseAIController::UpdatedPerception(AActor* Actor, FAIStimulus Stimulus, bool AlertedByAllies)
+void AAIControllerBase::UpdatedPerception(AActor* Actor, FAIStimulus Stimulus, bool AlertedByAllies)
 {
 	
 	if (GetTeamAttitudeTowards(*Actor)!=ETeamAttitude::Hostile)
@@ -154,30 +154,30 @@ void ABaseAIController::UpdatedPerception(AActor* Actor, FAIStimulus Stimulus, b
 	if (!AlertedByAllies) AlertAllies(3000, Actor, Stimulus);
 }
 
-void ABaseAIController::HearingStimulusUpdated(AActor* Actor, FAIStimulus Stimulus)
+void AAIControllerBase::HearingStimulusUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
 }
 
-void ABaseAIController::SightStimulusUpdated(AActor* Actor, FAIStimulus Stimulus)
+void AAIControllerBase::SightStimulusUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
 }
 
-void ABaseAIController::DamageStimulusUpdated(AActor* Actor, FAIStimulus Stimulus)
+void AAIControllerBase::DamageStimulusUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
 }
 
-void ABaseAIController::AlertAllies(float AlertRadius, AActor* Actor, FAIStimulus Stimulus)
+void AAIControllerBase::AlertAllies(float AlertRadius, AActor* Actor, FAIStimulus Stimulus)
 {
 	TArray<AActor*> Actors;
 	TArray<TEnumAsByte<EObjectTypeQuery>> Objects;
 	TArray<AActor*> ActorsToIgnore;
 	ActorsToIgnore.Add(this->GetPawn());
-	UKismetSystemLibrary::SphereOverlapActors(GetWorld(), GetPawn()->GetActorLocation(), AlertRadius, Objects, ABaseCharacter::StaticClass(), ActorsToIgnore, Actors);
+	UKismetSystemLibrary::SphereOverlapActors(GetWorld(), GetPawn()->GetActorLocation(), AlertRadius, Objects, ACharacterBase::StaticClass(), ActorsToIgnore, Actors);
 	for (auto FoundActor : Actors)
 	{
-		if (ABaseCharacter* BaseCharacter = Cast<ABaseCharacter>(FoundActor))
+		if (ACharacterBase* BaseCharacter = Cast<ACharacterBase>(FoundActor))
 		{
-			if (ABaseAIController* AIController = Cast<ABaseAIController>(BaseCharacter->GetController()))
+			if (AAIControllerBase* AIController = Cast<AAIControllerBase>(BaseCharacter->GetController()))
 			{
 				if (AIController->TeamNumber == TeamNumber)
 				{
@@ -190,7 +190,7 @@ void ABaseAIController::AlertAllies(float AlertRadius, AActor* Actor, FAIStimulu
 }
 
 
-void ABaseAIController::OnPerceptionUpdated_Implementation(AActor* Actor, FAIStimulus Stimulus)
+void AAIControllerBase::OnPerceptionUpdated_Implementation(AActor* Actor, FAIStimulus Stimulus)
 {
 	UpdatedPerception(Actor, Stimulus);
 }

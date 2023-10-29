@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Core/BaseCharacter.h"
+#include "Core/CharacterBase.h"
 
-#include "BaseAIController.h"
-#include "BaseGrenade.h"
+#include "AIControllerBase.h"
+#include "GrenadeBase.h"
 #include "GunBase.h"
 #include "HealthComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -23,7 +23,7 @@
 #include "Perception/AISense_Touch.h"
 
 // Sets default values
-ABaseCharacter::ABaseCharacter()
+ACharacterBase::ACharacterBase()
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -37,10 +37,10 @@ ABaseCharacter::ABaseCharacter()
 }
 
 // Called when the game starts or when spawned
-void ABaseCharacter::BeginPlay()
+void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
-	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ABaseCharacter::OnHit);
+	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ACharacterBase::OnHit);
 
 	if (SpawnWeaponClass && HasAuthority())
 	{
@@ -50,39 +50,39 @@ void ABaseCharacter::BeginPlay()
 
 	//UE_LOG(LogTemp, Warning, TEXT("Char: %s %f"), *GetActorLabel(), GetHealthComponent()->GetHealth());
 	//if (GetHealthComponent()) UE_LOG(LogTemp, Warning, TEXT("%s's Health component is owned by %s (Should be %s)"), *GetActorLabel(), *GetHealthComponent()->GetOwner()->GetActorLabel(), *GetActorLabel());
-	if (GetHealthComponent()) GetHealthComponent()->OnHealthDepleted.AddDynamic(this, &ABaseCharacter::OnHealthDepleted);	
+	if (GetHealthComponent()) GetHealthComponent()->OnHealthDepleted.AddDynamic(this, &ACharacterBase::OnHealthDepleted);	
 }
 
 // Called every frame
-void ABaseCharacter::Tick(float DeltaTime)
+void ACharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
 
-void ABaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void ACharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(ABaseCharacter, EquippedWeapon);
+	DOREPLIFETIME(ACharacterBase, EquippedWeapon);
 }
 
 // Called to bind functionality to input
-void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 }
 
-float ABaseCharacter::CustomOnTakeAnyDamage_Implementation(float DamageAmount, FVector Force,
+float ACharacterBase::CustomOnTakeAnyDamage_Implementation(float DamageAmount, FVector Force,
 	AController* EventInstigator, AActor* DamageCauser)
 {
 	return IDamageableInterface::CustomOnTakeAnyDamage(DamageAmount, Force, EventInstigator, DamageCauser);
 }
 
-float ABaseCharacter::CustomTakePointDamage_Implementation(FPointDamageEvent const& PointDamageEvent, float Force, AController* EventInstigator, AActor* DamageCauser)
+float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent const& PointDamageEvent, float Force, AController* EventInstigator, AActor* DamageCauser)
 {
 	float x = IDamageableInterface::CustomTakePointDamage(PointDamageEvent, Force, EventInstigator, DamageCauser);
-	if (EventInstigator && Cast<ABaseAIController>(GetController()))
+	if (EventInstigator && Cast<AAIControllerBase>(GetController()))
 	{
 		UAISense_Damage::ReportDamageEvent(GetWorld(), this, EventInstigator->GetPawn(), PointDamageEvent.Damage, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Location);
 	}
@@ -140,12 +140,12 @@ float ABaseCharacter::CustomTakePointDamage_Implementation(FPointDamageEvent con
 // 	return IDamageableInterface::CustomTakeDamage(DamageAmount, Force, DamageEvent, EventInstigator, DamageCauser);
 // }
 
-void ABaseCharacter::OnHealthDepleted_Implementation(float Damage, FVector DamageForce, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
+void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector DamageForce, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
 	if (BloodDecalMaterial) UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(100, 100, 100), GetActorLocation(), FRotator(-90,0,0));
 	if (DeathSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), DeathSound, GetActorLocation());
 	GetMesh()->SetNotifyRigidBodyCollision(true);
-	GetMesh()->OnComponentHit.AddDynamic(this, &ABaseCharacter::OnHit);
+	GetMesh()->OnComponentHit.AddDynamic(this, &ACharacterBase::OnHit);
 	GetMesh()->GetAnimInstance()->Montage_Play(DeathAnim);
 	GetCapsuleComponent()->DestroyComponent();
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -153,7 +153,7 @@ void ABaseCharacter::OnHealthDepleted_Implementation(float Damage, FVector Damag
 	GetMesh()->AddImpulseAtLocation(DamageForce, HitLocation, HitBoneName);
 	OnKilled.Broadcast(EventInstigator, DamageCauser);
 	
-	GetWorld()->GetTimerManager().SetTimer(RagdollTimer, this, &ABaseCharacter::RagdollSettled, 1);
+	GetWorld()->GetTimerManager().SetTimer(RagdollTimer, this, &ACharacterBase::RagdollSettled, 1);
 	if (GetController()) GetController()->Destroy();
 	//TestDelegate.Execute(this);
 	if (EquippedWeapon)
@@ -161,7 +161,7 @@ void ABaseCharacter::OnHealthDepleted_Implementation(float Damage, FVector Damag
 	
 }
 
-void ABaseCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+void ACharacterBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
 {
 	LaunchCharacter(NormalImpulse/100, true, true);
@@ -187,17 +187,17 @@ void ABaseCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 	}
 }
 
-UHealthComponent* ABaseCharacter::GetHealthComponent()
+UHealthComponent* ACharacterBase::GetHealthComponent()
 {
 	return HealthComponent;
 }
 
-void ABaseCharacter::EquipGrenadeType_Implementation(TSubclassOf<ABaseGrenade> Grenade)
+void ACharacterBase::EquipGrenadeType_Implementation(TSubclassOf<AGrenadeBase> Grenade)
 {
 	// EquippedGrenadeClass = Grenade;
 }
 
-void ABaseCharacter::Melee_Implementation()
+void ACharacterBase::Melee_Implementation()
 {
 	//GetMesh()->GetAnimInstance()->Montage_Play(MeleeAnim);
 	UE_LOG(LogTemp, Warning, TEXT("Melee"));
@@ -221,57 +221,57 @@ void ABaseCharacter::Melee_Implementation()
 	}
 }
 
-void ABaseCharacter::ThrowEquippedGrenade_Implementation()
+void ACharacterBase::ThrowEquippedGrenade_Implementation()
 {
 	if (GrenadeInventory[CurGrenadeTypeI].GrenadeAmount <= 0) return;
 	OnGrenadeInvetoryUpdated.Broadcast(GrenadeInventory);
 	FVector EyesLoc;
 	FRotator EyesRot;
 	GetActorEyesViewPoint(EyesLoc, EyesRot);
-	ABaseGrenade* Grenade = Cast<ABaseGrenade>(GetWorld()->SpawnActor(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, &EyesLoc));
+	AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActor(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, &EyesLoc));
 	Grenade->SetArmed(true);
 	FVector Force = GetBaseAimRotation().Vector() + FVector(0,0,0.1);
 	Grenade->Mesh->AddImpulse(Force*20000);
 }
 
-void ABaseCharacter::UseEquipment()
+void ACharacterBase::UseEquipment()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Used Equipment"));
 }
 
-void ABaseCharacter::PrimaryAttack_Pull()
+void ACharacterBase::PrimaryAttack_Pull()
 {
 	if (EquippedWeapon)
 		EquippedWeapon->PullTrigger();
 }
 
-void ABaseCharacter::PrimaryAttack_Release()
+void ACharacterBase::PrimaryAttack_Release()
 {
 	if (EquippedWeapon)
 		EquippedWeapon->ReleaseTrigger();
 }
 
-void ABaseCharacter::ReloadInput()
+void ACharacterBase::ReloadInput()
 {
 	if (EquippedWeapon) EquippedWeapon->StartReload();
 }
 
-void ABaseCharacter::PickupWeapon(AGunBase* Gun)
+void ACharacterBase::PickupWeapon(AGunBase* Gun)
 {
 	Server_PickupWeapon(Gun);
 }
 
-void ABaseCharacter::Server_PickupWeapon_Implementation(AGunBase* Gun)
+void ACharacterBase::Server_PickupWeapon_Implementation(AGunBase* Gun)
 {
 	Multi_PickupWeapon(Gun);
 }
 
-bool ABaseCharacter::Server_PickupWeapon_Validate(AGunBase* Gun)
+bool ACharacterBase::Server_PickupWeapon_Validate(AGunBase* Gun)
 {
 	return true;
 }
 
-void ABaseCharacter::Multi_PickupWeapon_Implementation(AGunBase* Gun)
+void ACharacterBase::Multi_PickupWeapon_Implementation(AGunBase* Gun)
 {
 	Gun->Mesh->SetSimulatePhysics(false);
 	Gun->SetActorEnableCollision(false);
@@ -291,7 +291,7 @@ void ABaseCharacter::Multi_PickupWeapon_Implementation(AGunBase* Gun)
 	}
 }
 
-void ABaseCharacter::DropWeapon()
+void ACharacterBase::DropWeapon()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Dropped weapon"));
 	EquippedWeapon->ReleaseTrigger();
@@ -304,7 +304,7 @@ void ABaseCharacter::DropWeapon()
 	EquippedWeapon = nullptr;
 }
 
-void ABaseCharacter::RagdollSettled()
+void ACharacterBase::RagdollSettled()
 {
 	TArray<FName> BoneNames;
 	GetMesh()->GetBoneNames(BoneNames);
@@ -314,28 +314,28 @@ void ABaseCharacter::RagdollSettled()
 		GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 	} else
 	{
-		GetWorld()->GetTimerManager().SetTimer(RagdollTimer, this, &ABaseCharacter::RagdollSettled, 1);
+		GetWorld()->GetTimerManager().SetTimer(RagdollTimer, this, &ACharacterBase::RagdollSettled, 1);
 	}
 }
 
-void ABaseCharacter::Stun()
+void ACharacterBase::Stun()
 {
 	StunAmount = 0;
 	float StunDuration = HurtAnim->CalculateSequenceLength();
 	GetMesh()->GetAnimInstance()->Montage_Play(HurtAnim);
-	if (ABaseAIController* AIC = Cast<ABaseAIController>(GetController()))
+	if (AAIControllerBase* AIC = Cast<AAIControllerBase>(GetController()))
 	{
 		AIC->BehaviorTreeComp->PauseLogic(FString("Stunned"));
 		AIC->StopMovement();
 		AIC->BlackboardComp->SetValueAsBool("IsStunned", true);
 		AIC->ClearFocus(EAIFocusPriority::Gameplay);
-		GetWorld()->GetTimerManager().SetTimer(StunTimer, this, &ABaseCharacter::Unstun, StunDuration, false);
+		GetWorld()->GetTimerManager().SetTimer(StunTimer, this, &ACharacterBase::Unstun, StunDuration, false);
 	}
 }
 
-void ABaseCharacter::Unstun()
+void ACharacterBase::Unstun()
 {
-	if (ABaseAIController* AIC = Cast<ABaseAIController>(GetController()))
+	if (AAIControllerBase* AIC = Cast<AAIControllerBase>(GetController()))
 	{
 		AIC->BehaviorTreeComp->ResumeLogic(FString("Unstunned"));
 		AIC->BlackboardComp->SetValueAsBool("IsStunned", false);

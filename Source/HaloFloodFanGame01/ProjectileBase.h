@@ -4,14 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "HaloFloodFanGame01Projectile.generated.h"
+#include "ProjectileBase.generated.h"
 
 class UNiagaraSystem;
 class USphereComponent;
 class UProjectileMovementComponent;
 
 UCLASS(config=Game)
-class AHaloFloodFanGame01Projectile : public AActor
+class AProjectileBase : public AActor
 {
 	GENERATED_BODY()
 
@@ -50,7 +50,7 @@ private:
 	UAudioComponent* IdleSoundComponent;
 
 public:
-	AHaloFloodFanGame01Projectile();
+	AProjectileBase();
 
 	virtual void BeginPlay() override;
 	

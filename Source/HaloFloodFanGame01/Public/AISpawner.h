@@ -4,24 +4,24 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "HaloSpawner.generated.h"
+#include "AISpawner.generated.h"
 
 class UHealthComponent;
 class ASmartObject;
 class UBoxComponent;
-class ABaseCharacter;
+class ACharacterBase;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSpawned);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAvailable, AHaloSpawner*, Spawner);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAvailable, AAISpawner*, Spawner);
 
 UCLASS()
-class HALOFLOODFANGAME01_API AHaloSpawner : public AActor
+class HALOFLOODFANGAME01_API AAISpawner : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	AHaloSpawner();
+	AAISpawner();
 
 protected:
 	// Called when the game starts or when spawned
@@ -34,10 +34,10 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	TArray<ABaseCharacter*> SpawnSquad(TMap<TSubclassOf<ABaseCharacter>, int> SquadToSpawn);
+	TArray<ACharacterBase*> SpawnSquad(TMap<TSubclassOf<ACharacterBase>, int> SquadToSpawn);
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TMap<TSubclassOf<ABaseCharacter>, int> Squad;
+	TMap<TSubclassOf<ACharacterBase>, int> Squad;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UBoxComponent* Box;
@@ -46,7 +46,7 @@ public:
 	ASmartObject* SmartObj;
 
 	UPROPERTY()
-	TArray<ABaseCharacter*> SpawnedChars;
+	TArray<ACharacterBase*> SpawnedChars;
 
 	UPROPERTY()
 	FOnAvailable OnAvailable;

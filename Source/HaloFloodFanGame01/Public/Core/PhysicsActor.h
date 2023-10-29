@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "HaloPhysicsActor.generated.h"
+#include "PhysicsActor.generated.h"
 
 UCLASS()
-class HALOFLOODFANGAME01_API AHaloPhysicsActor : public AActor
+class HALOFLOODFANGAME01_API APhysicsActor : public AActor
 {
 	GENERATED_BODY()
 
@@ -15,7 +15,7 @@ class HALOFLOODFANGAME01_API AHaloPhysicsActor : public AActor
 	UStaticMeshComponent* StaticMesh;
 public:	
 	// Sets default values for this actor's properties
-	AHaloPhysicsActor();
+	APhysicsActor();
 
 protected:
 	// Called when the game starts or when spawned

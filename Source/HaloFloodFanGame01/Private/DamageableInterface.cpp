@@ -4,7 +4,7 @@
 #include "DamageableInterface.h"
 
 #include "HealthComponent.h"
-#include "Core/BaseCharacter.h"
+#include "Core/CharacterBase.h"
 #include "Engine/DamageEvents.h"
 #include "Kismet/GameplayStatics.h"
 

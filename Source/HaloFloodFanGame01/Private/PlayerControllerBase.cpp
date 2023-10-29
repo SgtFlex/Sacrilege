@@ -1,21 +1,21 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "HaloPlayerController.h"
+#include "PlayerControllerBase.h"
 
-#include "HaloHUDWidget.h"
-#include "Core/BaseCharacter.h"
+#include "PlayerHUD.h"
+#include "Core/CharacterBase.h"
 #include "GameFramework/GameModeBase.h"
-#include "HaloFloodFanGame01/HaloFloodFanGame01Character.h"
+#include "HaloFloodFanGame01/PlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
 
-AHaloPlayerController::AHaloPlayerController()
+APlayerControllerBase::APlayerControllerBase()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	
 }
 
-void AHaloPlayerController::BeginPlay()
+void APlayerControllerBase::BeginPlay()
 {
 	Super::BeginPlay();
 	TeamId = FGenericTeamId(TeamNumber);
@@ -23,7 +23,7 @@ void AHaloPlayerController::BeginPlay()
 	
 }
 
-void AHaloPlayerController::OnPossess(APawn* InPawn)
+void APlayerControllerBase::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
@@ -36,7 +36,7 @@ void AHaloPlayerController::OnPossess(APawn* InPawn)
 	// }
 }
 
-FGenericTeamId AHaloPlayerController::GetGenericTeamId() const
+FGenericTeamId APlayerControllerBase::GetGenericTeamId() const
 {
 	return TeamId;
 }

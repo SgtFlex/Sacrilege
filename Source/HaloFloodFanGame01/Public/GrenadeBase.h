@@ -6,20 +6,20 @@
 #include "DamageableInterface.h"
 #include "PickupInterface.h"
 #include "GameFramework/Actor.h"
-#include "BaseGrenade.generated.h"
+#include "GrenadeBase.generated.h"
 
 class UImage;
 class UProjectileMovementComponent;
 class UPickupComponent;
 class UNiagaraSystem;
 UCLASS()
-class HALOFLOODFANGAME01_API ABaseGrenade : public AActor, public IPickupInterface, public IDamageableInterface
+class HALOFLOODFANGAME01_API AGrenadeBase : public AActor, public IPickupInterface, public IDamageableInterface
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	ABaseGrenade();
+	AGrenadeBase();
 
 	UPROPERTY(EditAnywhere)
 	float FuseTime = 2;
@@ -87,7 +87,7 @@ public:
 	void OnCollide(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit );
 	
 	UFUNCTION()
-	virtual void Pickup(AHaloFloodFanGame01Character* Character) override;
+	virtual void Pickup(APlayerCharacter* Character) override;
 
 	// virtual float TakePointDamage(FPointDamageEvent const& PointDamageEvent, FVector Force, AController*, AActor* DamageCauser) override;
 

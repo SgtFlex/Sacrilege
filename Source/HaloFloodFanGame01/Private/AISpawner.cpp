@@ -1,18 +1,18 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "HaloSpawner.h"
+#include "AISpawner.h"
 
 #include "HealthComponent.h"
-#include "Core/BaseCharacter.h"
+#include "Core/CharacterBase.h"
 
 #include "Components/BoxComponent.h"
-#include "Core/BaseCharacter.h"
+#include "Core/CharacterBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
-AHaloSpawner::AHaloSpawner()
+AAISpawner::AAISpawner()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -22,7 +22,7 @@ AHaloSpawner::AHaloSpawner()
 }
 
 // Called when the game starts or when spawned
-void AHaloSpawner::BeginPlay()
+void AAISpawner::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -30,11 +30,11 @@ void AHaloSpawner::BeginPlay()
 	
 }
 
-void AHaloSpawner::OnUnitKilled(UHealthComponent* HealthComponent)
+void AAISpawner::OnUnitKilled(UHealthComponent* HealthComponent)
 {
 	if (HealthComponent->GetHealth() <= 0)
 	{
-		SpawnedChars.Remove(Cast<ABaseCharacter>(HealthComponent->GetOwner()));
+		SpawnedChars.Remove(Cast<ACharacterBase>(HealthComponent->GetOwner()));
 	}
 	if (SpawnedChars.IsEmpty())
 	{
@@ -44,13 +44,13 @@ void AHaloSpawner::OnUnitKilled(UHealthComponent* HealthComponent)
 }
 
 // Called every frame
-void AHaloSpawner::Tick(float DeltaTime)
+void AAISpawner::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 }
 
-TArray<ABaseCharacter*> AHaloSpawner::SpawnSquad(TMap<TSubclassOf<ABaseCharacter>, int> SquadToSpawn)
+TArray<ACharacterBase*> AAISpawner::SpawnSquad(TMap<TSubclassOf<ACharacterBase>, int> SquadToSpawn)
 {
 	SpawnedChars.Empty();
 	FVector BoxExtents = Box->GetScaledBoxExtent();
@@ -62,10 +62,10 @@ TArray<ABaseCharacter*> AHaloSpawner::SpawnSquad(TMap<TSubclassOf<ABaseCharacter
 		{
 			FVector Loc = UKismetMathLibrary::RandomPointInBoundingBox(GetActorLocation(), BoxExtents);
 			FRotator Rot = FRotator(0,0,0);
-			ABaseCharacter* Char = GetWorld()->SpawnActor<ABaseCharacter>(elem.Key, Loc, Rot);
+			ACharacterBase* Char = GetWorld()->SpawnActor<ACharacterBase>(elem.Key, Loc, Rot);
 			if (Char)
 			{
-				Char->GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &AHaloSpawner::OnUnitKilled);
+				Char->GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &AAISpawner::OnUnitKilled);
 				SpawnedChars.Add(Char);
 				if (SmartObj)
 				{

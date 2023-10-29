@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Core/BasePawn.h"
-#include "BaseGroundCharacter.generated.h"
+#include "Core/PawnBase.h"
+#include "GroundCharacterBase.generated.h"
 
 class UCharacterMovementComponent;
 class UMovementComponent;
@@ -12,12 +12,12 @@ class UMovementComponent;
  * 
  */
 UCLASS()
-class HALOFLOODFANGAME01_API ABaseGroundCharacter : public ABasePawn
+class HALOFLOODFANGAME01_API AGroundCharacterBase : public APawnBase
 {
 	GENERATED_BODY()
 
 	UPROPERTY(Category=Character, VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
 	UCharacterMovementComponent* CharMoveComp;
 public:
-	ABaseGroundCharacter();
+	AGroundCharacterBase();
 };

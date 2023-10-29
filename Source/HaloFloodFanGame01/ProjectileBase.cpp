@@ -1,6 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "HaloFloodFanGame01Projectile.h"
+#include "ProjectileBase.h"
 
 #include "DamageableInterface.h"
 #include "GunBase.h"
@@ -9,12 +9,12 @@
 #include "Components/AudioComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
-#include "Core/BaseCharacter.h"
+#include "Core/CharacterBase.h"
 #include "Engine/DamageEvents.h"
 #include "Kismet/GameplayStatics.h"
 #include "Perception/AISense_Hearing.h"
 
-AHaloFloodFanGame01Projectile::AHaloFloodFanGame01Projectile() 
+AProjectileBase::AProjectileBase() 
 {
 	// Use a sphere as a simple collision representation
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
@@ -41,11 +41,11 @@ AHaloFloodFanGame01Projectile::AHaloFloodFanGame01Projectile()
 	InitialLifeSpan = 5.0f;
 }
 
-void AHaloFloodFanGame01Projectile::BeginPlay()
+void AProjectileBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &AHaloFloodFanGame01Projectile::OnOverlap);
+	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &AProjectileBase::OnOverlap);
 	if (IdleSound)
 	{
 		IdleSoundComponent = UGameplayStatics::SpawnSoundAttached(IdleSound, GetRootComponent());
@@ -53,7 +53,7 @@ void AHaloFloodFanGame01Projectile::BeginPlay()
 	}
 }
 
-void AHaloFloodFanGame01Projectile::OnProjectileOverlapped_Implementation(UPrimitiveComponent* OverlappedComponent,
+void AProjectileBase::OnProjectileOverlapped_Implementation(UPrimitiveComponent* OverlappedComponent,
 	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
 	const FHitResult& SweepResult)
 {
@@ -96,10 +96,10 @@ void AHaloFloodFanGame01Projectile::OnProjectileOverlapped_Implementation(UPrimi
 	ProjectileMovement->Deactivate();
 }
 
-void AHaloFloodFanGame01Projectile::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+void AProjectileBase::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                                              UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (Cast<ABaseCharacter>(OtherActor) == GetInstigator() || OtherActor == GetOwner())
+	if (Cast<ACharacterBase>(OtherActor) == GetInstigator() || OtherActor == GetOwner())
 	{
 		return;
 	}

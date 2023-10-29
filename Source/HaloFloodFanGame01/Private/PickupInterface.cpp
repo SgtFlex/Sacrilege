@@ -4,6 +4,6 @@
 #include "PickupInterface.h"
 
 // Add default functionality here for any IPickupInterface functions that are not pure virtual.
-void IPickupInterface::Pickup(AHaloFloodFanGame01Character* Character)
+void IPickupInterface::Pickup(APlayerCharacter* Character)
 {
 }

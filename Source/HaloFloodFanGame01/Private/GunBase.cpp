@@ -8,7 +8,7 @@
 #include "VectorTypes.h"
 #include "Components/Image.h"
 #include "Engine/DamageEvents.h"
-#include "HaloFloodFanGame01/HaloFloodFanGame01Character.h"
+#include "HaloFloodFanGame01/PlayerCharacter.h"
 #include "Perception/AISense_Hearing.h"
 #include "Perception/AISense_Sight.h"
 
@@ -43,7 +43,7 @@ void AGunBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AGunBase::Pickup(ABaseCharacter* Char)
+void AGunBase::Pickup(ACharacterBase* Char)
 {
 	SetOwner(Char);
 }
@@ -130,7 +130,7 @@ void AGunBase::ReleaseTrigger_Implementation()
 	Server_ReleaseTrigger();
 }
 
-void AGunBase::OnInteract_Implementation(AHaloFloodFanGame01Character* Character)
+void AGunBase::OnInteract_Implementation(APlayerCharacter* Character)
 {
 	IInteractableInterface::OnInteract_Implementation(Character);
 	Character->PickupWeapon(this);
@@ -153,7 +153,7 @@ void AGunBase::Fire_Implementation()
 		return;
 	}
 
-	if (AHaloFloodFanGame01Character* Char = Cast<AHaloFloodFanGame01Character>(GetOwner()))
+	if (APlayerCharacter* Char = Cast<APlayerCharacter>(GetOwner()))
 		if (FiringCameraShake && Char->IsLocallyControlled())
 			Cast<APlayerController>(Char->GetController())->PlayerCameraManager->StartCameraShake(FiringCameraShake, 1, ECameraShakePlaySpace::CameraLocal);
 	if (FiringSound)
@@ -161,7 +161,7 @@ void AGunBase::Fire_Implementation()
 	if (Mesh->DoesSocketExist("Muzzle") && MuzzlePFX)
 		UNiagaraFunctionLibrary::SpawnSystemAttached(MuzzlePFX, Mesh, "Muzzle", FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
 	CurMagazine--;
-	ABaseCharacter* OwningChar = Cast<ABaseCharacter>(GetOwner());
+	ACharacterBase* OwningChar = Cast<ACharacterBase>(GetOwner());
 	if (!OwningChar) return;
 	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, OwningChar, 0.0f);
 	if (OwningChar->FiringAnim) OwningChar->GetMesh()->GetAnimInstance()->Montage_Play(OwningChar->FiringAnim);
@@ -173,7 +173,7 @@ void AGunBase::Fire_Implementation()
 			FRotator Rotation = OwningChar->GetBaseAimRotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
 			FActorSpawnParameters ActorSpawnParameters;
 			ActorSpawnParameters.Owner = this;
-			ActorSpawnParameters.Instigator = Cast<ABaseCharacter>(this->GetOwner());
+			ActorSpawnParameters.Instigator = Cast<ACharacterBase>(this->GetOwner());
 			GetWorld()->SpawnActor(ProjectileClass, &Location, &Rotation, ActorSpawnParameters);
 		} else
 		{

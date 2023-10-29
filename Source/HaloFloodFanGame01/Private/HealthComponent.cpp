@@ -6,7 +6,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "TimerManager.h"
 #include "Components/AudioComponent.h"
-#include "Core/BaseCharacter.h"
+#include "Core/CharacterBase.h"
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
@@ -212,7 +212,7 @@ void UHealthComponent::BreakShields()
 		UMeshComponent* MeshComp = Cast<UMeshComponent>(GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
 		MeshComp->SetOverlayMaterial(nullptr);
 	}
-	if (ShieldBreakFX) UNiagaraFunctionLibrary::SpawnSystemAttached(ShieldBreakFX, Cast<ABaseCharacter>(GetOwner())->GetMesh(),
+	if (ShieldBreakFX) UNiagaraFunctionLibrary::SpawnSystemAttached(ShieldBreakFX, Cast<ACharacterBase>(GetOwner())->GetMesh(),
 		NAME_None, FVector(0,0,0), FRotator(0,0,0),EAttachLocation::SnapToTarget, true);
 	if (ShieldBreakSFX) UGameplayStatics::SpawnSoundAttached(ShieldBreakSFX, GetOwner()->GetRootComponent());
 }

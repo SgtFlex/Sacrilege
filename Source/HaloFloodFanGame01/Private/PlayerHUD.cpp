@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "HaloHUDWidget.h"
+#include "PlayerHUD.h"
 
 #include "GrenadeWidget.h"
 #include "Blueprint/WidgetTree.h"
@@ -17,14 +17,14 @@
 #include "Components/TextBlock.h"
 #include "Components/UniformGridSlot.h"
 #include "Components/VerticalBox.h"
-#include "HaloFloodFanGame01/HaloFloodFanGame01Character.h"
-#include "HaloFloodFanGame01/HaloFloodFanGame01GameMode.h"
-#include "BaseGrenade.h"
+#include "HaloFloodFanGame01/PlayerCharacter.h"
+#include "HaloFloodFanGame01/FirefightGamemode.h"
+#include "GrenadeBase.h"
 
-void UHaloHUDWidget::NativeConstruct()
+void UPlayerHUD::NativeConstruct()
 {
 	Super::NativeConstruct();
-	PlayerCharacter = Cast<AHaloFloodFanGame01Character>(GetOwningPlayer()->GetPawn());
+	PlayerCharacter = Cast<APlayerCharacter>(GetOwningPlayer()->GetPawn());
 	// SetFragCounter(PlayerCharacter->FragCount);
 	// SetPlasmaCounter(PlayerCharacter->PlasmaCount);
 	// SetSpikeCounter(PlayerCharacter->SpikeCount);
@@ -33,17 +33,17 @@ void UHaloHUDWidget::NativeConstruct()
 	{
 		UpdateHUDWeaponData(PlayerCharacter->EquippedWeapon, PlayerCharacter->HolsteredWeapon);
 	}
-	PlayerCharacter->WeaponsUpdated.AddDynamic(this, &UHaloHUDWidget::UpdateHUDWeaponData);
-	PlayerCharacter->OnInteractableChanged.AddDynamic(this, &UHaloHUDWidget::UpdateInteractable);
-	PlayerCharacter->GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &UHaloHUDWidget::OnHealthUpdated);
-	PlayerCharacter->OnGrenadeInvetoryUpdated.AddDynamic(this, &UHaloHUDWidget::UpdateGrenadeInventory);
-	PlayerCharacter->OnGrenadeTypeSwitched.AddDynamic(this, &UHaloHUDWidget::UHaloHUDWidget::UpdateSelectedGrenadeType);
+	PlayerCharacter->WeaponsUpdated.AddDynamic(this, &UPlayerHUD::UpdateHUDWeaponData);
+	PlayerCharacter->OnInteractableChanged.AddDynamic(this, &UPlayerHUD::UpdateInteractable);
+	PlayerCharacter->GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &UPlayerHUD::OnHealthUpdated);
+	PlayerCharacter->OnGrenadeInvetoryUpdated.AddDynamic(this, &UPlayerHUD::UpdateGrenadeInventory);
+	PlayerCharacter->OnGrenadeTypeSwitched.AddDynamic(this, &UPlayerHUD::UPlayerHUD::UpdateSelectedGrenadeType);
 	UpdateGrenadeInventory(PlayerCharacter->GrenadeInventory);
 	//Cast<AHaloFloodFanGame01GameMode>(UGameplayStatics::GetGameMode(GetWorld()))->OnScoreUpdated.AddDynamic(this, &UHaloHUDWidget::OnScoreUpdated);
-	if (AHaloFloodFanGame01GameMode* FirefightGamemode = Cast<AHaloFloodFanGame01GameMode>(UGameplayStatics::GetGameMode(GetWorld()))) FirefightGamemode->OnWaveStart.AddDynamic(this, &UHaloHUDWidget::UpdateSetAndWaveCount);
+	if (AFirefightGameMode* FirefightGamemode = Cast<AFirefightGameMode>(UGameplayStatics::GetGameMode(GetWorld()))) FirefightGamemode->OnWaveStart.AddDynamic(this, &UPlayerHUD::UpdateSetAndWaveCount);
 }
 
-void UHaloHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+void UPlayerHUD::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
@@ -76,7 +76,7 @@ void UHaloHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		SetCanInteract(false);*/
 }
 
-void UHaloHUDWidget::SetInteractInfo(FText InfoText, UTexture2D* Icon)
+void UPlayerHUD::SetInteractInfo(FText InfoText, UTexture2D* Icon)
 {
 	if (Icon)
 	{
@@ -98,14 +98,14 @@ void UHaloHUDWidget::SetInteractInfo(FText InfoText, UTexture2D* Icon)
 	}
 }
 
-void UHaloHUDWidget::UpdateSelectedGrenadeType(TSubclassOf<ABaseGrenade> GrenadeClass)
+void UPlayerHUD::UpdateSelectedGrenadeType(TSubclassOf<AGrenadeBase> GrenadeClass)
 {
 	if (SelectedGrenadeType) GrenadeWidgetMap[SelectedGrenadeType]->SelectionBorder->SetVisibility(ESlateVisibility::Hidden);
 	SelectedGrenadeType = GrenadeClass;
 	GrenadeWidgetMap[GrenadeClass]->SelectionBorder->SetVisibility(ESlateVisibility::Visible);
 }
 
-void UHaloHUDWidget::UpdateGrenadeInventory(TArray<FGrenadeStruct> GrenadeInventory)
+void UPlayerHUD::UpdateGrenadeInventory(TArray<FGrenadeStruct> GrenadeInventory)
 {
 	for (auto GrenadeStruct : GrenadeInventory)
 	{
@@ -136,7 +136,7 @@ void UHaloHUDWidget::UpdateGrenadeInventory(TArray<FGrenadeStruct> GrenadeInvent
 }
 
 
-void UHaloHUDWidget::SetCompassDirection_Implementation(float Yaw)
+void UPlayerHUD::SetCompassDirection_Implementation(float Yaw)
 {
 	CompassDirection = (Yaw+180);
 	float Offset = 45;
@@ -148,7 +148,7 @@ void UHaloHUDWidget::SetCompassDirection_Implementation(float Yaw)
 }
 
 
-void UHaloHUDWidget::ConstructAmmoGrid_Implementation(AGunBase* Gun)
+void UPlayerHUD::ConstructAmmoGrid_Implementation(AGunBase* Gun)
 {
 	if (!Gun->BulletWidget) return;
     AmmoGrid->ClearChildren();
@@ -179,12 +179,12 @@ void UHaloHUDWidget::ConstructAmmoGrid_Implementation(AGunBase* Gun)
 	}
 }
 
-void UHaloHUDWidget::SetAmmoReserveCounter_Implementation(int32 AmmoReserve)
+void UPlayerHUD::SetAmmoReserveCounter_Implementation(int32 AmmoReserve)
 {
 	AmmoReserveCounter->SetText(FText::AsNumber(AmmoReserve));
 }
 
-void UHaloHUDWidget::SetAmmoGridBullets_Implementation(int32 CurMagazine, int32 MaxMagazine)
+void UPlayerHUD::SetAmmoGridBullets_Implementation(int32 CurMagazine, int32 MaxMagazine)
 {
 	int i = 0;
 	for (auto BulletIcon : BulletIcons)
@@ -197,26 +197,26 @@ void UHaloHUDWidget::SetAmmoGridBullets_Implementation(int32 CurMagazine, int32 
 	}
 }
 
-void UHaloHUDWidget::SetMagazineReserveCounter_Implementation(int32 MagazineCount)
+void UPlayerHUD::SetMagazineReserveCounter_Implementation(int32 MagazineCount)
 {
 	MagazineCounter->SetText(FText::AsNumber(MagazineCount));
 }
 
 
-void UHaloHUDWidget::UpdateHUDMagazineElements()
+void UPlayerHUD::UpdateHUDMagazineElements()
 {
 	SetMagazineReserveCounter(PlayerCharacter->EquippedWeapon->CurMagazine);
 	SetAmmoReserveCounter(PlayerCharacter->EquippedWeapon->CurReserve);
 	SetAmmoGridBullets(PlayerCharacter->EquippedWeapon->CurMagazine, PlayerCharacter->EquippedWeapon->MaxMagazine);
 }
 
-void UHaloHUDWidget::OnScoreUpdated(int NewScore)
+void UPlayerHUD::OnScoreUpdated(int NewScore)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Updated"));
 	ScoreCounter->SetText(FText::AsNumber(NewScore));
 }
 
-void UHaloHUDWidget::SetCrosshairType(int type)
+void UPlayerHUD::SetCrosshairType(int type)
 {
 	switch (type)
 	{
@@ -236,12 +236,12 @@ void UHaloHUDWidget::SetCrosshairType(int type)
 	}
 }
 
-void UHaloHUDWidget::SetCrosshairTexture(UTexture2D* NewTexture)
+void UPlayerHUD::SetCrosshairTexture(UTexture2D* NewTexture)
 {
 	Crosshair->SetBrushFromTexture(NewTexture);
 }
 
-void UHaloHUDWidget::SetFragHUDEnabled(bool bDisplay)
+void UPlayerHUD::SetFragHUDEnabled(bool bDisplay)
 {
 	if (bDisplay)
 	{
@@ -252,7 +252,7 @@ void UHaloHUDWidget::SetFragHUDEnabled(bool bDisplay)
 	}
 }
 
-void UHaloHUDWidget::SetWeaponHUDEnabled(bool bDisplay)
+void UPlayerHUD::SetWeaponHUDEnabled(bool bDisplay)
 {
 	if (bDisplay)
 	{
@@ -263,13 +263,13 @@ void UHaloHUDWidget::SetWeaponHUDEnabled(bool bDisplay)
 	}
 }
 
-void UHaloHUDWidget::OnHealthUpdated(UHealthComponent* HealthComp)
+void UPlayerHUD::OnHealthUpdated(UHealthComponent* HealthComp)
 {
 	SetHealth(HealthComp->GetHealth(), HealthComp->GetMaxHealth());
 	SetShields(HealthComp->GetShields(), HealthComp->GetMaxShields());
 }
 
-void UHaloHUDWidget::UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredGun)
+void UPlayerHUD::UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredGun)
 {
 	if (EquippedGun)
 	{
@@ -281,8 +281,8 @@ void UHaloHUDWidget::UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* Holste
 		EquippedGunWidget->SetBrushFromTexture(EquippedGun->WeaponIcon);
 		ConstructAmmoGrid(EquippedGun);
 		UpdateHUDMagazineElements();
-		EquippedGun->OnFire.AddUniqueDynamic(this, &UHaloHUDWidget::UpdateHUDMagazineElements);
-		EquippedGun->OnReload.AddUniqueDynamic(this, &UHaloHUDWidget::UpdateHUDMagazineElements);
+		EquippedGun->OnFire.AddUniqueDynamic(this, &UPlayerHUD::UpdateHUDMagazineElements);
+		EquippedGun->OnReload.AddUniqueDynamic(this, &UPlayerHUD::UpdateHUDMagazineElements);
 	} else
 	{
 		MagazineCounter->SetVisibility(ESlateVisibility::Hidden);
@@ -299,7 +299,7 @@ void UHaloHUDWidget::UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* Holste
 	}
 }
 
-void UHaloHUDWidget::UpdateInteractable(AActor* Actor)
+void UPlayerHUD::UpdateInteractable(AActor* Actor)
 {
 	if (IInteractableInterface* Interactable = Cast<IInteractableInterface>(Actor))
 	{
@@ -318,19 +318,19 @@ void UHaloHUDWidget::UpdateInteractable(AActor* Actor)
 }
 
 
-void UHaloHUDWidget::UpdateSetAndWaveCount(int Set, int Wave)
+void UPlayerHUD::UpdateSetAndWaveCount(int Set, int Wave)
 {
 	SetCount->SetText(FText::AsNumber(Set));
 	WaveCount->SetText(FText::AsNumber(Wave));
 }
 
-void UHaloHUDWidget::PushTextNotification_Implementation(const FText& Text)
+void UPlayerHUD::PushTextNotification_Implementation(const FText& Text)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Pushing notif"));
 }
 
 
-bool UHaloHUDWidget::Initialize()
+bool UPlayerHUD::Initialize()
 {
 	Super::Initialize();
 	
@@ -338,7 +338,7 @@ bool UHaloHUDWidget::Initialize()
 	return true;
 }
 
-void UHaloHUDWidget::SetHealth_Implementation(float CurrentHealth, float MaxHealth)
+void UPlayerHUD::SetHealth_Implementation(float CurrentHealth, float MaxHealth)
 {
 	if (HealthBar) {
 		FNumberFormattingOptions NumberFormattingOptions;
@@ -348,7 +348,7 @@ void UHaloHUDWidget::SetHealth_Implementation(float CurrentHealth, float MaxHeal
 	}
 }
 
-void UHaloHUDWidget::SetShields_Implementation(float CurrentShields, float MaxShields)
+void UPlayerHUD::SetShields_Implementation(float CurrentShields, float MaxShields)
 {
 	if (ShieldBar) {
 		FNumberFormattingOptions NumberFormattingOptions;
@@ -360,7 +360,7 @@ void UHaloHUDWidget::SetShields_Implementation(float CurrentShields, float MaxSh
 
 
 
-void UHaloHUDWidget::SetCanInteract_Implementation(bool CanInteract)
+void UPlayerHUD::SetCanInteract_Implementation(bool CanInteract)
 {
 	if (CanInteract)
 		InteractBoxWidget->SetVisibility(ESlateVisibility::Visible);

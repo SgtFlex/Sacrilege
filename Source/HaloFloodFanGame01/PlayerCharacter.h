@@ -7,15 +7,15 @@
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "Components/TimelineComponent.h"
-#include "Core/BaseCharacter.h"
+#include "Core/CharacterBase.h"
 #include "Kismet/GameplayStatics.h"
-#include "HaloFloodFanGame01Character.generated.h"
+#include "PlayerCharacter.generated.h"
 
 class IInteractableInterface;
 class USphereComponent;
 class UBoxComponent;
-class UHaloHUDWidget;
-class ABaseGrenade;
+class UPlayerHUD;
+class AGrenadeBase;
 class UInputComponent;
 class USkeletalMeshComponent;
 class USceneComponent;
@@ -28,7 +28,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractableChanged, AActor*, Int
 
 
 UCLASS(config=Game)
-class AHaloFloodFanGame01Character : public ABaseCharacter
+class APlayerCharacter : public ACharacterBase
 {
 	GENERATED_BODY()
 
@@ -86,7 +86,7 @@ class AHaloFloodFanGame01Character : public ABaseCharacter
 	FTimerHandle PossessionDelay;
 	
 public:
-	AHaloFloodFanGame01Character();
+	APlayerCharacter();
 
 	/** Property replication */
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

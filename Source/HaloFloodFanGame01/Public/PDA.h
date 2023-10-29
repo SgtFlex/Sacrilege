@@ -6,9 +6,9 @@
 #include "InputActionValue.h"
 #include "InputMappingQuery.h"
 #include "GameFramework/Actor.h"
-#include "HaloPDA.generated.h"
+#include "PDA.generated.h"
 struct FInputActionValue;
-class AHaloFloodFanGame01Character;
+class APlayerCharacter;
 USTRUCT(BlueprintType)
 struct FBuyable
 {
@@ -23,13 +23,13 @@ struct FBuyable
 };
 class UWidgetComponent;
 UCLASS()
-class HALOFLOODFANGAME01_API AHaloPDA : public AActor
+class HALOFLOODFANGAME01_API APDA : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	AHaloPDA();
+	APDA();
 
 protected:
 	// Called when the game starts or when spawned
@@ -85,7 +85,7 @@ public:
 	APlayerController* PlayerController;
 
 	UPROPERTY(BlueprintReadOnly)
-	AHaloFloodFanGame01Character* Pawn;
+	APlayerCharacter* Pawn;
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category=Input)

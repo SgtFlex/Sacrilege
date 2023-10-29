@@ -1,8 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "HaloFloodFanGame01Character.h"
+#include "PlayerCharacter.h"
 
-#include "BaseGrenade.h"
+#include "GrenadeBase.h"
 #include "GunBase.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -26,7 +26,7 @@
 
 
 
-AHaloFloodFanGame01Character::AHaloFloodFanGame01Character()
+APlayerCharacter::APlayerCharacter()
 {
 	// Set size for collision capsule
 	//GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
@@ -52,7 +52,7 @@ AHaloFloodFanGame01Character::AHaloFloodFanGame01Character()
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 }
 
-void AHaloFloodFanGame01Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 
 
@@ -61,7 +61,7 @@ void AHaloFloodFanGame01Character::GetLifetimeReplicatedProps(TArray<FLifetimePr
 	//DOREPLIFETIME(AHaloFloodFanGame01Character, EnhancedInputComponent);
 }
 
-void AHaloFloodFanGame01Character::OnInteractionSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+void APlayerCharacter::OnInteractionSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 	bool bFromSweep, const FHitResult& SweepResult)
 {
 	// if (Cast<IInteractableInterface>(OtherActor))
@@ -70,19 +70,19 @@ void AHaloFloodFanGame01Character::OnInteractionSphereBeginOverlap(UPrimitiveCom
 	// }
 }
 
-void AHaloFloodFanGame01Character::OnInteractionSphereEndOverlap(UPrimitiveComponent* OverlappedComponent,
+void APlayerCharacter::OnInteractionSphereEndOverlap(UPrimitiveComponent* OverlappedComponent,
 	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	//InteractableActor = nullptr;
 }
 
-void AHaloFloodFanGame01Character::BeginPlay()
+void APlayerCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
 
-	InteractionSphere->OnComponentBeginOverlap.AddDynamic(this, &AHaloFloodFanGame01Character::OnInteractionSphereBeginOverlap);
-	InteractionSphere->OnComponentEndOverlap.AddDynamic(this, &AHaloFloodFanGame01Character::OnInteractionSphereEndOverlap);
+	InteractionSphere->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnInteractionSphereBeginOverlap);
+	InteractionSphere->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnInteractionSphereEndOverlap);
 	
 	if (HolsteredWeaponClass)
 		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(HolsteredWeaponClass)));
@@ -104,7 +104,7 @@ void AHaloFloodFanGame01Character::BeginPlay()
 	}
 }
 
-void AHaloFloodFanGame01Character::Tick(float DeltaSeconds)
+void APlayerCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
@@ -148,7 +148,7 @@ void AHaloFloodFanGame01Character::Tick(float DeltaSeconds)
 	// FirstPersonCameraComponent->SetWorldRotation(Rot);
 }
 
-FHitResult AHaloFloodFanGame01Character::GetPlayerAim()
+FHitResult APlayerCharacter::GetPlayerAim()
 {
 	return PlayerAim;
 }
@@ -156,7 +156,7 @@ FHitResult AHaloFloodFanGame01Character::GetPlayerAim()
 
 //////////////////////////////////////////////////////////////////////////// Input
 
-void AHaloFloodFanGame01Character::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
+void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	// Set up action bindings
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -168,32 +168,32 @@ void AHaloFloodFanGame01Character::SetupPlayerInputComponent(class UInputCompone
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		//Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AHaloFloodFanGame01Character::Move);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
 
 		//Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AHaloFloodFanGame01Character::Look);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
 
-		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &AHaloFloodFanGame01Character::Interact);
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Interact);
 
-		EnhancedInputComponent->BindAction(PrimaryAttackAction, ETriggerEvent::Started, this, &AHaloFloodFanGame01Character::PrimaryAttack_Pull);
+		EnhancedInputComponent->BindAction(PrimaryAttackAction, ETriggerEvent::Started, this, &APlayerCharacter::PrimaryAttack_Pull);
 
-		EnhancedInputComponent->BindAction(PrimaryAttackAction, ETriggerEvent::Completed, this, &AHaloFloodFanGame01Character::PrimaryAttack_Release);
+		EnhancedInputComponent->BindAction(PrimaryAttackAction, ETriggerEvent::Completed, this, &APlayerCharacter::PrimaryAttack_Release);
 		
-		EnhancedInputComponent->BindAction(SwitchWeaponAction, ETriggerEvent::Triggered, this, &AHaloFloodFanGame01Character::SwitchWeapon);
+		EnhancedInputComponent->BindAction(SwitchWeaponAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SwitchWeapon);
 
-		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &AHaloFloodFanGame01Character::ReloadInput);
+		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ReloadInput);
 		
-		EnhancedInputComponent->BindAction(MeleeAction, ETriggerEvent::Triggered, this, &AHaloFloodFanGame01Character::Melee);
+		EnhancedInputComponent->BindAction(MeleeAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Melee);
 
-		EnhancedInputComponent->BindAction(SwitchGrenadeAction, ETriggerEvent::Triggered, this, &AHaloFloodFanGame01Character::SwitchGrenadeType);
+		EnhancedInputComponent->BindAction(SwitchGrenadeAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SwitchGrenadeType);
 		
-		EnhancedInputComponent->BindAction(ThrowGrenadeAction, ETriggerEvent::Triggered, this, &AHaloFloodFanGame01Character::ThrowEquippedGrenade);
+		EnhancedInputComponent->BindAction(ThrowGrenadeAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ThrowEquippedGrenade);
 
-		EnhancedInputComponent->BindAction(UseEquipmentAction, ETriggerEvent::Triggered, this, &AHaloFloodFanGame01Character::UseEquipment);
+		EnhancedInputComponent->BindAction(UseEquipmentAction, ETriggerEvent::Triggered, this, &APlayerCharacter::UseEquipment);
 	}
 }
 
-void AHaloFloodFanGame01Character::Move(const FInputActionValue& Value)
+void APlayerCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
@@ -205,7 +205,7 @@ void AHaloFloodFanGame01Character::Move(const FInputActionValue& Value)
 	}
 }
 
-void AHaloFloodFanGame01Character::Look(const FInputActionValue& Value)
+void APlayerCharacter::Look(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	
@@ -219,7 +219,7 @@ void AHaloFloodFanGame01Character::Look(const FInputActionValue& Value)
 	}
 }
 
-void AHaloFloodFanGame01Character::Server_Look_Implementation(float Pitch)
+void APlayerCharacter::Server_Look_Implementation(float Pitch)
 {
 	Multi_Look(Pitch);
 }
@@ -228,14 +228,14 @@ FVector StartMeleeLoc;
 FVector EndMeleeLoc;
 FHitResult MeleeHit;
 
-void AHaloFloodFanGame01Character::Multi_Look_Implementation(float Pitch)
+void APlayerCharacter::Multi_Look_Implementation(float Pitch)
 {
 	FRotator Rotation = GetFirstPersonCameraComponent()->GetComponentRotation();
 	Rotation.Pitch = Pitch;
 	GetFirstPersonCameraComponent()->SetWorldRotation(Rotation);
 }
 
-void AHaloFloodFanGame01Character::Melee_Implementation()
+void APlayerCharacter::Melee_Implementation()
 {
 	FVector TraceStart = GetFirstPersonCameraComponent()->GetComponentLocation();
 	FVector TraceEnd = GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*500;
@@ -278,7 +278,7 @@ void AHaloFloodFanGame01Character::Melee_Implementation()
 	}
 }
 
-void AHaloFloodFanGame01Character::MeleeDamageCode()
+void APlayerCharacter::MeleeDamageCode()
 {
 	IDamageableInterface* HitActor = Cast<IDamageableInterface>(MeleeHit.GetActor());
 	FPointDamageEvent PointDamageEvent;
@@ -289,12 +289,12 @@ void AHaloFloodFanGame01Character::MeleeDamageCode()
 	HitActor->CustomTakePointDamage(PointDamageEvent, MeleeForce);
 }
 
-void AHaloFloodFanGame01Character::MeleeUpdate(float Alpha)
+void APlayerCharacter::MeleeUpdate(float Alpha)
 {
 	SetActorLocation(FMath::Lerp(StartMeleeLoc, EndMeleeLoc, Alpha));
 }
 
-void AHaloFloodFanGame01Character::OnHealthDepleted_Implementation(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
+void APlayerCharacter::OnHealthDepleted_Implementation(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
 	if (PlayerController)
 	{
@@ -314,7 +314,7 @@ void AHaloFloodFanGame01Character::OnHealthDepleted_Implementation(float Damage,
 	Super::OnHealthDepleted_Implementation(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
 }
 
-void AHaloFloodFanGame01Character::ThrowEquippedGrenade_Implementation()
+void APlayerCharacter::ThrowEquippedGrenade_Implementation()
 {
 	if (GrenadeInventory.Num() <= 0) return;
 	
@@ -331,7 +331,7 @@ void AHaloFloodFanGame01Character::ThrowEquippedGrenade_Implementation()
 	ActorSpawnParameters.Owner = this;
 	UE_LOG(LogTemp, Warning, TEXT("Throwing grenade type: %s"), *GrenadeInventory[CurGrenadeTypeI].GrenadeClass->GetDefaultObjectName().ToString());
 	//GetWorld()->SpawnActor(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, &SpawnLoc, &SpawnRot, ActorSpawnParameters);
-	if (ABaseGrenade* Grenade = Cast<ABaseGrenade>(GetWorld()->SpawnActor(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, &SpawnLoc, &SpawnRot, ActorSpawnParameters)))
+	if (AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActor(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, &SpawnLoc, &SpawnRot, ActorSpawnParameters)))
 	{
 		Grenade->SetArmed(true);
 		FVector Direction = GetFirstPersonCameraComponent()->GetForwardVector() + FVector(0,0,0.15);
@@ -350,7 +350,7 @@ void AHaloFloodFanGame01Character::ThrowEquippedGrenade_Implementation()
 	}
 }
 
-void AHaloFloodFanGame01Character::SwitchWeapon()
+void APlayerCharacter::SwitchWeapon()
 {
 	
 	if (!EquippedWeapon || !HolsteredWeapon)
@@ -365,7 +365,7 @@ void AHaloFloodFanGame01Character::SwitchWeapon()
 	WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
 }
 
-void AHaloFloodFanGame01Character::Interact()
+void APlayerCharacter::Interact()
 {
 	FHitResult Hit;
 	FVector TraceStart = FirstPersonCameraComponent->GetComponentLocation();
@@ -388,12 +388,12 @@ void AHaloFloodFanGame01Character::Interact()
 	}
 }
 
-void AHaloFloodFanGame01Character::SwitchGrenadeType()
+void APlayerCharacter::SwitchGrenadeType()
 {
 	SwitchGrenadeType(CurGrenadeTypeI+1);
 }
 
-void AHaloFloodFanGame01Character::SwitchGrenadeType(int Index = 0)
+void APlayerCharacter::SwitchGrenadeType(int Index = 0)
 {
 	if (GrenadeInventory.Num() <= 0) return;
 	
@@ -403,18 +403,18 @@ void AHaloFloodFanGame01Character::SwitchGrenadeType(int Index = 0)
 	UE_LOG(LogTemp, Warning, TEXT("Switched grenade to: %s"), *GrenadeInventory[CurGrenadeTypeI].GrenadeClass->GetDefaultObjectName().ToString());
 }
 
-void AHaloFloodFanGame01Character::ControllerChanged(AController* OldController, AController* NewController)
+void APlayerCharacter::ControllerChanged(AController* OldController, AController* NewController)
 {
 	
 }
 
-void AHaloFloodFanGame01Character::PossessedBy(AController* NewController)
+void APlayerCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 	
 }
 
-void AHaloFloodFanGame01Character::UnPossessed()
+void APlayerCharacter::UnPossessed()
 {
 	Super::UnPossessed();
 	if (APlayerController* PC = Cast<APlayerController>(Controller))
@@ -426,7 +426,7 @@ void AHaloFloodFanGame01Character::UnPossessed()
 	}
 }
 
-void AHaloFloodFanGame01Character::PickupWeapon(AGunBase* Gun)
+void APlayerCharacter::PickupWeapon(AGunBase* Gun)
 {
 	Super::PickupWeapon(Gun);
 	if (EquippedWeapon)
@@ -442,13 +442,13 @@ void AHaloFloodFanGame01Character::PickupWeapon(AGunBase* Gun)
 	}
 }
 
-void AHaloFloodFanGame01Character::DropWeapon()
+void APlayerCharacter::DropWeapon()
 {
 	Super::DropWeapon();
 	WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
 }
 
-void AHaloFloodFanGame01Character::SetFragCount(int32 NewFragCount)
+void APlayerCharacter::SetFragCount(int32 NewFragCount)
 {
 	FragCount = NewFragCount;
 }

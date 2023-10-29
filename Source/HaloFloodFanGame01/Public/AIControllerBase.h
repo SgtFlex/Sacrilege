@@ -6,7 +6,7 @@
 #include "AIController.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "AlertState.h"
-#include "BaseAIController.generated.h"
+#include "AIControllerBase.generated.h"
 
 class UBehaviorTreeComponent;
 class ASmartObject;
@@ -14,10 +14,10 @@ class ASmartObject;
  * 
  */
 UCLASS()
-class HALOFLOODFANGAME01_API ABaseAIController : public AAIController
+class HALOFLOODFANGAME01_API AAIControllerBase : public AAIController
 {
 	GENERATED_BODY()
-	ABaseAIController();
+	AAIControllerBase();
 
 public:
 	virtual void BeginPlay() override;

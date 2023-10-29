@@ -2,8 +2,8 @@
 
 
 #include "TP_WeaponComponent.h"
-#include "HaloFloodFanGame01Character.h"
-#include "HaloFloodFanGame01Projectile.h"
+#include "PlayerCharacter.h"
+#include "ProjectileBase.h"
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Kismet/GameplayStatics.h"
@@ -41,7 +41,7 @@ void UTP_WeaponComponent::Fire()
 			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 	
 			// Spawn the projectile at the muzzle
-			World->SpawnActor<AHaloFloodFanGame01Projectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+			World->SpawnActor<AProjectileBase>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 		}
 	}
 	
@@ -63,7 +63,7 @@ void UTP_WeaponComponent::Fire()
 	}
 }
 
-void UTP_WeaponComponent::AttachWeapon(AHaloFloodFanGame01Character* TargetCharacter)
+void UTP_WeaponComponent::AttachWeapon(APlayerCharacter* TargetCharacter)
 {
 	Character = TargetCharacter;
 	if (Character == nullptr)

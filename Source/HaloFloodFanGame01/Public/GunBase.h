@@ -20,8 +20,8 @@ struct FHitScanTrace
 	
 };
 
-class UHaloHUDWidget;
-class ABaseCharacter;
+class UPlayerHUD;
+class ACharacterBase;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFire);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReload);
 
@@ -51,7 +51,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void Pickup(ABaseCharacter* Char);
+	void Pickup(ACharacterBase* Char);
 
 	void Equip();
 
@@ -96,7 +96,7 @@ public:
 	UFUNCTION(NetMulticast, Reliable, WithValidation)
 	void Multi_ReleaseTrigger();
 	
-	virtual void OnInteract_Implementation(AHaloFloodFanGame01Character* Character) override;
+	virtual void OnInteract_Implementation(APlayerCharacter* Character) override;
 
 	virtual void GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon) override;
 

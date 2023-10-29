@@ -5,18 +5,18 @@
 #include "CoreMinimal.h"
 #include "GenericTeamAgentInterface.h"
 #include "GameFramework/PlayerController.h"
-#include "HaloPlayerController.generated.h"
+#include "PlayerControllerBase.generated.h"
 
-class UHaloHUDWidget;
+class UPlayerHUD;
 /**
  * 
  */
 UCLASS()
-class HALOFLOODFANGAME01_API AHaloPlayerController : public APlayerController, public IGenericTeamAgentInterface
+class HALOFLOODFANGAME01_API APlayerControllerBase : public APlayerController, public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
 public:
-	AHaloPlayerController();
+	APlayerControllerBase();
 
 	virtual void BeginPlay() override;
 

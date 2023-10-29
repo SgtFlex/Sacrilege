@@ -5,10 +5,10 @@
 #include "CoreMinimal.h"
 #include "DamageableInterface.h"
 #include "GameFramework/Character.h"
-#include "BaseCharacter.generated.h"
+#include "CharacterBase.generated.h"
 
 class ASmartObject;
-class ABaseGrenade;
+class AGrenadeBase;
 class ADecalActor;
 class AGunBase;
 class UHealthComponent;
@@ -17,7 +17,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPickupWeapon);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDropWeapon);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnKilled, AController*, Instigator, AActor*, Causer);
-DECLARE_DELEGATE_OneParam(FTest, ABaseCharacter*);
+DECLARE_DELEGATE_OneParam(FTest, ACharacterBase*);
 
 
 USTRUCT()
@@ -26,7 +26,7 @@ struct FGrenadeStruct
 	GENERATED_BODY()
 	
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<ABaseGrenade> GrenadeClass;
+	TSubclassOf<AGrenadeBase> GrenadeClass;
 	
 	UPROPERTY(EditAnywhere)
 	int GrenadeAmount;
@@ -34,16 +34,16 @@ struct FGrenadeStruct
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrenadeInvetoryUpdated, TArray<FGrenadeStruct>, GrenadeInventory);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrenadeTypeSwitched, TSubclassOf<ABaseGrenade>, GrenadeClass);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrenadeTypeSwitched, TSubclassOf<AGrenadeBase>, GrenadeClass);
 
 UCLASS()
-class HALOFLOODFANGAME01_API ABaseCharacter : public ACharacter, public IDamageableInterface
+class HALOFLOODFANGAME01_API ACharacterBase : public ACharacter, public IDamageableInterface
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this pawn's properties
-	ABaseCharacter();
+	ACharacterBase();
 
 protected:
 	// Called when the game starts or when spawned
@@ -74,7 +74,7 @@ public:
 	void Melee();
 
 	UFUNCTION(BlueprintNativeEvent)
-	void EquipGrenadeType(TSubclassOf<ABaseGrenade> Grenade);
+	void EquipGrenadeType(TSubclassOf<AGrenadeBase> Grenade);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void ThrowEquippedGrenade();

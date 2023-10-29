@@ -6,7 +6,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "TP_WeaponComponent.generated.h"
 
-class AHaloFloodFanGame01Character;
+class APlayerCharacter;
 
 UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class HALOFLOODFANGAME01_API UTP_WeaponComponent : public USkeletalMeshComponent
@@ -16,7 +16,7 @@ class HALOFLOODFANGAME01_API UTP_WeaponComponent : public USkeletalMeshComponent
 public:
 	/** Projectile class to spawn */
 	UPROPERTY(EditDefaultsOnly, Category=Projectile)
-	TSubclassOf<class AHaloFloodFanGame01Projectile> ProjectileClass;
+	TSubclassOf<class AProjectileBase> ProjectileClass;
 
 	/** Sound to play each time we fire */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
@@ -43,7 +43,7 @@ public:
 
 	/** Attaches the actor to a FirstPersonCharacter */
 	UFUNCTION(BlueprintCallable, Category="Weapon")
-	void AttachWeapon(AHaloFloodFanGame01Character* TargetCharacter);
+	void AttachWeapon(APlayerCharacter* TargetCharacter);
 
 	/** Make the weapon Fire a Projectile */
 	UFUNCTION(BlueprintCallable, Category="Weapon")
@@ -56,5 +56,5 @@ protected:
 
 private:
 	/** The Character holding this weapon*/
-	AHaloFloodFanGame01Character* Character;
+	APlayerCharacter* Character;
 };

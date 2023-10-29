@@ -1,15 +1,15 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "HaloFloodFanGame01GameMode.h"
+#include "FirefightGamemode.h"
 
-#include "HaloSpawner.h"
+#include "AISpawner.h"
 #include "Components/AudioComponent.h"
-#include "Core/BaseCharacter.h"
+#include "Core/CharacterBase.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet\GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
 
-AHaloFloodFanGame01GameMode::AHaloFloodFanGame01GameMode()
+AFirefightGameMode::AFirefightGameMode()
 	: Super()
 {
 	// set default pawn class to our Blueprinted character
@@ -18,22 +18,22 @@ AHaloFloodFanGame01GameMode::AHaloFloodFanGame01GameMode()
 	SoundtrackComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("SoundtrackComponent"));
 }
 
-void AHaloFloodFanGame01GameMode::BeginPlay()
+void AFirefightGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 	TArray<AActor*> OutActors;
 	
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AHaloSpawner::StaticClass(), OutActors);
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AAISpawner::StaticClass(), OutActors);
 	for (AActor* a : OutActors)
 	{
-		Spawners.Add(Cast<AHaloSpawner>(a));
+		Spawners.Add(Cast<AAISpawner>(a));
 	}
 	AvailableSpawners = Spawners;
 	StartSet();
-	//ABaseCharacter::TestDelegate.BindSP(this, &AHaloFloodFanGame01GameMode::TestFunc);
+	//ACharacterBase::TestDelegate.BindSP(this, &AHaloFloodFanGame01GameMode::TestFunc);
 }
 
-void AHaloFloodFanGame01GameMode::OnEnemyKilled(AController* EventInstigator, AActor* DamageCauser)
+void AFirefightGameMode::OnEnemyKilled(AController* EventInstigator, AActor* DamageCauser)
 {
 	
 	if (APlayerController* PlayerController = Cast<APlayerController>(EventInstigator))
@@ -57,7 +57,7 @@ void AHaloFloodFanGame01GameMode::OnEnemyKilled(AController* EventInstigator, AA
 	}
 }
 
-void AHaloFloodFanGame01GameMode::FinishWave()
+void AFirefightGameMode::FinishWave()
 {
 	MaxWavePool = MaxWavePool + 1;
 	CurWavePool = MaxWavePool;
@@ -81,12 +81,12 @@ void AHaloFloodFanGame01GameMode::FinishWave()
 	}
 }
 
-int AHaloFloodFanGame01GameMode::GetCurrentWave()
+int AFirefightGameMode::GetCurrentWave()
 {
 	return curWave;
 }
 
-void AHaloFloodFanGame01GameMode::StartSet()
+void AFirefightGameMode::StartSet()
 {
 	curSet++;
 	curWave = 0;
@@ -98,26 +98,26 @@ void AHaloFloodFanGame01GameMode::StartSet()
 	}
 }
 
-void AHaloFloodFanGame01GameMode::FinishSet()
+void AFirefightGameMode::FinishSet()
 {
 	MaxSquadCost = (MaxSquadCost + 1) * 2;
 	if (bEnableMusic) GetSoundtrackComponent()->FadeOut(10, 0);
-	GetWorldTimerManager().SetTimer(SetFinishDelayTimer, this, &AHaloFloodFanGame01GameMode::StartSet, 10);
+	GetWorldTimerManager().SetTimer(SetFinishDelayTimer, this, &AFirefightGameMode::StartSet, 10);
 }
 
-void AHaloFloodFanGame01GameMode::StartWave()
+void AFirefightGameMode::StartWave()
 {
 	curWave++;
 	SquadsToSpawn.Append(CalculateWave());
 	SpawnWave(SquadsToSpawn);
 }
 
-int AHaloFloodFanGame01GameMode::GetCurrentSet()
+int AFirefightGameMode::GetCurrentSet()
 {
 	return curSet;
 }
 
-TArray<FSquadStruct> AHaloFloodFanGame01GameMode::CalculateWave()
+TArray<FSquadStruct> AFirefightGameMode::CalculateWave()
 {
 	
 	TArray<FSquadStruct> Wave;
@@ -142,7 +142,7 @@ TArray<FSquadStruct> AHaloFloodFanGame01GameMode::CalculateWave()
 	return Wave;
 }
 
-void AHaloFloodFanGame01GameMode::SpawnWave(TArray<FSquadStruct> WaveToSpawn)
+void AFirefightGameMode::SpawnWave(TArray<FSquadStruct> WaveToSpawn)
 {
 	OnWaveStart.Broadcast(curSet, curWave);
 	SquadsAtWaveStart = SquadsToSpawn;
@@ -158,13 +158,13 @@ void AHaloFloodFanGame01GameMode::SpawnWave(TArray<FSquadStruct> WaveToSpawn)
 	UE_LOG(LogTemp, Warning, TEXT("Spawning wave!"));
 	for (auto AvailableSpawner : AvailableSpawners)
 	{
-		TArray<ABaseCharacter*> SpawnedChars = AvailableSpawner->SpawnSquad(SquadsToSpawn[0].SquadUnits);
+		TArray<ACharacterBase*> SpawnedChars = AvailableSpawner->SpawnSquad(SquadsToSpawn[0].SquadUnits);
 		{
 			for (auto SpawnedChar : SpawnedChars)
 			{
 				if (SpawnedChar)
 				{
-					SpawnedChar->OnKilled.AddDynamic(this, &AHaloFloodFanGame01GameMode::OnEnemyKilled);
+					SpawnedChar->OnKilled.AddDynamic(this, &AFirefightGameMode::OnEnemyKilled);
 					CurrentEnemyCount++;
 				}
 			}
@@ -174,16 +174,16 @@ void AHaloFloodFanGame01GameMode::SpawnWave(TArray<FSquadStruct> WaveToSpawn)
 	}
 }
 
-void AHaloFloodFanGame01GameMode::OnSpawnerAvailable(AHaloSpawner* Spawner)
+void AFirefightGameMode::OnSpawnerAvailable(AAISpawner* Spawner)
 {
 	if (SquadsToSpawn.IsEmpty()) return;
-	TArray<ABaseCharacter*> SpawnedChars = Spawner->SpawnSquad(SquadsToSpawn[0].SquadUnits);
+	TArray<ACharacterBase*> SpawnedChars = Spawner->SpawnSquad(SquadsToSpawn[0].SquadUnits);
 	{
 		for (auto SpawnedChar : SpawnedChars)
 		{
 			if (SpawnedChar)
 			{
-				SpawnedChar->OnKilled.AddDynamic(this, &AHaloFloodFanGame01GameMode::OnEnemyKilled);
+				SpawnedChar->OnKilled.AddDynamic(this, &AFirefightGameMode::OnEnemyKilled);
 				CurrentEnemyCount++;
 			}
 		}
@@ -191,32 +191,32 @@ void AHaloFloodFanGame01GameMode::OnSpawnerAvailable(AHaloSpawner* Spawner)
 	
 }
 
-void AHaloFloodFanGame01GameMode::GameFinished()
+void AFirefightGameMode::GameFinished()
 {
 	UGameplayStatics::OpenLevel(GetWorld(), FName(UGameplayStatics::GetCurrentLevelName(GetWorld())));
 }
 
-int AHaloFloodFanGame01GameMode::GetPlayerResource(APlayerController* PlayerController)
+int AFirefightGameMode::GetPlayerResource(APlayerController* PlayerController)
 {
 	return PlayerResource;
 }
 
-int AHaloFloodFanGame01GameMode::SetPlayerResource(APlayerController* PlayerController, int NewPlayerResource)
+int AFirefightGameMode::SetPlayerResource(APlayerController* PlayerController, int NewPlayerResource)
 {
 	return PlayerResource = NewPlayerResource;
 }
 
-void AHaloFloodFanGame01GameMode::TestFunc(ABaseCharacter* Character)
+void AFirefightGameMode::TestFunc(ACharacterBase* Character)
 {
 	UE_LOG(LogTemp, Warning, TEXT("ENEMY KILLED"));
 }
 
-int AHaloFloodFanGame01GameMode::GetPlayerScore(APlayerController* PlayerController)
+int AFirefightGameMode::GetPlayerScore(APlayerController* PlayerController)
 {
 	return PlayerScore;
 }
 
-UAudioComponent* AHaloFloodFanGame01GameMode::GetSoundtrackComponent()
+UAudioComponent* AFirefightGameMode::GetSoundtrackComponent()
 {
 	return SoundtrackComponent;
 }

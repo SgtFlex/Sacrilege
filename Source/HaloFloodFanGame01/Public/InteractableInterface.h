@@ -23,7 +23,7 @@ class HALOFLOODFANGAME01_API IInteractableInterface
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	UFUNCTION(BlueprintNativeEvent)
-	void OnInteract(AHaloFloodFanGame01Character* Character);
+	void OnInteract(APlayerCharacter* Character);
 
 	UFUNCTION(BlueprintNativeEvent)
 	void GetInteractInfo(FText &Text, UTexture2D* &Icon);

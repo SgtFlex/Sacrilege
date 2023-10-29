@@ -5,22 +5,22 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/TextBlock.h"
-#include "HaloHUDWidget.generated.h"
+#include "PlayerHUD.generated.h"
 
 
-class ABaseGrenade;
+class AGrenadeBase;
 class UUniformGridPanel;
 class UGrenadeWidget;
 struct FGrenadeStruct;
 class UListView;
 class UTextBlock;
 class UHealthComponent;
-class AHaloFloodFanGame01Character;
+class APlayerCharacter;
 /**
  * 
  */
 UCLASS()
-class HALOFLOODFANGAME01_API UHaloHUDWidget : public UUserWidget
+class HALOFLOODFANGAME01_API UPlayerHUD : public UUserWidget
 {
 	GENERATED_BODY()
 
@@ -42,7 +42,7 @@ public:
 	void SetInteractInfo(FText InfoText, UTexture2D* Icon = nullptr);
 
 	UFUNCTION() 
-	void UpdateSelectedGrenadeType(TSubclassOf<ABaseGrenade> GrenadeClass);
+	void UpdateSelectedGrenadeType(TSubclassOf<AGrenadeBase> GrenadeClass);
 
 	UFUNCTION()
 	void UpdateGrenadeInventory(TArray<FGrenadeStruct> GrenadeInventory);
@@ -127,7 +127,7 @@ public:
 	TArray<UGrenadeWidget*> GrenadeWidgets;
 
 	UPROPERTY()
-	TMap<TSubclassOf<ABaseGrenade>, UGrenadeWidget*> GrenadeWidgetMap;
+	TMap<TSubclassOf<AGrenadeBase>, UGrenadeWidget*> GrenadeWidgetMap;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UWidget* HealthHUD;
@@ -165,7 +165,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<UUserWidget> GrenadeWidgetClass;
 
-	TSubclassOf<ABaseGrenade> SelectedGrenadeType;
+	TSubclassOf<AGrenadeBase> SelectedGrenadeType;
 
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	// class UTextBlock* FragCounter;
@@ -228,5 +228,5 @@ public:
 	FLinearColor HUDColor = FColor(255, 150, 50, 255);
 
 	UPROPERTY()
-	class AHaloFloodFanGame01Character* PlayerCharacter;
+	class APlayerCharacter* PlayerCharacter;
 };

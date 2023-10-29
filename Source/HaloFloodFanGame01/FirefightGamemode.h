@@ -5,10 +5,10 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
 #include "GameFramework/GameModeBase.h"
-#include "HaloFloodFanGame01GameMode.generated.h"
+#include "FirefightGamemode.generated.h"
 
-class ABaseCharacter;
-class AHaloSpawner;
+class ACharacterBase;
+class AAISpawner;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWaveStart, int, CurrentSet, int, CurrentWave);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnScoreUpdated, APlayerController*, PlayerController, int, NewScore, int, NewResource);
@@ -21,17 +21,17 @@ struct FSquadStruct
 	float Cost;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TMap<TSubclassOf<ABaseCharacter>, int> SquadUnits;
+	TMap<TSubclassOf<ACharacterBase>, int> SquadUnits;
 	
 };
 
 UCLASS(minimalapi)
-class AHaloFloodFanGame01GameMode : public AGameMode
+class AFirefightGameMode : public AGameMode
 {
 	GENERATED_BODY()
 
 public:
-	AHaloFloodFanGame01GameMode();
+	AFirefightGameMode();
 
 	virtual void BeginPlay() override;
 
@@ -45,7 +45,7 @@ public:
 	int GetCurrentSet();
 	TArray<FSquadStruct> CalculateWave();
 	void SpawnWave(TArray<FSquadStruct> WaveToSpawn);
-	void OnSpawnerAvailable(AHaloSpawner* Spawner);
+	void OnSpawnerAvailable(AAISpawner* Spawner);
 	void GameFinished();
 
 	UFUNCTION(BlueprintGetter)
@@ -55,7 +55,7 @@ public:
 	int SetPlayerResource(APlayerController* PlayerController, int NewPlayerResource);
 
 	UFUNCTION()
-	void TestFunc(ABaseCharacter* Character);
+	void TestFunc(ACharacterBase* Character);
 
 	UFUNCTION(BlueprintGetter)
 	int GetPlayerScore(APlayerController* PlayerController);
@@ -111,9 +111,9 @@ public:
 	UPROPERTY()
 	int WaveEnemyCount;
 	
-	TArray<AHaloSpawner*> Spawners;
+	TArray<AAISpawner*> Spawners;
 
-	TArray<AHaloSpawner*> AvailableSpawners;
+	TArray<AAISpawner*> AvailableSpawners;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TArray<USoundBase*> Soundtracks;
