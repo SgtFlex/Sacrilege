@@ -3,6 +3,7 @@
 
 #include "PlayerHUD.h"
 
+#include "AIControllerBase.h"
 #include "GrenadeWidget.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/CanvasPanelSlot.h"
@@ -20,6 +21,7 @@
 #include "HaloFloodFanGame01/PlayerCharacter.h"
 #include "HaloFloodFanGame01/FirefightGamemode.h"
 #include "GrenadeBase.h"
+#include "PlayerControllerBase.h"
 
 void UPlayerHUD::NativeConstruct()
 {
@@ -48,16 +50,27 @@ void UPlayerHUD::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
 	FHitResult PlayerAim = PlayerCharacter->GetPlayerAim();
-	if (Cast<IDamageableInterface>(PlayerAim.GetActor()) && PlayerAim.Distance <= 2000)
+	if (PlayerAim.GetActor())
 	{
-		SetCrosshairType(4);
-	} else if (Cast<IInteractableInterface>(PlayerAim.GetActor()) && PlayerAim.Distance <= 500)
-	{
-		SetCrosshairType(2);
-	} else
-	{
-		SetCrosshairType(1);
+		if (APawn* Pawn = Cast<APawn>(PlayerAim.GetActor()))
+		{
+			APlayerControllerBase* PlayerController = Cast<APlayerControllerBase>(PlayerCharacter->GetController());
+			if (AAIControllerBase* AIController = Cast<AAIControllerBase>(Pawn->GetController()))
+			{
+				if (AIController->TeamNumber == PlayerController->TeamNumber)
+				{
+					SetCrosshairType(3);
+				} else if (AIController->Team)
+				{
+					SetCrosshairType(4);
+				}
+			} else
+			{
+				SetCrosshairType(1);
+			}
+		}
 	}
+	
 
 	SetCompassDirection(PlayerCharacter->GetFirstPersonCameraComponent()->GetComponentRotation().Yaw);
 

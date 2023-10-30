@@ -188,7 +188,7 @@ public:
 	TSubclassOf<class UUserWidget> PlayerHUDClass;
 
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
 	class UUserWidget* PlayerHUD;
 
 	UPROPERTY(EditAnywhere, Category="Loadout")

@@ -110,39 +110,45 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 
 	MeleeTimeline.TickTimeline(DeltaSeconds);
 	FVector TraceStart = FirstPersonCameraComponent->GetComponentLocation();
-	FVector TraceEnd = FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector()*1000.0f;
+	FVector TraceEnd = FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector()*10000.0f;
 	FCollisionQueryParams CollisionParameters;
 	CollisionParameters.AddIgnoredActor(this);
 	GetWorld()->LineTraceSingleByChannel(PlayerAim, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParameters);
 
-	TArray<AActor*> Actors;
-	InteractionSphere->GetOverlappingActors(Actors);
+	
 	AActor* FoundActor = nullptr;
-	if (!Actors.IsEmpty())
+
+	FHitResult HitResult = GetPlayerAim();
+	if (Cast<IInteractableInterface>(HitResult.GetActor()) && HitResult.Distance < 250)
 	{
-		float ClosestDist = 0;
-		for (auto Actor : Actors)
+		FoundActor = HitResult.GetActor();
+	} else
+	{
+		TArray<AActor*> Actors;
+		InteractionSphere->GetOverlappingActors(Actors);
+		
+		if (!Actors.IsEmpty())
 		{
-			if (Cast<IInteractableInterface>(Actor) && (ClosestDist == 0 || GetDistanceTo(Actor) < ClosestDist))
+			float ClosestDist = 0;
+			for (auto Actor : Actors)
 			{
-				ClosestDist = GetDistanceTo(Actor);
-				FoundActor = Actor;
-				
+				if (Cast<IInteractableInterface>(Actor) && (ClosestDist == 0 || GetDistanceTo(Actor) < ClosestDist))
+				{
+					ClosestDist = GetDistanceTo(Actor);
+					FoundActor = Actor;
+				}
 			}
 		}
 	}
-
-	if (FoundActor)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Closest int actor: %s"), *FoundActor->GetActorLabel());
-	}
+	
+	
 
 	if (InteractableActor != FoundActor)
 	{
 		InteractableActor = FoundActor;
-		UE_LOG(LogTemp, Warning, TEXT("Updated Interactable Actor"));
 		OnInteractableChanged.Broadcast(InteractableActor);
 	}
+	
 	// FRotator Rot = GetFirstPersonCameraComponent()->GetComponentRotation();
 	// Rot.Pitch = UKismetMathLibrary::NormalizeAxis(RemoteViewPitch);
 	// FirstPersonCameraComponent->SetWorldRotation(Rot);
@@ -324,16 +330,18 @@ void APlayerCharacter::ThrowEquippedGrenade_Implementation()
 	// if (!EquippedGrenadeClass) return;
 	// if (FragCount<=0) return;
 	// SetFragCount(FragCount-1);
-	const FVector SpawnLoc = GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*300;
+	const FVector SpawnLoc = GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*100;
 	const FRotator SpawnRot = GetFirstPersonCameraComponent()->GetForwardVector().Rotation();
+	const FTransform& SpawnTransform = FTransform(GetFirstPersonCameraComponent()->GetForwardVector().Rotation(), GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*300);
 	FActorSpawnParameters ActorSpawnParameters;
 	ActorSpawnParameters.Instigator = this;
 	ActorSpawnParameters.Owner = this;
-	UE_LOG(LogTemp, Warning, TEXT("Throwing grenade type: %s"), *GrenadeInventory[CurGrenadeTypeI].GrenadeClass->GetDefaultObjectName().ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("Throwing grenade type: %s"), *GrenadeInventory[CurGrenadeTypeI].GrenadeClass->GetDefaultObjectName().ToString());
 	//GetWorld()->SpawnActor(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, &SpawnLoc, &SpawnRot, ActorSpawnParameters);
-	if (AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActor(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, &SpawnLoc, &SpawnRot, ActorSpawnParameters)))
+	if (AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActorDeferred<AGrenadeBase>(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, SpawnTransform, this, this, ESpawnActorCollisionHandlingMethod::AlwaysSpawn)))
 	{
 		Grenade->SetArmed(true);
+		Grenade->FinishSpawning(SpawnTransform);
 		FVector Direction = GetFirstPersonCameraComponent()->GetForwardVector() + FVector(0,0,0.15);
 		Direction.Normalize();
 		//Grenade->ProjectileMovementComponent->AddForce(Direction*100000.0f);
@@ -367,25 +375,14 @@ void APlayerCharacter::SwitchWeapon()
 
 void APlayerCharacter::Interact()
 {
-	FHitResult Hit;
-	FVector TraceStart = FirstPersonCameraComponent->GetComponentLocation();
-	FVector TraceEnd = FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector()*1000.0f;
-	FCollisionQueryParams CollisionParameters;
-	CollisionParameters.AddIgnoredActor(this);
-	GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParameters);
-	if (Hit.bBlockingHit && UKismetSystemLibrary::DoesImplementInterface(Hit.GetActor(), UInteractableInterface::StaticClass()))
+	if (InteractableActor)
 	{
-		IInteractableInterface::Execute_OnInteract(Hit.GetActor(), this);
-	} else
-	{
-		if (InteractableActor)
+		if (UKismetSystemLibrary::DoesImplementInterface(InteractableActor, UInteractableInterface::StaticClass()))
 		{
-			if (UKismetSystemLibrary::DoesImplementInterface(InteractableActor, UInteractableInterface::StaticClass()))
-			{
-				IInteractableInterface::Execute_OnInteract(InteractableActor, this);
-			}
+			IInteractableInterface::Execute_OnInteract(InteractableActor, this);
 		}
 	}
+	
 }
 
 void APlayerCharacter::SwitchGrenadeType()

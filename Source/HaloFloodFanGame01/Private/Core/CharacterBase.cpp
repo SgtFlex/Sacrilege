@@ -84,6 +84,7 @@ float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent con
 	float x = IDamageableInterface::CustomTakePointDamage(PointDamageEvent, Force, EventInstigator, DamageCauser);
 	if (EventInstigator && Cast<AAIControllerBase>(GetController()))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Reported damage event"));
 		UAISense_Damage::ReportDamageEvent(GetWorld(), this, EventInstigator->GetPawn(), PointDamageEvent.Damage, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Location);
 	}
 	

@@ -40,7 +40,7 @@ AAIControllerBase::AAIControllerBase()
 void AAIControllerBase::BeginPlay()
 {
 	Super::BeginPlay();
-	AIPerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(this, &AAIControllerBase::OnPerceptionUpdated);
+	SetGenericTeamId(FGenericTeamId(TeamNumber));
 	GetWorldTimerManager().SetTimer(Delay, this, &AAIControllerBase::BeginPlayDelayed, 0.1f, false);
 	BehaviorTreeComp->StartLogic();
 }
@@ -87,8 +87,9 @@ void AAIControllerBase::UpdateControlRotation(float DeltaTime, bool bUpdatePawn)
 
 void AAIControllerBase::BeginPlayDelayed()
 {
+	AIPerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(this, &AAIControllerBase::OnPerceptionUpdated);
 	ACharacterBase* Char = Cast<ACharacterBase>(GetPawn());
-	SetGenericTeamId(FGenericTeamId(TeamNumber));
+	
 	if (Char)
 	{
 		if (ASmartObject* SmartObj = Char->SmartObject) {

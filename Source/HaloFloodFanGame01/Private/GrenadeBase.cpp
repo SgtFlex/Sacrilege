@@ -21,23 +21,21 @@ AGrenadeBase::AGrenadeBase()
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
 	Mesh->SetSimulatePhysics(true);
-	Mesh->SetNotifyRigidBodyCollision(true);
 	SetRootComponent(Mesh);
-
 	
-
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>("ProjectileMovementComp");
-
 	PickupComponent = CreateDefaultSubobject<UPickupComponent>("PickupComp");
 	PickupComponent->SetupAttachment(GetRootComponent());
 	PickupComponent->SetEnabled(false);
+
+	
 }
 
 // Called when the game starts or when spawned
 void AGrenadeBase::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	Mesh->OnComponentHit.AddDynamic(this, &AGrenadeBase::OnCollide);
 }
 
 // Called every frame
@@ -58,26 +56,19 @@ void AGrenadeBase::Explode_Implementation()
 void AGrenadeBase::SetArmed(bool NewArmed)
 {
 	bArmed = NewArmed;
-	PickupComponent->SetEnabled(!bArmed);
-	if (NewArmed)
-	{
-		Mesh->OnComponentHit.AddDynamic(this, &AGrenadeBase::OnCollide);
-	} else
-	{
-		Mesh->OnComponentHit.RemoveDynamic(this, &AGrenadeBase::OnCollide);
-	}
+	PickupComponent->SetActive(false);
 }
 
-void AGrenadeBase::Arm(float ArmTime)
+void AGrenadeBase::StartFuse(float NewFuseTime)
 {
 	if (FuseStarted) return;
 	FuseStarted = true;
-	if (ArmTime > 0)
+	if (NewFuseTime > 0)
 	{
-		if (!GetWorldTimerManager().TimerExists(FuseTimer) || ArmTime < GetWorldTimerManager().GetTimerRemaining(FuseTimer))
+		if (!GetWorldTimerManager().TimerExists(FuseTimer) || NewFuseTime < GetWorldTimerManager().GetTimerRemaining(FuseTimer))
 		{
 			bArmed = true;
-			GetWorldTimerManager().SetTimer(FuseTimer, this, &AGrenadeBase::Explode, ArmTime);
+			GetWorldTimerManager().SetTimer(FuseTimer, this, &AGrenadeBase::Explode, NewFuseTime);
 		}
 	} else
 	{
@@ -90,13 +81,15 @@ void AGrenadeBase::OnCollide_Implementation(UPrimitiveComponent* HitComponent, A
 	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	if (!bArmed) return;
-	Arm(FuseTime);
+	StartFuse(FuseTime);
+	UE_LOG(LogTemp, Warning, TEXT("Called oncollide"));
 }
 
 void AGrenadeBase::Pickup(APlayerCharacter* Character)
 {
 	IPickupInterface::Pickup(Character);
 	bool FoundGrenade = false;
+	UE_LOG(LogTemp, Warning, TEXT("Picked up grenade"));
 	for (int i = 0; i < Character->GrenadeInventory.Num(); i++)
 	{
 		if (Character->GrenadeInventory[i].GrenadeClass == GetClass())
@@ -126,6 +119,6 @@ float AGrenadeBase::CustomOnTakeAnyDamage(float DamageAmount, FVector Force,
 {
 	IDamageableInterface::CustomOnTakeAnyDamage(DamageAmount, Force, EventInstigator, DamageCauser);
 	if (EventInstigator) SetInstigator(EventInstigator->GetPawn());
-	this->Arm(FMath::RandRange(0.25, 0.5));
+	this->StartFuse(FMath::RandRange(0.25, 0.5));
 	return DamageAmount;
 }

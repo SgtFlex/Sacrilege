@@ -24,7 +24,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	float FuseTime = 2;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ExposeOnSpawn))
 	bool bArmed = false;
 
 	bool FuseStarted = false;
@@ -81,7 +81,7 @@ public:
 
 	void SetArmed(bool NewArmed = false);
 
-	void Arm(float ArmTime = 4);
+	void StartFuse(float NewFuseTime = 4);
 
 	UFUNCTION(BlueprintNativeEvent)
 	void OnCollide(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit );

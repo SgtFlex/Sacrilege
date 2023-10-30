@@ -18,9 +18,7 @@ APlayerControllerBase::APlayerControllerBase()
 void APlayerControllerBase::BeginPlay()
 {
 	Super::BeginPlay();
-	TeamId = FGenericTeamId(TeamNumber);
-
-	
+	TeamId = FGenericTeamId(TeamNumber);	
 }
 
 void APlayerControllerBase::OnPossess(APawn* InPawn)
