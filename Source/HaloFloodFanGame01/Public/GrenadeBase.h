@@ -8,6 +8,7 @@
 #include "GameFramework/Actor.h"
 #include "GrenadeBase.generated.h"
 
+class USphereComponent;
 class UImage;
 class UProjectileMovementComponent;
 class UPickupComponent;
@@ -53,7 +54,10 @@ public:
 	UPROPERTY(EditAnywhere)
 	USoundBase* ExplosionSFX;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USphereComponent* CollisionMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UStaticMeshComponent* Mesh;
 
 	FTimerHandle FuseTimer;
@@ -66,6 +70,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	UTexture2D* GrenadeIcon;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UMaterialInterface* ExplosionDecal;
 
 
 protected:

@@ -8,7 +8,9 @@
 #include "MyCustomBlueprintFunctionLibrary.h"
 #include "NiagaraFunctionLibrary.h"
 #include "PickupComponent.h"
+#include "Components/DecalComponent.h"
 #include "Engine/DamageEvents.h"
+#include "Engine/DecalActor.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "HaloFloodFanGame01/PlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
@@ -49,7 +51,10 @@ void AGrenadeBase::Explode_Implementation()
 	if (ExplosionSFX) UGameplayStatics::PlaySoundAtLocation(GetWorld(), ExplosionSFX, GetActorLocation());
 	if (ExplosionPFX) UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ExplosionPFX, GetActorLocation());
 	TArray<AActor*> ActorsToIgnore;
-	UMyCustomBlueprintFunctionLibrary::FireExplosion(GetWorld(), ActorsToIgnore, GetActorLocation(), MaxExplosionDamage, MinExplosionDamage, OuterExplosionRadius, InnerExplosionRadius, ExplosionDamageFalloff, ExplosionForce, this, Cast<APawn>(GetOwner())->GetController());
+	UMyCustomBlueprintFunctionLibrary::FireExplosion(GetWorld(), ActorsToIgnore, GetActorLocation(), MaxExplosionDamage, MinExplosionDamage, OuterExplosionRadius, InnerExplosionRadius, ExplosionDamageFalloff, ExplosionForce, this, GetInstigatorController());
+	ADecalActor* DecalActor = GetWorld()->SpawnActor<ADecalActor>(ADecalActor::StaticClass(), GetActorLocation(), FRotator(0,0,0));
+	DecalActor->SetDecalMaterial(ExplosionDecal);
+	DecalActor->GetDecal()->DecalSize = FVector(512, 512, 512);
 	Destroy();
 }
 

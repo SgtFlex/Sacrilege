@@ -11,6 +11,7 @@
 #include "Components/SphereComponent.h"
 #include "Core/CharacterBase.h"
 #include "Engine/DamageEvents.h"
+#include "Engine/DecalActor.h"
 #include "Kismet/GameplayStatics.h"
 #include "Perception/AISense_Hearing.h"
 
@@ -80,7 +81,14 @@ void AProjectileBase::OnProjectileOverlapped_Implementation(UPrimitiveComponent*
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), HitPFX, SweepResult.Location, SweepResult.Normal.Rotation());
 		
 	}
-	if (HitSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, SweepResult.Location);
+
+	if (HitSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, SweepResult.ImpactPoint);
+	if (ImpactDecalClass)
+	{
+		FTransform SpawnTransform = FTransform(SweepResult.Normal.Rotation() + FRotator(-90, FMath::RandRange(-180, 180), 0), SweepResult.ImpactPoint, FVector(1,1,1) * FMath::RandRange(0.1f, 1.0f));
+		ADecalActor* ImpactDecal = GetWorld()->SpawnActor<ADecalActor>(ImpactDecalClass, SpawnTransform);
+		ImpactDecal->AttachToComponent(OtherComp, FAttachmentTransformRules::KeepWorldTransform);
+	}
 	if (IdleSoundComponent) IdleSoundComponent->Stop();
 	FTimerDelegate TimerDelegate;
 	TimerDelegate.BindLambda([&]()

@@ -54,7 +54,14 @@ void AGunBase::Equip()
 
 void AGunBase::Drop()
 {
+	GetWorldTimerManager().ClearTimer(ReloadTimer);
+	bReloading = false;
 	SetOwner(nullptr);
+	if (CurMagazine + CurReserve <= 0)
+	{
+		//Disable collision query responses to prevent being picked up.
+		Mesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	}
 }
 
 void AGunBase::StartReload()
@@ -71,6 +78,7 @@ void AGunBase::Multi_StartReload_Implementation()
 {
 	if (bReloading || CurReserve <= 0 || CurMagazine == MaxMagazine) return;
 	bReloading = true;
+	if (BurstAmount > 0) GetWorldTimerManager().ClearTimer(FireHandle);
 	GetWorld()->GetTimerManager().SetTimer(ReloadTimer, this, &AGunBase::FinishReload, ReloadSpeed, false);
 	if (ReloadSound) UGameplayStatics::SpawnSoundAttached(ReloadSound, GetRootComponent());
 }
@@ -92,7 +100,7 @@ bool AGunBase::Server_PullTrigger_Validate()
 
 void AGunBase::Multi_PullTrigger_Implementation()
 {
-	if (GetWorldTimerManager().TimerExists(BurstRetriggerHandle))
+	if (GetWorldTimerManager().TimerExists(BurstRetriggerHandle) || CurMagazine <= 0 || bReloading)
 		return;
 	BulletsFired = 0;
 	GetWorldTimerManager().SetTimer(FireHandle, this, &AGunBase::Fire, 60/FireRate, true, 0);
@@ -198,11 +206,11 @@ void AGunBase::Fire_Implementation()
 			if (Hit.bBlockingHit)
 			{
 				if (HitSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, Hit.Location);
-				if (BulletImpactClass && !Cast<IDamageableInterface>(Hit.GetActor()))
+				if (ImpactDecal && !Cast<IDamageableInterface>(Hit.GetActor()))
 				{
-					FVector Location = Hit.Location;
+					FVector Location = Hit.ImpactPoint;
 					FRotator Rotation = Hit.Normal.Rotation() + FRotator(-90, 0, 0);
-					AActor* Decal = GetWorld()->SpawnActor(BulletImpactClass, &Location, &Rotation);
+					AActor* Decal = GetWorld()->SpawnActor(ImpactDecal, &Location, &Rotation);
 					Decal->AttachToComponent(Hit.GetComponent(), FAttachmentTransformRules::KeepWorldTransform);
 				}
 			}

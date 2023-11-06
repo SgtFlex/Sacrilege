@@ -49,27 +49,7 @@ void UPlayerHUD::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	FHitResult PlayerAim = PlayerCharacter->GetPlayerAim();
-	if (PlayerAim.GetActor())
-	{
-		if (APawn* Pawn = Cast<APawn>(PlayerAim.GetActor()))
-		{
-			APlayerControllerBase* PlayerController = Cast<APlayerControllerBase>(PlayerCharacter->GetController());
-			if (AAIControllerBase* AIController = Cast<AAIControllerBase>(Pawn->GetController()))
-			{
-				if (AIController->TeamNumber == PlayerController->TeamNumber)
-				{
-					SetCrosshairType(3);
-				} else if (AIController->Team)
-				{
-					SetCrosshairType(4);
-				}
-			} else
-			{
-				SetCrosshairType(1);
-			}
-		}
-	}
+	DetermineCrosshairColor();
 	
 
 	SetCompassDirection(PlayerCharacter->GetFirstPersonCameraComponent()->GetComponentRotation().Yaw);
@@ -247,6 +227,31 @@ void UPlayerHUD::SetCrosshairType(int type)
 		Crosshair->SetColorAndOpacity(EnemyColor);
 		break;
 	}
+}
+
+void UPlayerHUD::DetermineCrosshairColor()
+{
+	FHitResult PlayerAim = PlayerCharacter->GetPlayerAim();
+	if (PlayerAim.GetActor())
+	{
+		if (APawn* Pawn = Cast<APawn>(PlayerAim.GetActor()))
+		{
+			APlayerControllerBase* PlayerController = Cast<APlayerControllerBase>(PlayerCharacter->GetController());
+			if (AAIControllerBase* AIController = Cast<AAIControllerBase>(Pawn->GetController()))
+			{
+				if (AIController->TeamNumber == PlayerController->TeamNumber)
+				{
+					SetCrosshairType(3);
+					return;
+				} else if (AIController->Team)
+				{
+					SetCrosshairType(4);
+					return;
+				}
+			}
+		}
+	}
+	SetCrosshairType(1);
 }
 
 void UPlayerHUD::SetCrosshairTexture(UTexture2D* NewTexture)

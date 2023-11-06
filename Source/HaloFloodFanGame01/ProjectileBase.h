@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "ProjectileBase.generated.h"
 
+class ADecalActor;
 class UNiagaraSystem;
 class USphereComponent;
 class UProjectileMovementComponent;
@@ -41,6 +42,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	UNiagaraSystem* HitPFX;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TSubclassOf<ADecalActor> ImpactDecalClass;
 
 private:
 	UPROPERTY()

@@ -30,8 +30,6 @@ ACharacterBase::ACharacterBase()
 
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 	
-	GetCapsuleComponent()->SetNotifyRigidBodyCollision(true);
-
 	SetReplicates(true);
 	SetReplicateMovement(true);
 }
@@ -143,12 +141,25 @@ float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent con
 
 void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector DamageForce, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
+	GetHealthComponent()->Deactivate();
+	for (auto GrenadeStruct : GrenadeInventory)
+	{
+		for (int i = 0; i < FMath::RandRange(0, GrenadeStruct.GrenadeAmount); i++)
+		{
+			FActorSpawnParameters ActorSpawnParameters = FActorSpawnParameters();
+			ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+			FVector Loc = GetActorLocation();
+			AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActor(GrenadeStruct.GrenadeClass, &Loc));
+			Grenade->Mesh->SetSimulatePhysics(true);
+			UE_LOG(LogTemp, Warning, TEXT("dropped grenades"));
+		}
+	}
 	if (BloodDecalMaterial) UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(100, 100, 100), GetActorLocation(), FRotator(-90,0,0));
 	if (DeathSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), DeathSound, GetActorLocation());
-	GetMesh()->SetNotifyRigidBodyCollision(true);
-	GetMesh()->OnComponentHit.AddDynamic(this, &ACharacterBase::OnHit);
+	//GetMesh()->OnComponentHit.AddDynamic(this, &ACharacterBase::OnHit);
 	GetMesh()->GetAnimInstance()->Montage_Play(DeathAnim);
 	GetCapsuleComponent()->DestroyComponent();
+	SetRootComponent(GetMesh());
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->AddImpulseAtLocation(DamageForce, HitLocation, HitBoneName);
@@ -230,6 +241,7 @@ void ACharacterBase::ThrowEquippedGrenade_Implementation()
 	FRotator EyesRot;
 	GetActorEyesViewPoint(EyesLoc, EyesRot);
 	AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActor(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, &EyesLoc));
+	Grenade->SetInstigator(this);
 	Grenade->SetArmed(true);
 	FVector Force = GetBaseAimRotation().Vector() + FVector(0,0,0.1);
 	Grenade->Mesh->AddImpulse(Force*20000);
@@ -294,14 +306,12 @@ void ACharacterBase::Multi_PickupWeapon_Implementation(AGunBase* Gun)
 
 void ACharacterBase::DropWeapon()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Dropped weapon"));
 	EquippedWeapon->ReleaseTrigger();
-	EquippedWeapon->Drop();
 	EquippedWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-	//EquippedWep->SetActorLocation(this->Mesh1P->GetSocketLocation("GripPoint"));
 	EquippedWeapon->SetActorEnableCollision(true);
 	EquippedWeapon->Mesh->SetSimulatePhysics(true);
-	//EquippedWep->Mesh->AddImpulse(FirstPersonCameraComponent->GetForwardVector()*5000);
+	EquippedWeapon->Mesh->AddImpulse(GetControlRotation().Vector() * 300, NAME_None, true);
+	EquippedWeapon->Drop();
 	EquippedWeapon = nullptr;
 }
 

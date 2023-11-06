@@ -79,7 +79,10 @@ AActor* APDA::StartBuildPreview(TSubclassOf<AActor> ActorToPreview)
 	if (bIsPreviewing) StopBuildPreview();
 	bIsPreviewing = true;
 	FVector SpawnLoc = UKismetMathLibrary::GetForwardVector(Pawn->GetBaseAimRotation()) * 500.0f;
-	AActor* SpawnedActor = GetWorld()->SpawnActor(ActorToPreview, &SpawnLoc);
+	FActorSpawnParameters ActorSpawnParameters = FActorSpawnParameters();
+	FRotator Rotation = GetOwner()->GetActorRotation() + FRotator(0, 90, 0);
+	ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	AActor* SpawnedActor = GetWorld()->SpawnActor(ActorToPreview, &SpawnLoc, &Rotation, ActorSpawnParameters);
 	if (SpawnedActor)
 	{
 		TArray<UActorComponent*> SpawnedActorComponenets;

@@ -20,15 +20,15 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnKilled, AController*, Instigator
 DECLARE_DELEGATE_OneParam(FTest, ACharacterBase*);
 
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FGrenadeStruct
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TSubclassOf<AGrenadeBase> GrenadeClass;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int GrenadeAmount;
 	
 };
@@ -154,7 +154,7 @@ public:
 	// UPROPERTY(EditAnywhere, Category="Loadout")
 	// TSubclassOf<ABaseGrenade> EquippedGrenadeClass;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FGrenadeStruct> GrenadeInventory;
 
 	UPROPERTY(EditAnywhere)

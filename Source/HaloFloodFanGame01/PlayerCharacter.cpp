@@ -109,19 +109,16 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	MeleeTimeline.TickTimeline(DeltaSeconds);
-	FVector TraceStart = FirstPersonCameraComponent->GetComponentLocation();
-	FVector TraceEnd = FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector()*10000.0f;
-	FCollisionQueryParams CollisionParameters;
-	CollisionParameters.AddIgnoredActor(this);
-	GetWorld()->LineTraceSingleByChannel(PlayerAim, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParameters);
 
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(this);
+	UKismetSystemLibrary::SphereTraceSingle(GetWorld(), FirstPersonCameraComponent->GetComponentLocation(), FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector()*10000.0f, 20, UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Visibility), false, ActorsToIgnore, EDrawDebugTrace::None, PlayerAim, true, FLinearColor::Red, FLinearColor::Green, 5);
 	
 	AActor* FoundActor = nullptr;
 
-	FHitResult HitResult = GetPlayerAim();
-	if (Cast<IInteractableInterface>(HitResult.GetActor()) && HitResult.Distance < 250)
+	if (Cast<IInteractableInterface>(GetPlayerAim().GetActor()) && GetPlayerAim().Distance < 250)
 	{
-		FoundActor = HitResult.GetActor();
+		FoundActor = GetPlayerAim().GetActor();
 	} else
 	{
 		TArray<AActor*> Actors;
@@ -323,32 +320,24 @@ void APlayerCharacter::OnHealthDepleted_Implementation(float Damage, FVector For
 void APlayerCharacter::ThrowEquippedGrenade_Implementation()
 {
 	if (GrenadeInventory.Num() <= 0) return;
-	
-	//if (GrenadeInventory[CurGrenadeTypeI].GrenadeAmount <= 0) return;
+
 	GrenadeInventory[CurGrenadeTypeI].GrenadeAmount -= 1;
-	
-	// if (!EquippedGrenadeClass) return;
-	// if (FragCount<=0) return;
-	// SetFragCount(FragCount-1);
-	const FVector SpawnLoc = GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*100;
-	const FRotator SpawnRot = GetFirstPersonCameraComponent()->GetForwardVector().Rotation();
-	const FTransform& SpawnTransform = FTransform(GetFirstPersonCameraComponent()->GetForwardVector().Rotation(), GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*300);
+	const FTransform SpawnTransform = FTransform(GetFirstPersonCameraComponent()->GetForwardVector().Rotation(), GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*300);
 	FActorSpawnParameters ActorSpawnParameters;
 	ActorSpawnParameters.Instigator = this;
 	ActorSpawnParameters.Owner = this;
-	//UE_LOG(LogTemp, Warning, TEXT("Throwing grenade type: %s"), *GrenadeInventory[CurGrenadeTypeI].GrenadeClass->GetDefaultObjectName().ToString());
-	//GetWorld()->SpawnActor(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, &SpawnLoc, &SpawnRot, ActorSpawnParameters);
-	if (AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActorDeferred<AGrenadeBase>(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, SpawnTransform, this, this, ESpawnActorCollisionHandlingMethod::AlwaysSpawn)))
+
+	if (AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActorDeferred<AGrenadeBase>(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, SpawnTransform, this, this, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding)))
 	{
+		Grenade->SetInstigator(this);
 		Grenade->SetArmed(true);
 		Grenade->FinishSpawning(SpawnTransform);
 		FVector Direction = GetFirstPersonCameraComponent()->GetForwardVector() + FVector(0,0,0.15);
 		Direction.Normalize();
-		//Grenade->ProjectileMovementComponent->AddForce(Direction*100000.0f);
-		Grenade->ProjectileMovementComponent->Velocity = (Direction*2000.0f);
+		Grenade->Mesh->AddImpulse(Direction*2000.0f, NAME_None, true);
+		Grenade->Mesh->AddAngularImpulseInDegrees(Grenade->GetActorRightVector().GetSafeNormal()*1000 , NAME_None, true);
+		//Grenade->ProjectileMovementComponent->Velocity = (Direction*2000.0f);
 		
-		//Grenade->Mesh->AddImpulse(Force*20000);
-
 		if (GrenadeInventory[CurGrenadeTypeI].GrenadeAmount <= 0)
 		{
 			GrenadeInventory.RemoveAt(CurGrenadeTypeI);
@@ -364,6 +353,8 @@ void APlayerCharacter::SwitchWeapon()
 	if (!EquippedWeapon || !HolsteredWeapon)
 		return;
 	EquippedWeapon->ReleaseTrigger();
+	GetWorldTimerManager().ClearTimer(EquippedWeapon->ReloadTimer);
+	EquippedWeapon->bReloading = false;
 	AGunBase* TempGun = EquippedWeapon;
 	EquippedWeapon = HolsteredWeapon;
 	HolsteredWeapon = TempGun;

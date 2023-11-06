@@ -86,6 +86,8 @@ public:
 	
 	void SetCrosshairType(int type);
 
+	void DetermineCrosshairColor();
+
 	void SetCrosshairTexture(UTexture2D* NewTexture);
 
 	UFUNCTION(BlueprintCallable)
@@ -136,7 +138,7 @@ public:
 	UWidget* CompassHUD;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	UListView* TextNotificationList;
+	class UVerticalBox* TextNotificationList;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UImage* Crosshair;
