@@ -28,7 +28,7 @@ AGrenadeBase::AGrenadeBase()
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>("ProjectileMovementComp");
 	PickupComponent = CreateDefaultSubobject<UPickupComponent>("PickupComp");
 	PickupComponent->SetupAttachment(GetRootComponent());
-	PickupComponent->SetEnabled(false);
+	PickupComponent->SetEnabled(true);
 
 	
 }
@@ -61,25 +61,30 @@ void AGrenadeBase::Explode_Implementation()
 void AGrenadeBase::SetArmed(bool NewArmed)
 {
 	bArmed = NewArmed;
-	PickupComponent->SetActive(false);
+	PickupComponent->SetEnabled(!NewArmed);
+	if (NewArmed)
+	{
+		Mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_PhysicsBody, ECollisionResponse::ECR_Block);
+	} else
+	{
+		Mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_PhysicsBody, ECollisionResponse::ECR_Ignore);
+	}
 }
 
 void AGrenadeBase::StartFuse(float NewFuseTime)
 {
-	if (FuseStarted) return;
+	bArmed = true;
 	FuseStarted = true;
 	if (NewFuseTime > 0)
 	{
 		if (!GetWorldTimerManager().TimerExists(FuseTimer) || NewFuseTime < GetWorldTimerManager().GetTimerRemaining(FuseTimer))
 		{
-			bArmed = true;
 			GetWorldTimerManager().SetTimer(FuseTimer, this, &AGrenadeBase::Explode, NewFuseTime);
 		}
 	} else
 	{
 		Explode();
 	}
-	
 }
 
 void AGrenadeBase::OnCollide_Implementation(UPrimitiveComponent* HitComponent, AActor* OtherActor,

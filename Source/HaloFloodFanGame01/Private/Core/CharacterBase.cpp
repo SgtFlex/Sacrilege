@@ -149,9 +149,12 @@ void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector Damag
 			FActorSpawnParameters ActorSpawnParameters = FActorSpawnParameters();
 			ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 			FVector Loc = GetActorLocation();
-			AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActor(GrenadeStruct.GrenadeClass, &Loc));
-			Grenade->Mesh->SetSimulatePhysics(true);
-			UE_LOG(LogTemp, Warning, TEXT("dropped grenades"));
+			if (AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActor(GrenadeStruct.GrenadeClass, &Loc)))
+			{
+				Grenade->Mesh->SetSimulatePhysics(true);
+				Grenade->Mesh->AddImpulse(DamageForce * 0.025);
+			}
+				
 		}
 	}
 	if (BloodDecalMaterial) UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(100, 100, 100), GetActorLocation(), FRotator(-90,0,0));

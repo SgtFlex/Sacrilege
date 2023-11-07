@@ -69,6 +69,12 @@ public:
 	USoundBase* ShieldBreakSFX;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	USoundBase* ShieldLowSFX;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	USoundBase* ShieldWarningSFX;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	UNiagaraSystem* ShieldBreakFX;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)

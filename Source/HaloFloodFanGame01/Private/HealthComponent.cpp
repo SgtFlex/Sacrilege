@@ -53,29 +53,25 @@ float UHealthComponent::TakeDamage(float Damage, FVector Force, FVector HitLocat
 
 	
 		float DamageLeft = Damage;
-		// if (MaxShields > 0)
-		// {
-		// 	if (ShieldAudioComponent) ShieldAudioComponent->Stop();
-		// 	GetOwner()->GetWorldTimerManager().ClearTimer(ShieldRegenTimer);
-		// 	GetOwner()->GetWorldTimerManager().SetTimer(ShieldDelayTimerHandle, this, &UHealthComponent::StartShieldRegen, ShieldRegenDelay);
-		// }
 		if (Shields > 0)
 		{
 			DamageLeft = Damage - Shields;
 			SetShields(Shields - Damage);
-			// if (Shields <= 0)
-			// {
-			// 	BreakShields();
-			// } else
-			// {
-			// 	if (ShieldMat)
-			// 	{
-			// 		UMeshComponent* MeshComp = Cast<UMeshComponent>(GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
-			// 		MeshComp->SetOverlayMaterial(ShieldMat);
-			// 		UMaterialInstanceDynamic* ShieldMatDynamic = UMaterialInstanceDynamic::Create(ShieldMat, this->GetOwner());
-			// 		ShieldMatDynamic->SetScalarParameterValue(FName("Intensity"), 40 * (Shields/MaxShields));
-			// 	}
-			// }
+			if (Shields < 0)
+			{
+				if (ShieldWarningSFX)
+				{
+					ShieldAudioComponent->SetSound(ShieldWarningSFX);
+					ShieldAudioComponent->Play();
+				}
+			}
+			else if (Shields <= MaxShields * 0.25)
+			{
+				{
+					ShieldAudioComponent->SetSound(ShieldWarningSFX);
+					ShieldAudioComponent->Play();
+				}
+			}
 		}
 		if (Health > 0 && Shields <= 0)
 		{
@@ -206,6 +202,7 @@ void UHealthComponent::SetShieldRegenRatePerSecond(float NewShieldRegenRatePerSe
 	this->ShieldRegenRatePerSecond = NewShieldRegenRatePerSecond;
 }
 
+//Perhaps move this stuff to delegates called inside characters?
 void UHealthComponent::BreakShields()
 {
 	if (ShieldMat) {
@@ -234,7 +231,7 @@ void UHealthComponent::RegenShields()
 
 void UHealthComponent::StopShieldRegen()
 {
-	if (ShieldFinishRegenSFX) UGameplayStatics::SpawnSound2D(GetWorld(), ShieldFinishRegenSFX);
+	if (ShieldFinishRegenSFX) UGameplayStatics::SpawnSoundAttached(ShieldFinishRegenSFX, GetOwner()->GetRootComponent());
 	GetOwner()->GetWorldTimerManager().ClearTimer(ShieldRegenTimer);
 }
 

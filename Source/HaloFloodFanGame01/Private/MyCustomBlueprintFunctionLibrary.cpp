@@ -75,6 +75,8 @@ void UMyCustomBlueprintFunctionLibrary::FireExplosion(const UObject* WorldContex
 				if (PrimComponent->IsSimulatingPhysics())
 				{
 					PrimComponent->AddImpulse((HitActor->GetActorLocation() - Location).GetSafeNormal() * Force);
+					//PrimComponent->AddImpulse((HitActor->GetActorLocation() - Location).GetSafeNormal() * FMath::Lerp(0, Force, (FVector::Distance(HitActor->GetActorLocation(), Location)) + InnerRadius));
+
 				}
 			}
 		}
