@@ -96,7 +96,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetWeaponHUDEnabled(bool bDisplay);
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintNativeEvent)
 	void OnHealthUpdated(UHealthComponent* HealthComp);
 
 	UFUNCTION()

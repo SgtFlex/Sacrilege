@@ -18,6 +18,7 @@ UHealthComponent::UHealthComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
+	ShieldAudioComponent = CreateDefaultSubobject<UAudioComponent>("AudioComp");
 	// ...
 }
 
@@ -34,8 +35,15 @@ void UHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 void UHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	
+	ShieldAudioComponent->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
 	// ...
 
+	if (ShieldAttenuationSettings)
+	{
+		ShieldAudioComponent->AttenuationSettings = ShieldAttenuationSettings;
+	} 
 }
 
 
@@ -50,29 +58,27 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 float UHealthComponent::TakeDamage(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser, bool bIgnoreShields, bool bIgnoreHealthArmor, bool bIgnoreShieldArmor)
 {
 	if (GetHealth() <= 0) return 0;
-
-	
 		float DamageLeft = Damage;
 		if (Shields > 0)
 		{
 			DamageLeft = Damage - Shields;
 			SetShields(Shields - Damage);
-			if (Shields < 0)
+			
+		}
+		if (MaxShields > 0)
+		{
+			if (ShieldWarningSFX && Shields <= 0 && ShieldAudioComponent->GetSound() != ShieldWarningSFX)
 			{
-				if (ShieldWarningSFX)
-				{
-					ShieldAudioComponent->SetSound(ShieldWarningSFX);
-					ShieldAudioComponent->Play();
-				}
+				ShieldAudioComponent->SetSound(ShieldWarningSFX);
+				ShieldAudioComponent->Play();
 			}
-			else if (Shields <= MaxShields * 0.25)
+			else if (ShieldLowSFX && Shields <= MaxShields * 0.25 && ShieldAudioComponent->GetSound() != ShieldLowSFX)
 			{
-				{
-					ShieldAudioComponent->SetSound(ShieldWarningSFX);
-					ShieldAudioComponent->Play();
-				}
+				ShieldAudioComponent->SetSound(ShieldLowSFX);
+				ShieldAudioComponent->Play();
 			}
 		}
+		
 		if (Health > 0 && Shields <= 0)
 		{
 			if (SetHealth(Health - DamageLeft) <= 0) //New health value set.
@@ -97,7 +103,6 @@ void UHealthComponent::Multi_TakeDamage_Implementation(float Damage, FVector For
 	UE_LOG(LogTemp, Warning, TEXT("Called TakeDamage on: %s. Health: %f"), *UEnum::GetValueAsString(GetOwnerRole()), GetHealth());
 	if (MaxShields > 0)
 	{
-		if (ShieldAudioComponent) ShieldAudioComponent->Stop();
 		GetOwner()->GetWorldTimerManager().ClearTimer(ShieldRegenTimer);
 		GetOwner()->GetWorldTimerManager().SetTimer(ShieldDelayTimerHandle, this, &UHealthComponent::StartShieldRegen, ShieldRegenDelay);
 	}
@@ -211,13 +216,21 @@ void UHealthComponent::BreakShields()
 	}
 	if (ShieldBreakFX) UNiagaraFunctionLibrary::SpawnSystemAttached(ShieldBreakFX, Cast<ACharacterBase>(GetOwner())->GetMesh(),
 		NAME_None, FVector(0,0,0), FRotator(0,0,0),EAttachLocation::SnapToTarget, true);
-	if (ShieldBreakSFX) UGameplayStatics::SpawnSoundAttached(ShieldBreakSFX, GetOwner()->GetRootComponent());
+	if (ShieldBreakSFX)
+	{
+		ShieldAudioComponent->SetSound(ShieldBreakSFX);
+		ShieldAudioComponent->Play();
+	}
 }
 
 void UHealthComponent::StartShieldRegen()
 {
-	if (ShieldStartRegenSFX) ShieldAudioComponent = UGameplayStatics::SpawnSoundAttached(ShieldStartRegenSFX, GetOwner()->GetRootComponent(), NAME_None,
-		FVector(ForceInit), FRotator::ZeroRotator, EAttachLocation::KeepRelativeOffset, false, 1, 1, ShieldStartRegenSFX->GetDuration() * Shields/MaxShields);
+	
+	if (ShieldStartRegenSFX)
+	{
+		ShieldAudioComponent->SetSound(ShieldStartRegenSFX);
+		ShieldAudioComponent->Play(ShieldStartRegenSFX->GetDuration() * Shields/MaxShields);
+	}
 	GetOwner()->GetWorldTimerManager().SetTimer(ShieldRegenTimer, this, &UHealthComponent::RegenShields, ShieldRegenTickRate, true);
 }
 
@@ -231,7 +244,11 @@ void UHealthComponent::RegenShields()
 
 void UHealthComponent::StopShieldRegen()
 {
-	if (ShieldFinishRegenSFX) UGameplayStatics::SpawnSoundAttached(ShieldFinishRegenSFX, GetOwner()->GetRootComponent());
+	if (ShieldFinishRegenSFX)
+	{
+		ShieldAudioComponent->SetSound(ShieldFinishRegenSFX);
+		ShieldAudioComponent->Play();
+	}
 	GetOwner()->GetWorldTimerManager().ClearTimer(ShieldRegenTimer);
 }
 

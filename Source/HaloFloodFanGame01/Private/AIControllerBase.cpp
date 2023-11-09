@@ -93,10 +93,7 @@ void AAIControllerBase::BeginPlayDelayed()
 	if (Char)
 	{
 		if (ASmartObject* SmartObj = Char->SmartObject) {
-			FGameplayTag SubTag;
-			BehaviorTreeComp->SetDynamicSubtree(SubTag, SmartObj->DynamicTree);
-			BlackboardComp->SetValueAsBool(FName("HasSmartObject"), true);
-			BlackboardComp->SetValueAsEnum(TEXT("AlertState"), SmartObj->AlertState);
+			SetSmartObject(SmartObj);
 		}
 	}
 }
@@ -114,6 +111,16 @@ ETeamAttitude::Type AAIControllerBase::GetTeamAttitudeTowards(const AActor& Othe
 	}
 	return ETeamAttitude::Neutral;
 	//return Super::GetTeamAttitudeTowards(Other);
+}
+
+void AAIControllerBase::SetSmartObject(ASmartObject* SmartObject)
+{
+	FGameplayTag SubTag;
+	BehaviorTreeComp->SetDynamicSubtree(SubTag, SmartObject->DynamicTree);
+	BlackboardComp->SetValueAsBool(FName("HasSmartObject"), true);
+	BlackboardComp->SetValueAsObject(FName("SmartObject"), SmartObject);
+	BlackboardComp->SetValueAsEnum(TEXT("AlertState"), SmartObject->AlertState);
+	// BlackboardComp->SetValueAsVector(FName("StimulusLocation"), SmartObject->GetActorLocation());
 }
 
 void AAIControllerBase::UpdatedPerception(AActor* Actor, FAIStimulus Stimulus, bool AlertedByAllies)

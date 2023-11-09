@@ -202,6 +202,15 @@ void ACharacterBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 	}
 }
 
+void ACharacterBase::SetSmartObject(ASmartObject* NewSmartObject)
+{
+	SmartObject = NewSmartObject;
+	if (AAIControllerBase* AIController = Cast<AAIControllerBase>(GetController()))
+	{
+		AIController->SetSmartObject(NewSmartObject);
+	}
+}
+
 UHealthComponent* ACharacterBase::GetHealthComponent()
 {
 	return HealthComponent;

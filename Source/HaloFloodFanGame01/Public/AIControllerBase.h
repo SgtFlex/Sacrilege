@@ -27,6 +27,9 @@ public:
 	void BeginPlayDelayed();
 	
 	virtual ETeamAttitude::Type GetTeamAttitudeTowards(const AActor& Other) const override;
+
+	UFUNCTION(BlueprintCallable)
+	void SetSmartObject(ASmartObject* SmartObject);
 	
 	UFUNCTION(BlueprintNativeEvent)
 	void OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);

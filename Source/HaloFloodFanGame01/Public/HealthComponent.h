@@ -90,6 +90,9 @@ public:
 	UAudioComponent* ShieldAudioComponent;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	USoundAttenuation* ShieldAttenuationSettings;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	UMaterialInterface* ShieldMat;
 
 	UPROPERTY(VisibleAnywhere, BlueprintAssignable)

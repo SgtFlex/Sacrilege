@@ -281,7 +281,7 @@ void UPlayerHUD::SetWeaponHUDEnabled(bool bDisplay)
 	}
 }
 
-void UPlayerHUD::OnHealthUpdated(UHealthComponent* HealthComp)
+void UPlayerHUD::OnHealthUpdated_Implementation(UHealthComponent* HealthComp)
 {
 	SetHealth(HealthComp->GetHealth(), HealthComp->GetMaxHealth());
 	SetShields(HealthComp->GetShields(), HealthComp->GetMaxShields());

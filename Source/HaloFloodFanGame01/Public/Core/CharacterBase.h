@@ -67,6 +67,9 @@ public:
 
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit );
+
+	UFUNCTION(BlueprintCallable)
+	void SetSmartObject(ASmartObject* NewSmartObject);
 	
 	virtual UHealthComponent* GetHealthComponent() override;
 
