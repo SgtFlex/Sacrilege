@@ -113,10 +113,9 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 	TArray<AActor*> ActorsToIgnore;
 	ActorsToIgnore.Add(this);
 	UKismetSystemLibrary::SphereTraceSingle(GetWorld(), FirstPersonCameraComponent->GetComponentLocation(), FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector()*10000.0f, 20, UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Visibility), false, ActorsToIgnore, EDrawDebugTrace::None, PlayerAim, true, FLinearColor::Red, FLinearColor::Green, 5);
-	
 	AActor* FoundActor = nullptr;
-
-	if (Cast<IInteractableInterface>(GetPlayerAim().GetActor()) && GetPlayerAim().Distance < 250)
+	
+	if (GetPlayerAim().GetActor() && PlayerAim.Distance < 250 && GetPlayerAim().GetActor()->Implements<UInteractableInterface>())
 	{
 		FoundActor = GetPlayerAim().GetActor();
 	} else
@@ -129,7 +128,7 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 			float ClosestDist = 0;
 			for (auto Actor : Actors)
 			{
-				if (Cast<IInteractableInterface>(Actor) && (ClosestDist == 0 || GetDistanceTo(Actor) < ClosestDist))
+				if (Actor->Implements<UInteractableInterface>() && (ClosestDist == 0 || GetDistanceTo(Actor) < ClosestDist))
 				{
 					ClosestDist = GetDistanceTo(Actor);
 					FoundActor = Actor;
@@ -390,7 +389,6 @@ void APlayerCharacter::SwitchGrenadeType(int Index = 0)
 	CurGrenadeTypeI = Index;
 	CurGrenadeTypeI = CurGrenadeTypeI % (GrenadeInventory.Num());
 	OnGrenadeTypeSwitched.Broadcast(GrenadeInventory[CurGrenadeTypeI].GrenadeClass);
-	UE_LOG(LogTemp, Warning, TEXT("Switched grenade to: %s"), *GrenadeInventory[CurGrenadeTypeI].GrenadeClass->GetDefaultObjectName().ToString());
 }
 
 void APlayerCharacter::ControllerChanged(AController* OldController, AController* NewController)
@@ -426,9 +424,6 @@ void APlayerCharacter::PickupWeapon(AGunBase* Gun)
 			EquippedWeapon->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
 		}
 		WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
-	} else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Invalid pickup for player"));
 	}
 }
 

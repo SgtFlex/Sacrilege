@@ -319,13 +319,13 @@ void UPlayerHUD::UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredG
 
 void UPlayerHUD::UpdateInteractable(AActor* Actor)
 {
-	if (IInteractableInterface* Interactable = Cast<IInteractableInterface>(Actor))
+	if (Actor && Actor->Implements<UInteractableInterface>())
 	{
 		FText IntText;
 		UTexture2D* IntIcon;
 		SetCanInteract(true);
 		
-		Interactable->Execute_GetInteractInfo(Actor, IntText, IntIcon);
+		IInteractableInterface::Execute_GetInteractInfo(Actor, IntText, IntIcon);
 		SetInteractInfo(IntText, IntIcon);
 		InteractName->SetText(FText::FromString(Actor->GetActorLabel()));
 	} else
