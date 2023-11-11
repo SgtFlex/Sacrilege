@@ -101,6 +101,7 @@ void AProjectileBase::OnProjectileOverlapped_Implementation(UPrimitiveComponent*
 	}
 	
 	CollisionComp->Deactivate();
+	CollisionComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	ProjectileMovement->Deactivate();
 }
 

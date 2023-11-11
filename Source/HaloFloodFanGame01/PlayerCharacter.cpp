@@ -213,7 +213,9 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 	// input is a Vector2D
 	
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
-	Server_Look(LookAxisVector.Y);
+
+	// Disabled for now due to incorrect pitch values in standalone
+	// Server_Look(LookAxisVector.Y);
 	if (Controller != nullptr)
 	{
 		// add yaw and pitch input to controller
