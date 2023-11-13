@@ -18,13 +18,17 @@ APlayerControllerBase::APlayerControllerBase()
 void APlayerControllerBase::BeginPlay()
 {
 	Super::BeginPlay();
-	TeamId = FGenericTeamId(TeamNumber);	
+	SetGenericTeamId(FGenericTeamId(TeamNumber));
 }
 
 void APlayerControllerBase::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
+	// if (ACharacterBase* Char = Cast<ACharacterBase>(InPawn))
+	// 	SetGenericTeamId(Char->TeamNumber);
+
+	UE_LOG(LogTemp, Warning, TEXT("Possessed"));
 	// check(this);
 	// if (PlayerHUDClass)
 	// {
@@ -34,7 +38,11 @@ void APlayerControllerBase::OnPossess(APawn* InPawn)
 	// }
 }
 
-FGenericTeamId APlayerControllerBase::GetGenericTeamId() const
+void APlayerControllerBase::SetGenericTeamId(const FGenericTeamId& NewTeamID)
 {
-	return TeamId;
+	if (TeamID != NewTeamID)
+	{
+		TeamID = NewTeamID;
+		// @todo notify perception system that a controller changed team ID
+	}
 }

@@ -22,14 +22,19 @@ public:
 
 	virtual void OnPossess(APawn* InPawn) override;
 
-private:
-	FGenericTeamId TeamId;
-	FGenericTeamId GetGenericTeamId() const;
-
+	//----------------------------------------------------------------------//
+	// IGenericTeamAgentInterface
+	//----------------------------------------------------------------------//
+	private:
+	FGenericTeamId TeamID;
 public:
+	virtual void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
+	virtual FGenericTeamId GetGenericTeamId() const override { return TeamID; }
+	
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UUserWidget> PlayerHUDClass;
 
+public:
 	UPROPERTY(EditAnywhere)
-	int TeamNumber = 1;
+	uint8 TeamNumber = 2;
 };

@@ -20,6 +20,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISense_Damage.h"
+#include "Perception/AISense_Sight.h"
 #include "Perception/AISense_Touch.h"
 
 // Sets default values
@@ -141,6 +142,7 @@ float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent con
 
 void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector DamageForce, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
+	UAIPerceptionSystem::GetCurrent( GetWorld() )->UnregisterSource(*this);
 	GetHealthComponent()->Deactivate();
 	for (auto GrenadeStruct : GrenadeInventory)
 	{
@@ -170,10 +172,10 @@ void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector Damag
 	
 	GetWorld()->GetTimerManager().SetTimer(RagdollTimer, this, &ACharacterBase::RagdollSettled, 1);
 	if (GetController()) GetController()->Destroy();
+	
 	//TestDelegate.Execute(this);
 	if (EquippedWeapon)
 		DropWeapon();
-	
 }
 
 void ACharacterBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,

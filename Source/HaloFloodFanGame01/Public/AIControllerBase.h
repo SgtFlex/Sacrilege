@@ -24,6 +24,8 @@ public:
 
 	virtual void UpdateControlRotation(float DeltaTime, bool bUpdatePawn) override;
 
+	virtual void OnPossess(APawn* InPawn) override;
+
 	void BeginPlayDelayed();
 	
 	virtual ETeamAttitude::Type GetTeamAttitudeTowards(const AActor& Other) const override;
@@ -35,6 +37,9 @@ public:
 	void OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
 
 	void UpdatedPerception(AActor* Actor, FAIStimulus Stimulus, bool AlertedByAllies = false);
+
+	UFUNCTION(BlueprintCallable)
+	void UpdateTargetedEnemy(AActor* Actor, FAIStimulus Stimulus);
 
 	UFUNCTION()
 	void HearingStimulusUpdated(AActor* Actor, FAIStimulus Stimulus);
@@ -87,7 +92,7 @@ public:
 	class UAISenseConfig_Touch* Touch;
 
 	UPROPERTY(EditAnywhere)
-	int TeamNumber = 2;
+	uint8 TeamNumber = 2;
 
 	UPROPERTY(EditAnywhere)
 	TArray<AActor*> KnownEnemies;

@@ -35,14 +35,16 @@ AAIControllerBase::AAIControllerBase()
 	AIPerceptionComponent->ConfigureSense(*Team);
 	AIPerceptionComponent->ConfigureSense(*Touch);
 	AIPerceptionComponent->SetDominantSense(*Sight->GetSenseImplementation());
+
+	
 }
 
 void AAIControllerBase::BeginPlay()
 {
 	Super::BeginPlay();
-	SetGenericTeamId(FGenericTeamId(TeamNumber));
 	GetWorldTimerManager().SetTimer(Delay, this, &AAIControllerBase::BeginPlayDelayed, 0.1f, false);
 	BehaviorTreeComp->StartLogic();
+	SetGenericTeamId(FGenericTeamId(TeamNumber));
 }
 
 void AAIControllerBase::UpdateControlRotation(float DeltaTime, bool bUpdatePawn)
@@ -85,6 +87,14 @@ void AAIControllerBase::UpdateControlRotation(float DeltaTime, bool bUpdatePawn)
 	}
 }
 
+void AAIControllerBase::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+	// if (ACharacterBase* Char = Cast<ACharacterBase>(InPawn))
+	// 	SetGenericTeamId(Char->TeamNumber);
+	
+}
+
 void AAIControllerBase::BeginPlayDelayed()
 {
 	AIPerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(this, &AAIControllerBase::OnPerceptionUpdated);
@@ -100,17 +110,20 @@ void AAIControllerBase::BeginPlayDelayed()
 
 ETeamAttitude::Type AAIControllerBase::GetTeamAttitudeTowards(const AActor& Other) const
 {
+	//return Super::GetTeamAttitudeTowards(Other);
 	if (const APawn* OtherPawn = Cast<APawn>(&Other)) {
-
 		if (const IGenericTeamAgentInterface* TeamAgent = Cast<IGenericTeamAgentInterface>(OtherPawn->GetController()))
 		{
-			if (TeamAgent->GetGenericTeamId()==0)
+			if (TeamAgent->GetGenericTeamId().GetId() == 0)
 				return ETeamAttitude::Neutral;
-			return Super::GetTeamAttitudeTowards(*OtherPawn->GetController());
+			else if (TeamAgent->GetGenericTeamId().GetId() == GetGenericTeamId().GetId())
+				return ETeamAttitude::Friendly;
+			else
+				return ETeamAttitude::Hostile;
+			return Super::GetTeamAttitudeTowards(Other);
 		}
 	}
 	return ETeamAttitude::Neutral;
-	//return Super::GetTeamAttitudeTowards(Other);
 }
 
 void AAIControllerBase::SetSmartObject(ASmartObject* SmartObject)
@@ -125,41 +138,66 @@ void AAIControllerBase::SetSmartObject(ASmartObject* SmartObject)
 
 void AAIControllerBase::UpdatedPerception(AActor* Actor, FAIStimulus Stimulus, bool AlertedByAllies)
 {
-	
+
 	if (GetTeamAttitudeTowards(*Actor)!=ETeamAttitude::Hostile)
-		return;
-
-	//UE_LOG(LogTemp, Warning, TEXT("%s"), *Stimulus.Type.Name.ToString());
-
-	TArray<AActor*> PerceivedActors;
-	if (AIPerceptionComponent && Sight) AIPerceptionComponent->GetCurrentlyPerceivedActors(Sight->GetSenseImplementation(), PerceivedActors);
-	if (PerceivedActors.Contains(Actor))
 	{
-		KnownEnemies.Add(Actor);
-		BlackboardComp->SetValueAsEnum(TEXT("AlertState"), EAlertState::Alerted);
-		//BlackboardComp->SetValueAsObject(TEXT("Enemy"), Actor);
+		return;
+	}
+
+	//TODO this may be causing errors in AI. Needs fixing
+	// TArray<AActor*> PerceivedActors;
+	// if (AIPerceptionComponent && Sight) AIPerceptionComponent->GetCurrentlyPerceivedActors(Sight->GetSenseImplementation(), PerceivedActors);
+	// if (PerceivedActors.Contains(Actor))
+	// {
+	// 	KnownEnemies.Add(Actor);
+	// 	BlackboardComp->SetValueAsEnum(TEXT("AlertState"), EAlertState::Alerted);
+	// } else
+	// {
+	// 	if (Stimulus.Type == Sight->GetSenseID() && KnownEnemies.Contains(Actor)) KnownEnemies.Remove(Actor);
+	// 	if (PerceivedActors.IsEmpty()) BlackboardComp->SetValueAsEnum(TEXT("AlertState"), EAlertState::Suspicious);
+	// 	BlackboardComp->SetValueAsVector(TEXT("StimulusLocation"), Stimulus.StimulusLocation);
+	// }
+	//
+	if (Stimulus.Type == Sight->GetSenseID() && !AlertedByAllies)
+	{
+		UpdateTargetedEnemy(Actor, Stimulus);
 	} else
 	{
-		FVector Direction = Actor->GetVelocity();
-		if (KnownEnemies.Contains(Actor)) KnownEnemies.Remove(Actor);
-		Direction.Normalize();
-		FVector PredictedLocation = Stimulus.StimulusLocation + Direction*300;
-		//BlackboardComp->SetValueAsObject(TEXT("Enemy"), nullptr);
-		BlackboardComp->SetValueAsEnum(TEXT("AlertState"), EAlertState::Suspicious);
+		if (BlackboardComp->GetValueAsEnum(TEXT("AlertState")) != EAlertState::Alerted) BlackboardComp->SetValueAsEnum(TEXT("AlertState"), EAlertState::Suspicious);
 		BlackboardComp->SetValueAsVector(TEXT("StimulusLocation"), Stimulus.StimulusLocation);
 	}
-	float ClosestDist = -1;
-	AActor* ClosestEnemy = nullptr;
-	for (auto KnownEnemy : KnownEnemies)
-	{
-		if (ClosestDist == -1 || ClosestDist > GetPawn()->GetDistanceTo(KnownEnemy))
-		{
-			ClosestDist = GetPawn()->GetDistanceTo(KnownEnemy);
-			ClosestEnemy = KnownEnemy;
-		}
-	}
-	BlackboardComp->SetValueAsObject(TEXT("Enemy"), ClosestEnemy);
 	if (!AlertedByAllies) AlertAllies(3000, Actor, Stimulus);
+}
+
+void AAIControllerBase::UpdateTargetedEnemy(AActor* Actor, FAIStimulus Stimulus)
+{
+	
+	TArray<AActor*> SightedActors;
+	if (AIPerceptionComponent && Sight) AIPerceptionComponent->GetCurrentlyPerceivedActors(Sight->GetSenseImplementation(), SightedActors);
+	
+	if (!SightedActors.IsEmpty())
+	{
+		float ClosestDist = -1;
+		AActor* ClosestEnemy = nullptr;
+		for (auto SightedActor : SightedActors)
+		{
+			if (GetTeamAttitudeTowards(*SightedActor)==ETeamAttitude::Hostile)
+			{
+				if (ClosestDist == -1 || GetPawn()->GetDistanceTo(SightedActor) < ClosestDist)
+				{
+					ClosestDist = GetPawn()->GetDistanceTo(SightedActor);
+					ClosestEnemy = SightedActor;
+				}
+			}
+		}
+		BlackboardComp->SetValueAsEnum(TEXT("AlertState"), EAlertState::Alerted);
+		BlackboardComp->SetValueAsObject(TEXT("Enemy"), ClosestEnemy);
+	} else
+	{
+		BlackboardComp->SetValueAsEnum(TEXT("AlertState"), EAlertState::Suspicious);
+		BlackboardComp->SetValueAsObject(TEXT("Enemy"), nullptr);
+		BlackboardComp->SetValueAsVector(TEXT("StimulusLocation"), Stimulus.StimulusLocation);
+	}
 }
 
 void AAIControllerBase::HearingStimulusUpdated(AActor* Actor, FAIStimulus Stimulus)
@@ -183,14 +221,14 @@ void AAIControllerBase::AlertAllies(float AlertRadius, AActor* Actor, FAIStimulu
 	UKismetSystemLibrary::SphereOverlapActors(GetWorld(), GetPawn()->GetActorLocation(), AlertRadius, Objects, ACharacterBase::StaticClass(), ActorsToIgnore, Actors);
 	for (auto FoundActor : Actors)
 	{
+		
 		if (ACharacterBase* BaseCharacter = Cast<ACharacterBase>(FoundActor))
 		{
 			if (AAIControllerBase* AIController = Cast<AAIControllerBase>(BaseCharacter->GetController()))
 			{
-				if (AIController->TeamNumber == TeamNumber)
+				if (GetTeamAttitudeTowards(*FoundActor) == ETeamAttitude::Friendly)
 				{
 					AIController->UpdatedPerception(Actor, Stimulus, true);
-					//UE_LOG(LogTemp, Warning, TEXT("%s"), *FoundActor->GetActorLabel())
 				}
 			}
 		}

@@ -75,7 +75,6 @@ void UPlayerHUD::SetInteractInfo(FText InfoText, UTexture2D* Icon)
 	{
 		//InteractIcon->SetVisibility(ESlateVisibility::Visible);
 		InteractIcon->SetBrushFromTexture(Icon);
-		
 	}
 	else
 	{
