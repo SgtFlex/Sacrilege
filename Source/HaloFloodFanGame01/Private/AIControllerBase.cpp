@@ -35,8 +35,6 @@ AAIControllerBase::AAIControllerBase()
 	AIPerceptionComponent->ConfigureSense(*Team);
 	AIPerceptionComponent->ConfigureSense(*Touch);
 	AIPerceptionComponent->SetDominantSense(*Sight->GetSenseImplementation());
-
-	
 }
 
 void AAIControllerBase::BeginPlay()

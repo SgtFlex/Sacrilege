@@ -107,7 +107,7 @@ public:
 	virtual void DropWeapon();
 
 	UFUNCTION()
-	void RagdollSettled();
+	void RagdollSettled(UPrimitiveComponent* Component, FName Name);
 
 	void Stun();
 

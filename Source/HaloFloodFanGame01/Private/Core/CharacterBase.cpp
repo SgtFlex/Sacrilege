@@ -47,6 +47,8 @@ void ACharacterBase::BeginPlay()
 		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(SpawnWeaponClass)));
 	}
 
+	GetMesh()->OnComponentSleep.AddDynamic(this, &ACharacterBase::RagdollSettled);
+
 	//UE_LOG(LogTemp, Warning, TEXT("Char: %s %f"), *GetActorLabel(), GetHealthComponent()->GetHealth());
 	//if (GetHealthComponent()) UE_LOG(LogTemp, Warning, TEXT("%s's Health component is owned by %s (Should be %s)"), *GetActorLabel(), *GetHealthComponent()->GetOwner()->GetActorLabel(), *GetActorLabel());
 	if (GetHealthComponent()) GetHealthComponent()->OnHealthDepleted.AddDynamic(this, &ACharacterBase::OnHealthDepleted);	
@@ -170,7 +172,7 @@ void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector Damag
 	GetMesh()->AddImpulseAtLocation(DamageForce, HitLocation, HitBoneName);
 	OnKilled.Broadcast(EventInstigator, DamageCauser);
 	
-	GetWorld()->GetTimerManager().SetTimer(RagdollTimer, this, &ACharacterBase::RagdollSettled, 1);
+	//GetWorld()->GetTimerManager().SetTimer(RagdollTimer, this, &ACharacterBase::RagdollSettled, 1);
 	if (GetController()) GetController()->Destroy();
 	
 	//TestDelegate.Execute(this);
@@ -329,18 +331,12 @@ void ACharacterBase::DropWeapon()
 	EquippedWeapon = nullptr;
 }
 
-void ACharacterBase::RagdollSettled()
+void ACharacterBase::RagdollSettled(UPrimitiveComponent* Component, FName Name)
 {
-	TArray<FName> BoneNames;
-	GetMesh()->GetBoneNames(BoneNames);
-	if (GetMesh()->GetPhysicsLinearVelocity(BoneNames[1]).Length() <= 1)
-	{
-		GetMesh()->PutAllRigidBodiesToSleep();
-		GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
-	} else
-	{
-		GetWorld()->GetTimerManager().SetTimer(RagdollTimer, this, &ACharacterBase::RagdollSettled, 1);
-	}
+
+	GetMesh()->PutAllRigidBodiesToSleep();
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+	
 }
 
 void ACharacterBase::Stun()
