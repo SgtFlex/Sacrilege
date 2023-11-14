@@ -185,24 +185,20 @@ void ACharacterBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 {
 	LaunchCharacter(NormalImpulse/100, true, true);
 	float DamageCalculation;
-	if (OtherActor && OtherComp)
+	
+	if (OtherComp)
 	{
 		UAISense_Touch::ReportTouchEvent(GetWorld(), this, OtherActor, Hit.Location);
-		float VelocityDifference = FMath::Abs(OtherActor->GetVelocity().Length() - this->GetVelocity().Length());
-		float Mass = OtherComp->IsSimulatingPhysics() ? (OtherComp->GetMass()/300) : 1;
-		DamageCalculation = FMath::Pow(VelocityDifference, 1.0f/3.0f) * Mass;
-	} else {
-		DamageCalculation = FMath::Pow(this->GetVelocity().Length(), 1.0f/5.0f);
-	}
-	if (DamageCalculation > 5)
-	{
-		//FPointDamageEvent PointDamageEvent = FPointDamageEvent(DamageCalculation, Hit, FVector(0,0,0), UDamageType::StaticClass());
-		FDamageEvent DamageEvent = FDamageEvent(UDamageType::StaticClass());
-		//TakePointDamage(PointDamageEvent, NormalImpulse, nullptr, nullptr);
-		
-		CustomTakeDamage(DamageCalculation, NormalImpulse, DamageEvent, nullptr, nullptr);
-		float DecalSize = 100;
-		UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(DecalSize, DecalSize, DecalSize), GetMesh()->GetComponentLocation() + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), 0), FRotator(-90,0,FMath::RandRange(-180, 180)));
+		const float VelocityDifference = FMath::Abs(OtherComp->GetComponentVelocity().Length() - this->GetVelocity().Length());
+		const float Mass = OtherComp->IsSimulatingPhysics() ? (OtherComp->GetMass()) : 1;
+		DamageCalculation = FMath::Pow(VelocityDifference, 1.0f/5.0f) * (Mass/300);
+		if (DamageCalculation > 5)
+		{
+			FDamageEvent DamageEvent = FDamageEvent(UDamageType::StaticClass());
+			CustomTakeDamage(DamageCalculation, NormalImpulse, DamageEvent, nullptr, nullptr);
+			float DecalSize = 100;
+			UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(DecalSize, DecalSize, DecalSize), GetMesh()->GetComponentLocation() + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), 0), FRotator(-90,0,FMath::RandRange(-180, 180)));
+		}
 	}
 }
 
