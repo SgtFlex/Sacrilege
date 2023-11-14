@@ -215,7 +215,21 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, meta = (Category="HUD"))
 	TSubclassOf<UUserWidget> BulletWidget;
+
+	UPROPERTY(EditDefaultsOnly)
+	UAnimMontage* DrawAnimation1P;
 	
+	UPROPERTY(EditDefaultsOnly)
+	UAnimMontage* HolsterAnimation1P;
+
+	UPROPERTY(EditDefaultsOnly)
+	UAnimMontage* FireAnimation1P;
+
+	UPROPERTY(EditDefaultsOnly)
+	UAnimMontage* ReloadAnimation1P;
+
+	UPROPERTY(EditDefaultsOnly)
+	UAnimMontage* MeleeAnimation1P;
 private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AActor> ImpactDecal;

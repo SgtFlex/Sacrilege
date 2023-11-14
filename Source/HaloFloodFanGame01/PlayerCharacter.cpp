@@ -2,27 +2,20 @@
 
 #include "PlayerCharacter.h"
 
+#include "HealthComponent.h"
 #include "GrenadeBase.h"
 #include "GunBase.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "FrameTypes.h"
-#include "HealthComponent.h"
 #include "InteractableInterface.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/SphereComponent.h"
 #include "Components/TimelineComponent.h"
 #include "Engine/DamageEvents.h"
-#include "GameFramework/ProjectileMovementComponent.h"
 #include "GameFramework/SpectatorPawn.h"
-#include "Kismet/KismetMathLibrary.h"
-#include "Net/UnrealNetwork.h"
-
-
-//////////////////////////////////////////////////////////////////////////
-// AHaloFloodFanGame01Character
+#include "Kismet/KismetSystemLibrary.h"
 
 
 
@@ -54,8 +47,6 @@ APlayerCharacter::APlayerCharacter()
 
 void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-
-
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	//DOREPLIFETIME(AHaloFloodFanGame01Character, EnhancedInputComponent);
@@ -107,47 +98,9 @@ void APlayerCharacter::BeginPlay()
 void APlayerCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
 	MeleeTimeline.TickTimeline(DeltaSeconds);
 
-	TArray<AActor*> ActorsToIgnore;
-	ActorsToIgnore.Add(this);
-	UKismetSystemLibrary::SphereTraceSingle(GetWorld(), FirstPersonCameraComponent->GetComponentLocation(), FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector()*10000.0f, 20, UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Visibility), false, ActorsToIgnore, EDrawDebugTrace::None, PlayerAim, true, FLinearColor::Red, FLinearColor::Green, 5);
-	AActor* FoundActor = nullptr;
-	
-	if (GetPlayerAim().GetActor() && PlayerAim.Distance < 250 && GetPlayerAim().GetActor()->Implements<UInteractableInterface>())
-	{
-		FoundActor = GetPlayerAim().GetActor();
-	} else
-	{
-		TArray<AActor*> Actors;
-		InteractionSphere->GetOverlappingActors(Actors);
-		
-		if (!Actors.IsEmpty())
-		{
-			float ClosestDist = 0;
-			for (auto Actor : Actors)
-			{
-				if (Actor->Implements<UInteractableInterface>() && (ClosestDist == 0 || GetDistanceTo(Actor) < ClosestDist))
-				{
-					ClosestDist = GetDistanceTo(Actor);
-					FoundActor = Actor;
-				}
-			}
-		}
-	}
-	
-	
-
-	if (InteractableActor != FoundActor)
-	{
-		InteractableActor = FoundActor;
-		OnInteractableChanged.Broadcast(InteractableActor);
-	}
-	
-	// FRotator Rot = GetFirstPersonCameraComponent()->GetComponentRotation();
-	// Rot.Pitch = UKismetMathLibrary::NormalizeAxis(RemoteViewPitch);
-	// FirstPersonCameraComponent->SetWorldRotation(Rot);
+	SetCurrentInteractable();
 }
 
 FHitResult APlayerCharacter::GetPlayerAim()
@@ -183,7 +136,7 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 		
 		EnhancedInputComponent->BindAction(SwitchWeaponAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SwitchWeapon);
 
-		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ReloadInput);
+		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ReloadWeapon);
 		
 		EnhancedInputComponent->BindAction(MeleeAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Melee);
 
@@ -198,7 +151,7 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 void APlayerCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
-	FVector2D MovementVector = Value.Get<FVector2D>();
+	const FVector2D MovementVector = Value.Get<FVector2D>();
 	if (Controller != nullptr)
 	{
 		// add movement
@@ -211,7 +164,7 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
+	const FVector2D LookAxisVector = Value.Get<FVector2D>();
 
 	// Disabled for now due to incorrect pitch values in standalone
 	// Server_Look(LookAxisVector.Y);
@@ -237,6 +190,44 @@ void APlayerCharacter::Multi_Look_Implementation(float Pitch)
 	FRotator Rotation = GetFirstPersonCameraComponent()->GetComponentRotation();
 	Rotation.Pitch = Pitch;
 	GetFirstPersonCameraComponent()->SetWorldRotation(Rotation);
+}
+
+//@TODO Simplify by removing InteractionSphere. Interaction radius and casting should be done by interactables, not the player character.
+//We should simply find the closest Interactable actor within an array of interactables
+void APlayerCharacter::SetCurrentInteractable()
+{
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(this);
+	UKismetSystemLibrary::SphereTraceSingle(GetWorld(), FirstPersonCameraComponent->GetComponentLocation(), FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector()*10000.0f, 20, UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Visibility), false, ActorsToIgnore, EDrawDebugTrace::None, PlayerAim, true, FLinearColor::Red, FLinearColor::Green, 5);
+	AActor* FoundActor = nullptr;
+	
+	if (GetPlayerAim().GetActor() && PlayerAim.Distance < 250 && GetPlayerAim().GetActor()->Implements<UInteractableInterface>())
+	{
+		FoundActor = GetPlayerAim().GetActor();
+	} else
+	{
+		TArray<AActor*> Actors;
+		InteractionSphere->GetOverlappingActors(Actors);
+		
+		if (!Actors.IsEmpty())
+		{
+			float ClosestDist = 0;
+			for (auto Actor : Actors)
+			{
+				if (Actor->Implements<UInteractableInterface>() && (ClosestDist == 0 || GetDistanceTo(Actor) < ClosestDist))
+				{
+					ClosestDist = GetDistanceTo(Actor);
+					FoundActor = Actor;
+				}
+			}
+		}
+	}
+
+	if (InteractableActor != FoundActor)
+	{
+		InteractableActor = FoundActor;
+		OnInteractableChanged.Broadcast(InteractableActor);
+	}
 }
 
 void APlayerCharacter::Melee_Implementation()
@@ -310,11 +301,7 @@ void APlayerCharacter::OnHealthDepleted_Implementation(float Damage, FVector For
 		ASpectatorPawn* SpectatorPawn = Cast<ASpectatorPawn>(GetWorld()->SpawnActor(ASpectatorPawn::StaticClass(), &Loc, &Rot));
 		PlayerController->Possess(SpectatorPawn);
 	}
-		
 	
-	// FTimerHandle RestartTimer;
-	// GetWorldTimerManager().SetTimer(RestartTimer, this, &AHaloFloodFanGame01Character::Attack, 5, false);
-	// GetWorldTimerManager().SetTimer(RestartTimer, UGameplayStatics::GetGameMode(GetWorld())->RestartPlayer(PC), 5, false);
 	Super::OnHealthDepleted_Implementation(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
 }
 
@@ -337,44 +324,22 @@ void APlayerCharacter::ThrowEquippedGrenade_Implementation()
 		Direction.Normalize();
 		Grenade->Mesh->AddImpulse(Direction*2000.0f, NAME_None, true);
 		Grenade->Mesh->AddAngularImpulseInDegrees(Grenade->GetActorRightVector().GetSafeNormal()*1000 , NAME_None, true);
-		//Grenade->ProjectileMovementComponent->Velocity = (Direction*2000.0f);
 		
 		if (GrenadeInventory[CurGrenadeTypeI].GrenadeAmount <= 0)
 		{
 			GrenadeInventory.RemoveAt(CurGrenadeTypeI);
 			SwitchGrenadeType(CurGrenadeTypeI);
 		}
-		OnGrenadeInvetoryUpdated.Broadcast(GrenadeInventory);
+		OnGrenadeInventoryUpdated.Broadcast(GrenadeInventory);
 	}
-}
-
-void APlayerCharacter::SwitchWeapon()
-{
-	
-	if (!EquippedWeapon || !HolsteredWeapon)
-		return;
-	EquippedWeapon->ReleaseTrigger();
-	GetWorldTimerManager().ClearTimer(EquippedWeapon->ReloadTimer);
-	EquippedWeapon->bReloading = false;
-	AGunBase* TempGun = EquippedWeapon;
-	EquippedWeapon = HolsteredWeapon;
-	HolsteredWeapon = TempGun;
-	HolsteredWeapon->SetActorHiddenInGame(true);
-	EquippedWeapon->SetActorHiddenInGame(false);
-	EquippedWeapon->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
-	WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
 }
 
 void APlayerCharacter::Interact()
 {
-	if (InteractableActor)
+	if (InteractableActor && InteractableActor->Implements<UInteractableInterface>())
 	{
-		if (UKismetSystemLibrary::DoesImplementInterface(InteractableActor, UInteractableInterface::StaticClass()))
-		{
-			IInteractableInterface::Execute_OnInteract(InteractableActor, this);
-		}
+		IInteractableInterface::Execute_OnInteract(InteractableActor, this);
 	}
-	
 }
 
 void APlayerCharacter::SwitchGrenadeType()
@@ -391,15 +356,29 @@ void APlayerCharacter::SwitchGrenadeType(int Index = 0)
 	OnGrenadeTypeSwitched.Broadcast(GrenadeInventory[CurGrenadeTypeI].GrenadeClass);
 }
 
-void APlayerCharacter::ControllerChanged(AController* OldController, AController* NewController)
+void APlayerCharacter::DrawWeapon(AGunBase* Gun)
 {
+	Super::DrawWeapon(Gun);
 	
+	if (IsLocallyControlled())
+	{
+		GetMesh1P()->GetAnimInstance()->Montage_Play(DrawAnimation1P);
+		Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
+		//Gun->Mesh->PlayAnimation(Gun->DrawAnimation1P, false);
+	}
+}
+
+void APlayerCharacter::HolsterWeapon(AGunBase* Gun)
+{
+	Super::HolsterWeapon(Gun);
+
+	GetMesh1P()->GetAnimInstance()->Montage_Play(HolsterAnimation1P);
+	//Gun->Mesh->PlayAnimation(Gun->HolsterAnimation1P, false);
 }
 
 void APlayerCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-	
 }
 
 void APlayerCharacter::UnPossessed()
@@ -412,28 +391,4 @@ void APlayerCharacter::UnPossessed()
 			Subsystem->RemoveMappingContext(DefaultMappingContext);
 		}
 	}
-}
-
-void APlayerCharacter::PickupWeapon(AGunBase* Gun)
-{
-	Super::PickupWeapon(Gun);
-	if (EquippedWeapon)
-	{
-		if (IsLocallyControlled())
-		{
-			EquippedWeapon->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
-		}
-		WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
-	}
-}
-
-void APlayerCharacter::DropWeapon()
-{
-	Super::DropWeapon();
-	WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
-}
-
-void APlayerCharacter::SetFragCount(int32 NewFragCount)
-{
-	FragCount = NewFragCount;
 }

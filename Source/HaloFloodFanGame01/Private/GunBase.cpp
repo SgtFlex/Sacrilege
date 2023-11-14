@@ -9,6 +9,7 @@
 #include "Components/Image.h"
 #include "Engine/DamageEvents.h"
 #include "HaloFloodFanGame01/PlayerCharacter.h"
+#include "Kismet/GameplayStatics.h"
 #include "Perception/AISense_Hearing.h"
 #include "Perception/AISense_Sight.h"
 

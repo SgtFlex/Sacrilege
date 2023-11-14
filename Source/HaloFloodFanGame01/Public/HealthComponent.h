@@ -42,27 +42,27 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	bool IsAlive();
 public:
-	UPROPERTY(EditAnywhere, meta = (Category="Health"), Replicated)
+	UPROPERTY(EditAnywhere, Replicated, Category="Unit Information|Health", meta = (DisplayPriority=1))
 	float Health = 100;
-	UPROPERTY(EditAnywhere, meta = (Category="Health"))
+	UPROPERTY(EditAnywhere, Category="Unit Information|Health", meta = (DisplayPriority=1))
 	float MaxHealth = 100;
-	UPROPERTY(EditAnywhere, meta = (Category="Health"))
+	UPROPERTY(EditAnywhere, Category="Unit Information|Health", meta = (DisplayPriority=1))
 	float MaxHealthRegenAmount = 0;
-	UPROPERTY(EditAnywhere, meta = (Category="Health"))
+	UPROPERTY(EditAnywhere, Category="Unit Information|Health", meta = (DisplayPriority=1))
 	float HealthRegenDelay = 0;
-	UPROPERTY(EditAnywhere, meta = (Category="Health"))
+	UPROPERTY(EditAnywhere, Category="Unit Information|Health", meta = (DisplayPriority=1))
 	float HealthRegenPerSec = 1;
-	UPROPERTY(EditAnywhere, meta = (Category="Health"))
+	UPROPERTY(EditAnywhere, Category="Unit Information|Health", meta = (DisplayPriority=1))
 	float HealthArmor = 0;
-	UPROPERTY(EditAnywhere, meta = (Category="Health"))
+	UPROPERTY(EditAnywhere, Category="Unit Information|Health", meta = (DisplayPriority=1))
 	float MaxHealthArmor = 100;
-	UPROPERTY(EditAnywhere, meta = (Category="Shields"), Replicated)
+	UPROPERTY(EditAnywhere, Replicated, Category="Unit Information|Shields", meta = (DisplayPriority=1))
 	float Shields = 100;
-	UPROPERTY(EditAnywhere, meta = (Category="Shields"))
+	UPROPERTY(EditAnywhere, Category="Unit Information|Shields", meta = (DisplayPriority=1))
 	float MaxShields = 100;
-	UPROPERTY(EditAnywhere, meta = (Category="Shields"))
+	UPROPERTY(EditAnywhere, Category="Unit Information|Shields", meta = (DisplayPriority=1))
 	float ShieldRegenDelay = 3;
-	UPROPERTY(EditAnywhere, meta = (Category="Shields"))
+	UPROPERTY(EditAnywhere, Category="Unit Information|Shields", meta = (DisplayPriority=1))
 	float ShieldRegenRatePerSecond = 30;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)

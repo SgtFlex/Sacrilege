@@ -15,7 +15,7 @@ class UHealthComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPickupWeapon);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDropWeapon);
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponsUpdated, AGunBase*, NewGun, AGunBase*, OldGun);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnKilled, AController*, Instigator, AActor*, Causer);
 DECLARE_DELEGATE_OneParam(FTest, ACharacterBase*);
 
@@ -73,17 +73,17 @@ public:
 	
 	virtual UHealthComponent* GetHealthComponent() override;
 
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void Melee();
 
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void EquipGrenadeType(TSubclassOf<AGrenadeBase> Grenade);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void ThrowEquippedGrenade();
 
 	UFUNCTION(BlueprintCallable)
-	void UseEquipment();
+	virtual void UseEquipment();
 
 	UFUNCTION(BlueprintCallable)
 	virtual void PrimaryAttack_Pull();
@@ -92,7 +92,16 @@ public:
 	virtual void PrimaryAttack_Release();
 	
 	UFUNCTION(BlueprintCallable)
-	virtual void ReloadInput();
+	virtual void ReloadWeapon();
+
+	UFUNCTION(BlueprintCallable)
+	virtual void SwitchWeapon();
+
+	UFUNCTION()
+	virtual void DrawWeapon(AGunBase* Gun);
+
+	UFUNCTION()
+	virtual void HolsterWeapon(AGunBase* Gun);
 
 	UFUNCTION(BlueprintCallable)
 	virtual void PickupWeapon(AGunBase* Gun);
@@ -109,11 +118,16 @@ public:
 	UFUNCTION()
 	void RagdollSettled(UPrimitiveComponent* Component, FName Name);
 
-	void Stun();
+	UFUNCTION(BlueprintCallable)
+	virtual void Stun(float StunTime = 1);
 
 	void Unstun();
 
 public:
+	//Delegates
+	UPROPERTY(BlueprintAssignable)
+	FWeaponsUpdated WeaponsUpdated;
+	
 	UPROPERTY(BlueprintAssignable)
 	FOnPickupWeapon OnPickupWeapon;
 
@@ -121,20 +135,26 @@ public:
 	FOnDropWeapon OnDropWeapon;
 
 	UPROPERTY(BlueprintAssignable)
-	FOnGrenadeInvetoryUpdated OnGrenadeInvetoryUpdated;
+	FOnKilled OnKilled;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnGrenadeInvetoryUpdated OnGrenadeInventoryUpdated;
 
 	UPROPERTY(BlueprintAssignable)
 	FOnGrenadeTypeSwitched OnGrenadeTypeSwitched;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Stats", meta=(AllowPrivateAccess=true))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	UHealthComponent* HealthComponent;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Loadout", meta=(AllowPrivateAccess=true))
-	TSubclassOf<AGunBase> SpawnWeaponClass;
-
+	//Loadout
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0))
+	TSubclassOf<AGunBase> EquippedWeaponClass;
 	
-	UPROPERTY(EditAnywhere, Category="Loadout")
-	TSubclassOf<class AGunBase> HolsteredWeaponClass;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0))
+	TSubclassOf<AGunBase> HolsteredWeaponClass;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0))
+	TArray<FGrenadeStruct> GrenadeInventory;
 
 	UPROPERTY(BlueprintReadOnly, Replicated)
 	AGunBase* EquippedWeapon;
@@ -142,6 +162,7 @@ public:
 	UPROPERTY(BlueprintReadOnly, Replicated)
 	AGunBase* HolsteredWeapon;
 
+	//Blood
 	UPROPERTY(EditAnywhere)
 	class UNiagaraSystem* BloodPFX;
 
@@ -153,41 +174,34 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	USoundBase* DeathSound;
-	//
-	// UPROPERTY(EditAnywhere, Category="Loadout")
-	// TSubclassOf<ABaseGrenade> EquippedGrenadeClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<FGrenadeStruct> GrenadeInventory;
-
-	UPROPERTY(EditAnywhere)
+	//Anims
+	UPROPERTY(EditDefaultsOnly)
 	UAnimMontage* FiringAnim;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly)
 	UAnimMontage* HurtAnim;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly)
 	UAnimMontage* DeathAnim;
+
+	UPROPERTY(EditDefaultsOnly)
+	UAnimMontage* MeleeAnim;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ASmartObject* SmartObject;
-
-	UPROPERTY(VisibleAnywhere)
-	FOnKilled OnKilled;
-
+	
 	UPROPERTY()
 	FTimerHandle StunTimer;
 
 	UPROPERTY()
 	float StunAmount = 100;
 
-	//static FTest TestDelegate;
-
 	int CurGrenadeTypeI = 0;
-
+private:
+	
 protected:
-	UPROPERTY(EditDefaultsOnly)
-	UAnimMontage* MeleeAnim;
+	
 
 	UPROPERTY(EditAnywhere)
 	float MeleeDamage = 30;

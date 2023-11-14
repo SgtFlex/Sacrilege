@@ -121,7 +121,7 @@ void AGrenadeBase::Pickup(APlayerCharacter* Character)
 		Character->GrenadeInventory.Add(GrenadeType);
 		Destroy();
 	}
-	Character->OnGrenadeInvetoryUpdated.Broadcast(Character->GrenadeInventory);
+	Character->OnGrenadeInventoryUpdated.Broadcast(Character->GrenadeInventory);
 }
 
 float AGrenadeBase::CustomOnTakeAnyDamage(float DamageAmount, FVector Force,

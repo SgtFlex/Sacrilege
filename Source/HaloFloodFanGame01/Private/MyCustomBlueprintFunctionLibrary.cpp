@@ -5,7 +5,9 @@
 
 #include "DamageableInterface.h"
 #include "AI/NavigationSystemBase.h"
+#include "Camera/CameraComponent.h"
 #include "Engine/DamageEvents.h"
+#include "HaloFloodFanGame01/PlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Perception/AISense_Hearing.h"
 

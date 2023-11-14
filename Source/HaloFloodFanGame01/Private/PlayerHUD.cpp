@@ -13,7 +13,6 @@
 #include "GunBase.h"
 #include "HealthComponent.h"
 #include "Camera/CameraComponent.h"
-#include "Components/GridSlot.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Components/UniformGridSlot.h"
@@ -22,6 +21,7 @@
 #include "HaloFloodFanGame01/FirefightGamemode.h"
 #include "GrenadeBase.h"
 #include "PlayerControllerBase.h"
+#include "Kismet/GameplayStatics.h"
 
 void UPlayerHUD::NativeConstruct()
 {
@@ -38,7 +38,7 @@ void UPlayerHUD::NativeConstruct()
 	PlayerCharacter->WeaponsUpdated.AddDynamic(this, &UPlayerHUD::UpdateHUDWeaponData);
 	PlayerCharacter->OnInteractableChanged.AddDynamic(this, &UPlayerHUD::UpdateInteractable);
 	PlayerCharacter->GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &UPlayerHUD::OnHealthUpdated);
-	PlayerCharacter->OnGrenadeInvetoryUpdated.AddDynamic(this, &UPlayerHUD::UpdateGrenadeInventory);
+	PlayerCharacter->OnGrenadeInventoryUpdated.AddDynamic(this, &UPlayerHUD::UpdateGrenadeInventory);
 	PlayerCharacter->OnGrenadeTypeSwitched.AddDynamic(this, &UPlayerHUD::UPlayerHUD::UpdateSelectedGrenadeType);
 	UpdateGrenadeInventory(PlayerCharacter->GrenadeInventory);
 	//Cast<AHaloFloodFanGame01GameMode>(UGameplayStatics::GetGameMode(GetWorld()))->OnScoreUpdated.AddDynamic(this, &UHaloHUDWidget::OnScoreUpdated);

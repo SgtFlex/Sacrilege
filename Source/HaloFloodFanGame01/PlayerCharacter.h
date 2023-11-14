@@ -3,14 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GenericTeamAgentInterface.h"
-#include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "Components/TimelineComponent.h"
 #include "Core/CharacterBase.h"
-#include "Kismet/GameplayStatics.h"
 #include "PlayerCharacter.generated.h"
 
+class UInteractableInterface;
 class IInteractableInterface;
 class USphereComponent;
 class UBoxComponent;
@@ -23,7 +21,6 @@ class UCameraComponent;
 class UAnimMontage;
 class USoundBase;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponsUpdated, AGunBase*, NewGun, AGunBase*, OldGun);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractableChanged, AActor*, Interactable);
 
 
@@ -114,9 +111,6 @@ public:
 	virtual void ThrowEquippedGrenade_Implementation() override;
 
 	UFUNCTION(BlueprintCallable)
-	void SwitchWeapon();
-
-	UFUNCTION(BlueprintCallable)
 	void Interact();
 
 	UFUNCTION(BlueprintCallable)
@@ -125,22 +119,17 @@ public:
 	void SwitchGrenadeType(int Index);
 
 	virtual void PossessedBy(AController* NewController) override;
-
 	
 	virtual void UnPossessed() override;
-
-	void ControllerChanged(AController* OldController, AController* NewController);
 	
-	virtual void PickupWeapon(AGunBase* Gun) override;
-	
-	virtual void DropWeapon() override;
+	virtual void DrawWeapon(AGunBase* Gun) override;
 
-	UFUNCTION(BlueprintCallable)
-	void SetFragCount(int32 NewFragCount);
+	virtual void HolsterWeapon(AGunBase* Gun) override;
 
 	/** Returns Mesh1P subobject **/
 	UFUNCTION(BlueprintCallable)
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
+	
 	/** Returns FirstPersonCameraComponent subobject **/
 	UFUNCTION(BlueprintCallable)
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
@@ -158,6 +147,9 @@ protected:
 
 	UFUNCTION(NetMulticast, Unreliable)
 	void Multi_Look(float Pitch);
+
+	UFUNCTION()
+	void SetCurrentInteractable();
 
 	UFUNCTION(BlueprintCallable)
 	virtual void Melee_Implementation() override;
@@ -179,14 +171,10 @@ public:
 	APlayerController* PlayerController;
 	
 	UPROPERTY()
-	FWeaponsUpdated WeaponsUpdated;
-
-	UPROPERTY()
 	FOnInteractableChanged OnInteractableChanged;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UUserWidget> PlayerHUDClass;
-
 
 	UPROPERTY(BlueprintReadWrite)
 	class UUserWidget* PlayerHUD;
@@ -200,6 +188,18 @@ public:
 	UPROPERTY(EditAnywhere, Category="Loadout")
 	int32 IncenCount = 0;
 
+	UPROPERTY(EditDefaultsOnly)
+	UAnimMontage* DrawAnimation1P;
+
+	UPROPERTY(EditDefaultsOnly)
+	UAnimMontage* HolsterAnimation1P;
+
+	UPROPERTY(EditDefaultsOnly)
+	UAnimMontage* FireAnimation1P;
+
+	UPROPERTY()
+	TArray<AActor*> InteractableActors;
+
 private:
 	UPROPERTY()
 	AActor* InteractableActor;
@@ -212,12 +212,5 @@ private:
 	UCurveFloat* MeleeCurve;
 
 	FHitResult PlayerAim;
-
-	
-	
-
-protected:
-	UPROPERTY(EditAnywhere, Category="Collision")
-	TEnumAsByte<ECollisionChannel> TraceChannelProperty = ECC_Pawn;
 };
 

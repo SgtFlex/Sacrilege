@@ -16,11 +16,9 @@
 #include "Animation/AnimInstance.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "GameFramework/PawnMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISense_Damage.h"
-#include "Perception/AISense_Sight.h"
 #include "Perception/AISense_Touch.h"
 
 // Sets default values
@@ -41,10 +39,10 @@ void ACharacterBase::BeginPlay()
 	Super::BeginPlay();
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ACharacterBase::OnHit);
 
-	if (SpawnWeaponClass && HasAuthority())
+	if (EquippedWeaponClass && HasAuthority())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Spawned weapon!"));
-		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(SpawnWeaponClass)));
+		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(EquippedWeaponClass)));
 	}
 
 	GetMesh()->OnComponentSleep.AddDynamic(this, &ACharacterBase::RagdollSettled);
@@ -134,14 +132,6 @@ float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent con
 	return x;
 }
 
-
-
-// float ABaseCharacter::CustomTakeDamage_Implementation(float DamageAmount, FVector Force, FDamageEvent const& DamageEvent,
-// 	AController* EventInstigator, AActor* DamageCauser)
-// {
-// 	return IDamageableInterface::CustomTakeDamage(DamageAmount, Force, DamageEvent, EventInstigator, DamageCauser);
-// }
-
 void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector DamageForce, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
 	UAIPerceptionSystem::GetCurrent( GetWorld() )->UnregisterSource(*this);
@@ -163,7 +153,6 @@ void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector Damag
 	}
 	if (BloodDecalMaterial) UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(100, 100, 100), GetActorLocation(), FRotator(-90,0,0));
 	if (DeathSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), DeathSound, GetActorLocation());
-	//GetMesh()->OnComponentHit.AddDynamic(this, &ACharacterBase::OnHit);
 	GetMesh()->GetAnimInstance()->Montage_Play(DeathAnim);
 	GetCapsuleComponent()->DestroyComponent();
 	SetRootComponent(GetMesh());
@@ -172,10 +161,8 @@ void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector Damag
 	GetMesh()->AddImpulseAtLocation(DamageForce, HitLocation, HitBoneName);
 	OnKilled.Broadcast(EventInstigator, DamageCauser);
 	
-	//GetWorld()->GetTimerManager().SetTimer(RagdollTimer, this, &ACharacterBase::RagdollSettled, 1);
 	if (GetController()) GetController()->Destroy();
 	
-	//TestDelegate.Execute(this);
 	if (EquippedWeapon)
 		DropWeapon();
 }
@@ -191,13 +178,13 @@ void ACharacterBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 		UAISense_Touch::ReportTouchEvent(GetWorld(), this, OtherActor, Hit.Location);
 		const float VelocityDifference = FMath::Abs(OtherComp->GetComponentVelocity().Length() - this->GetVelocity().Length());
 		const float Mass = OtherComp->IsSimulatingPhysics() ? (OtherComp->GetMass()) : 1;
-		DamageCalculation = FMath::Pow(VelocityDifference, 1.0f/5.0f) * (Mass/300);
+		DamageCalculation = FMath::Pow(VelocityDifference, 1.0f/3.0f) * (Mass/300);
 		if (DamageCalculation > 5)
 		{
 			FDamageEvent DamageEvent = FDamageEvent(UDamageType::StaticClass());
 			CustomTakeDamage(DamageCalculation, NormalImpulse, DamageEvent, nullptr, nullptr);
-			float DecalSize = 100;
-			UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(DecalSize, DecalSize, DecalSize), GetMesh()->GetComponentLocation() + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), 0), FRotator(-90,0,FMath::RandRange(-180, 180)));
+			//float DecalSize = 100;
+			//UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(DecalSize, DecalSize, DecalSize), GetMesh()->GetComponentLocation() + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), 0), FRotator(-90,0,FMath::RandRange(-180, 180)));
 		}
 	}
 }
@@ -248,7 +235,7 @@ void ACharacterBase::Melee_Implementation()
 void ACharacterBase::ThrowEquippedGrenade_Implementation()
 {
 	if (GrenadeInventory[CurGrenadeTypeI].GrenadeAmount <= 0) return;
-	OnGrenadeInvetoryUpdated.Broadcast(GrenadeInventory);
+	OnGrenadeInventoryUpdated.Broadcast(GrenadeInventory);
 	FVector EyesLoc;
 	FRotator EyesRot;
 	GetActorEyesViewPoint(EyesLoc, EyesRot);
@@ -276,14 +263,48 @@ void ACharacterBase::PrimaryAttack_Release()
 		EquippedWeapon->ReleaseTrigger();
 }
 
-void ACharacterBase::ReloadInput()
+void ACharacterBase::ReloadWeapon()
 {
 	if (EquippedWeapon) EquippedWeapon->StartReload();
+}
+
+void ACharacterBase::SwitchWeapon()
+{
+	if (!(EquippedWeapon && HolsteredWeapon))
+		return;
+	HolsterWeapon(EquippedWeapon);
+	
+	AGunBase* TempGun = EquippedWeapon;
+	EquippedWeapon = HolsteredWeapon;
+	HolsteredWeapon = TempGun;
+	
+	DrawWeapon(EquippedWeapon);
+	WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
+}
+
+void ACharacterBase::DrawWeapon(AGunBase* Gun)
+{
+	//EquippedWeapon = Gun;
+	Gun->SetActorHiddenInGame(false);
+	Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
+}
+
+void ACharacterBase::HolsterWeapon(AGunBase* Gun)
+{
+	//EquippedWeapon = nullptr;
+	Gun->ReleaseTrigger();
+	GetWorldTimerManager().ClearTimer(Gun->ReloadTimer);
+	Gun->bReloading = false;
+	Gun->SetActorHiddenInGame(true);
 }
 
 void ACharacterBase::PickupWeapon(AGunBase* Gun)
 {
 	Server_PickupWeapon(Gun);
+	if (EquippedWeapon)
+	{
+		WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
+	}
 }
 
 void ACharacterBase::Server_PickupWeapon_Implementation(AGunBase* Gun)
@@ -300,8 +321,8 @@ void ACharacterBase::Multi_PickupWeapon_Implementation(AGunBase* Gun)
 {
 	Gun->Mesh->SetSimulatePhysics(false);
 	Gun->SetActorEnableCollision(false);
-	Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
 	Gun->Pickup(this);
+	
 	if (!EquippedWeapon)
 	{
 		EquippedWeapon = Gun;
@@ -314,6 +335,7 @@ void ACharacterBase::Multi_PickupWeapon_Implementation(AGunBase* Gun)
 		DropWeapon();
 		EquippedWeapon = Gun;
 	}
+	DrawWeapon(EquippedWeapon);
 }
 
 void ACharacterBase::DropWeapon()
@@ -325,6 +347,7 @@ void ACharacterBase::DropWeapon()
 	EquippedWeapon->Mesh->AddImpulse(GetControlRotation().Vector() * 300, NAME_None, true);
 	EquippedWeapon->Drop();
 	EquippedWeapon = nullptr;
+	WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
 }
 
 void ACharacterBase::RagdollSettled(UPrimitiveComponent* Component, FName Name)
@@ -335,7 +358,7 @@ void ACharacterBase::RagdollSettled(UPrimitiveComponent* Component, FName Name)
 	
 }
 
-void ACharacterBase::Stun()
+void ACharacterBase::Stun(float StunTime)
 {
 	StunAmount = 0;
 	float StunDuration = HurtAnim->CalculateSequenceLength();
