@@ -39,7 +39,7 @@ public:
 	void UpdatedPerception(AActor* Actor, FAIStimulus Stimulus, bool AlertedByAllies = false);
 
 	UFUNCTION(BlueprintCallable)
-	void UpdateTargetedEnemy(AActor* Actor, FAIStimulus Stimulus);
+	void UpdateTargetedEnemy(AActor* Actor);
 
 	UFUNCTION()
 	void HearingStimulusUpdated(AActor* Actor, FAIStimulus Stimulus);

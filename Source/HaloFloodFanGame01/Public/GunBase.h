@@ -60,6 +60,11 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	void Fire();
 
+	UFUNCTION(BlueprintCallable)
+	bool CanFire();
+	void FireLogic();
+	void SpawnFireCosmetic();
+
 	// UFUNCTION(Server, Reliable, WithValidation)
 	// void Server_Fire();
 	//
@@ -99,8 +104,6 @@ public:
 	virtual void OnInteract_Implementation(APlayerCharacter* Character) override;
 
 	virtual void GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon) override;
-
-	
 
 public:
 	UPROPERTY(EditAnywhere)

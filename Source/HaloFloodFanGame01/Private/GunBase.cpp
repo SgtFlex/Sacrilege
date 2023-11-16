@@ -154,22 +154,13 @@ void AGunBase::GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon)
 	
 }
 
-void AGunBase::Fire_Implementation()
+bool AGunBase::CanFire()
 {
-	if (bReloading || CurMagazine <= 0)
-	{
-		ReleaseTrigger();
-		return;
-	}
+	return bReloading || CurMagazine <= 0;
+}
 
-	if (APlayerCharacter* Char = Cast<APlayerCharacter>(GetOwner()))
-		if (FiringCameraShake && Char->IsLocallyControlled())
-			Cast<APlayerController>(Char->GetController())->PlayerCameraManager->StartCameraShake(FiringCameraShake, 1, ECameraShakePlaySpace::CameraLocal);
-	if (FiringSound)
-		UGameplayStatics::SpawnSoundAttached(FiringSound, GetRootComponent());
-	if (Mesh->DoesSocketExist("Muzzle") && MuzzlePFX)
-		UNiagaraFunctionLibrary::SpawnSystemAttached(MuzzlePFX, Mesh, "Muzzle", FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
-	CurMagazine--;
+void AGunBase::FireLogic()
+{
 	ACharacterBase* OwningChar = Cast<ACharacterBase>(GetOwner());
 	if (!OwningChar) return;
 	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, OwningChar, 0.0f);
@@ -217,11 +208,37 @@ void AGunBase::Fire_Implementation()
 			}
 		}
 	}
+	SpawnFireCosmetic();
 	BulletsFired++;
 	if (BulletsFired==BurstAmount)
 	{
 		ReleaseTrigger();
 	}
+}
+
+void AGunBase::SpawnFireCosmetic()
+{
+	if (APlayerCharacter* Char = Cast<APlayerCharacter>(GetOwner()))
+		if (FiringCameraShake && Char->IsLocallyControlled())
+			Cast<APlayerController>(Char->GetController())->PlayerCameraManager->StartCameraShake(FiringCameraShake, 1, ECameraShakePlaySpace::CameraLocal);
+	if (FiringSound)
+		UGameplayStatics::SpawnSoundAttached(FiringSound, GetRootComponent());
+	if (Mesh->DoesSocketExist("Muzzle") && MuzzlePFX)
+		UNiagaraFunctionLibrary::SpawnSystemAttached(MuzzlePFX, Mesh, "Muzzle", FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
+}
+
+void AGunBase::Fire_Implementation()
+{
+	if (CanFire())
+	{
+		ReleaseTrigger();
+		return;
+	}
+	CurMagazine--;
+	
+	
+	FireLogic();
+	
 	OnFire.Broadcast();
 }
 

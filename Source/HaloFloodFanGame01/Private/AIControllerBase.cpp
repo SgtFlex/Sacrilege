@@ -158,7 +158,7 @@ void AAIControllerBase::UpdatedPerception(AActor* Actor, FAIStimulus Stimulus, b
 	//
 	if (Stimulus.Type == Sight->GetSenseID() && !AlertedByAllies)
 	{
-		UpdateTargetedEnemy(Actor, Stimulus);
+		UpdateTargetedEnemy(Actor);
 	} else
 	{
 		if (BlackboardComp->GetValueAsEnum(TEXT("AlertState")) != EAlertState::Alerted) BlackboardComp->SetValueAsEnum(TEXT("AlertState"), EAlertState::Suspicious);
@@ -167,35 +167,36 @@ void AAIControllerBase::UpdatedPerception(AActor* Actor, FAIStimulus Stimulus, b
 	if (!AlertedByAllies) AlertAllies(3000, Actor, Stimulus);
 }
 
-void AAIControllerBase::UpdateTargetedEnemy(AActor* Actor, FAIStimulus Stimulus)
+void AAIControllerBase::UpdateTargetedEnemy(AActor* Actor)
 {
 	
 	TArray<AActor*> SightedActors;
 	if (AIPerceptionComponent && Sight) AIPerceptionComponent->GetCurrentlyPerceivedActors(Sight->GetSenseImplementation(), SightedActors);
-	
+	AActor* ClosestEnemy = nullptr;
 	if (!SightedActors.IsEmpty())
 	{
 		float ClosestDist = -1;
-		AActor* ClosestEnemy = nullptr;
+		
 		for (auto SightedActor : SightedActors)
 		{
-			if (GetTeamAttitudeTowards(*SightedActor)==ETeamAttitude::Hostile)
+			if (GetTeamAttitudeTowards(*SightedActor)==ETeamAttitude::Hostile && (ClosestDist == -1 || GetPawn()->GetDistanceTo(SightedActor) < ClosestDist))
 			{
-				if (ClosestDist == -1 || GetPawn()->GetDistanceTo(SightedActor) < ClosestDist)
-				{
-					ClosestDist = GetPawn()->GetDistanceTo(SightedActor);
-					ClosestEnemy = SightedActor;
-				}
+				ClosestDist = GetPawn()->GetDistanceTo(SightedActor);
+				ClosestEnemy = SightedActor;
 			}
 		}
-		BlackboardComp->SetValueAsEnum(TEXT("AlertState"), EAlertState::Alerted);
-		BlackboardComp->SetValueAsObject(TEXT("Enemy"), ClosestEnemy);
-	} else
-	{
-		BlackboardComp->SetValueAsEnum(TEXT("AlertState"), EAlertState::Suspicious);
-		BlackboardComp->SetValueAsObject(TEXT("Enemy"), nullptr);
-		BlackboardComp->SetValueAsVector(TEXT("StimulusLocation"), Stimulus.StimulusLocation);
+		if (ClosestEnemy)
+		{
+			BlackboardComp->SetValueAsEnum(TEXT("AlertState"), EAlertState::Alerted);
+			BlackboardComp->SetValueAsObject(TEXT("Enemy"), ClosestEnemy);
+			BlackboardComp->SetValueAsVector(TEXT("StimulusLocation"), ClosestEnemy->GetActorLocation());
+			return;
+		}
 	}
+	if (Actor) BlackboardComp->SetValueAsVector(TEXT("StimulusLocation"), Actor->GetActorLocation());
+	BlackboardComp->SetValueAsEnum(TEXT("AlertState"), EAlertState::Suspicious);
+	BlackboardComp->SetValueAsObject(TEXT("Enemy"), nullptr);
+	
 }
 
 void AAIControllerBase::HearingStimulusUpdated(AActor* Actor, FAIStimulus Stimulus)
