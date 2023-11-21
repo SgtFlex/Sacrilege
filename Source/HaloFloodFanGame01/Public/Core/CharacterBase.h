@@ -98,7 +98,7 @@ public:
 	virtual void SwitchWeapon();
 
 	UFUNCTION()
-	virtual void DrawWeapon(AGunBase* Gun);
+	virtual void EquipWeapon(AGunBase* Gun);
 
 	UFUNCTION()
 	virtual void HolsterWeapon(AGunBase* Gun);

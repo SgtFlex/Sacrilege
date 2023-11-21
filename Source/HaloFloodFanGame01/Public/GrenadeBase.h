@@ -96,10 +96,6 @@ public:
 	UFUNCTION()
 	virtual void Pickup(APlayerCharacter* Character) override;
 
-	// virtual float TakePointDamage(FPointDamageEvent const& PointDamageEvent, FVector Force, AController*, AActor* DamageCauser) override;
-
-	//virtual float TakeRadialDamage(float Force, FRadialDamageEvent const& RadialDamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
-
 	UFUNCTION()
 	virtual float CustomOnTakeAnyDamage(float DamageAmount, FVector Force, AController* EventInstigator, AActor* DamageCauser) override;
 };

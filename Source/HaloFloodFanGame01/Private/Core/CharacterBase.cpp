@@ -19,6 +19,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISense_Damage.h"
+#include "Perception/AISense_Sight.h"
 #include "Perception/AISense_Touch.h"
 
 // Sets default values
@@ -84,7 +85,9 @@ float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent con
 	if (EventInstigator && Cast<AAIControllerBase>(GetController()))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Reported damage event"));
-		UAISense_Damage::ReportDamageEvent(GetWorld(), this, EventInstigator->GetPawn(), PointDamageEvent.Damage, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Location);
+		UAISense_Damage::ReportDamageEvent(GetWorld(), this, EventInstigator->GetPawn(), PointDamageEvent.Damage, Cast<AActor>(EventInstigator)->GetActorLocation(), PointDamageEvent.HitInfo.Location);
+		
+		//UAISense_Sight::RegisterEvent()
 	}
 	
 	if (GetHealthComponent()->GetShields() <= 0)
@@ -278,11 +281,11 @@ void ACharacterBase::SwitchWeapon()
 	EquippedWeapon = HolsteredWeapon;
 	HolsteredWeapon = TempGun;
 	
-	DrawWeapon(EquippedWeapon);
+	EquipWeapon(EquippedWeapon);
 	WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
 }
 
-void ACharacterBase::DrawWeapon(AGunBase* Gun)
+void ACharacterBase::EquipWeapon(AGunBase* Gun)
 {
 	//EquippedWeapon = Gun;
 	Gun->SetActorHiddenInGame(false);
@@ -321,7 +324,7 @@ void ACharacterBase::Multi_PickupWeapon_Implementation(AGunBase* Gun)
 {
 	Gun->Mesh->SetSimulatePhysics(false);
 	Gun->SetActorEnableCollision(false);
-	Gun->Pickup(this);
+	Gun->OnPickup(this);
 	
 	if (!EquippedWeapon)
 	{
@@ -335,7 +338,7 @@ void ACharacterBase::Multi_PickupWeapon_Implementation(AGunBase* Gun)
 		DropWeapon();
 		EquippedWeapon = Gun;
 	}
-	DrawWeapon(EquippedWeapon);
+	EquipWeapon(EquippedWeapon);
 }
 
 void ACharacterBase::DropWeapon()
@@ -345,7 +348,7 @@ void ACharacterBase::DropWeapon()
 	EquippedWeapon->SetActorEnableCollision(true);
 	EquippedWeapon->Mesh->SetSimulatePhysics(true);
 	EquippedWeapon->Mesh->AddImpulse(GetControlRotation().Vector() * 300, NAME_None, true);
-	EquippedWeapon->Drop();
+	EquippedWeapon->OnDropped();
 	EquippedWeapon = nullptr;
 	WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
 }

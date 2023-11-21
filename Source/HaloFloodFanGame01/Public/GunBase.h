@@ -51,19 +51,23 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void Pickup(ACharacterBase* Char);
+	void OnPickup(ACharacterBase* Char);
 
-	void Equip();
+	void OnEquipped();
 
-	void Drop();
-
+	void OnDropped();
+	
 	UFUNCTION(BlueprintNativeEvent)
 	void Fire();
 
 	UFUNCTION(BlueprintCallable)
 	bool CanFire();
-	void FireLogic();
-	void SpawnFireCosmetic();
+	
+	UFUNCTION(BlueprintNativeEvent)
+	void SpawnBullet();
+
+	UFUNCTION(BlueprintCallable)
+	void SpawnMuzzleFX();
 
 	// UFUNCTION(Server, Reliable, WithValidation)
 	// void Server_Fire();
@@ -71,7 +75,7 @@ public:
 	// UFUNCTION(NetMulticast, Reliable, WithValidation)
 	// void Multi_Fire();
 
-	UFUNCTION()
+	UFUNCTION(BlueprintNativeEvent)
 	void StartReload();
 
 	UFUNCTION(Server, Reliable)
@@ -127,7 +131,7 @@ public:
 
 	//Amount of hitscan/projectiles that are fired simultaneously
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
-	int32 Multishot = 1;
+	int32 MultiShot = 1;
 
 	//Controls how many bullets are fired when the trigger is pulled. 0 means full auto, 1 means semi auto, 2+ is burst fire of whatever amount is provided
 	UPROPERTY(EditAnywhere, meta = (Category="Attributes"))
@@ -140,8 +144,6 @@ public:
 	//Amount of seconds required to reload the gun
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
 	float ReloadSpeed = 3;
-	
-	FTimerHandle ReloadTimer;
 
 	//How far left/right the gun jumps when firing a bullet
 	UPROPERTY(EditAnywhere, meta = (Category="Attributes"))
@@ -233,7 +235,12 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	UAnimMontage* MeleeAnimation1P;
+
+	UPROPERTY()
+	FTimerHandle ReloadTimer;
 private:
+	
+	
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AActor> ImpactDecal;
 };

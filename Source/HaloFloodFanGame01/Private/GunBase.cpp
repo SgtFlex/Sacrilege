@@ -44,16 +44,16 @@ void AGunBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AGunBase::Pickup(ACharacterBase* Char)
+void AGunBase::OnPickup(ACharacterBase* Char)
 {
 	SetOwner(Char);
 }
 
-void AGunBase::Equip()
+void AGunBase::OnEquipped()
 {
 }
 
-void AGunBase::Drop()
+void AGunBase::OnDropped()
 {
 	GetWorldTimerManager().ClearTimer(ReloadTimer);
 	bReloading = false;
@@ -65,7 +65,7 @@ void AGunBase::Drop()
 	}
 }
 
-void AGunBase::StartReload()
+void AGunBase::StartReload_Implementation()
 {
 	Server_StartReload();
 }
@@ -159,13 +159,13 @@ bool AGunBase::CanFire()
 	return bReloading || CurMagazine <= 0;
 }
 
-void AGunBase::FireLogic()
+void AGunBase::SpawnBullet_Implementation()
 {
 	ACharacterBase* OwningChar = Cast<ACharacterBase>(GetOwner());
 	if (!OwningChar) return;
 	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, OwningChar, 0.0f);
 	if (OwningChar->FiringAnim) OwningChar->GetMesh()->GetAnimInstance()->Montage_Play(OwningChar->FiringAnim);
-	for (int i = 0; i < Multishot; ++i)
+	for (int i = 0; i < MultiShot; ++i)
 	{
 		if (ProjectileClass)
 		{
@@ -208,7 +208,7 @@ void AGunBase::FireLogic()
 			}
 		}
 	}
-	SpawnFireCosmetic();
+	SpawnMuzzleFX();
 	BulletsFired++;
 	if (BulletsFired==BurstAmount)
 	{
@@ -216,7 +216,7 @@ void AGunBase::FireLogic()
 	}
 }
 
-void AGunBase::SpawnFireCosmetic()
+void AGunBase::SpawnMuzzleFX()
 {
 	if (APlayerCharacter* Char = Cast<APlayerCharacter>(GetOwner()))
 		if (FiringCameraShake && Char->IsLocallyControlled())
@@ -237,7 +237,7 @@ void AGunBase::Fire_Implementation()
 	CurMagazine--;
 	
 	
-	FireLogic();
+	SpawnBullet();
 	
 	OnFire.Broadcast();
 }

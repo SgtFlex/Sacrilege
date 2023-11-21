@@ -122,7 +122,7 @@ public:
 	
 	virtual void UnPossessed() override;
 	
-	virtual void DrawWeapon(AGunBase* Gun) override;
+	virtual void EquipWeapon(AGunBase* Gun) override;
 
 	virtual void HolsterWeapon(AGunBase* Gun) override;
 

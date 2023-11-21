@@ -356,9 +356,9 @@ void APlayerCharacter::SwitchGrenadeType(int Index = 0)
 	OnGrenadeTypeSwitched.Broadcast(GrenadeInventory[CurGrenadeTypeI].GrenadeClass);
 }
 
-void APlayerCharacter::DrawWeapon(AGunBase* Gun)
+void APlayerCharacter::EquipWeapon(AGunBase* Gun)
 {
-	Super::DrawWeapon(Gun);
+	Super::EquipWeapon(Gun);
 	
 	if (IsLocallyControlled())
 	{
