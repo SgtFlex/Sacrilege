@@ -124,10 +124,11 @@ void AGrenadeBase::Pickup(APlayerCharacter* Character)
 	Character->OnGrenadeInventoryUpdated.Broadcast(Character->GrenadeInventory);
 }
 
-float AGrenadeBase::CustomOnTakeAnyDamage(float DamageAmount, FVector Force,
-                               AController* EventInstigator, AActor* DamageCauser)
+float AGrenadeBase::CustomOnTakeAnyDamage_Implementation(float DamageAmount, FVector Force,
+	AController* EventInstigator, AActor* DamageCauser)
 {
-	IDamageableInterface::CustomOnTakeAnyDamage(DamageAmount, Force, EventInstigator, DamageCauser);
+	IDamageableInterface::CustomOnTakeAnyDamage_Implementation(DamageAmount, Force, EventInstigator,
+	                                                                  DamageCauser);
 	if (EventInstigator) SetInstigator(EventInstigator->GetPawn());
 	this->StartFuse(FMath::RandRange(0.25, 0.5));
 	return DamageAmount;

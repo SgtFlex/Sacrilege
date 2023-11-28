@@ -55,12 +55,9 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	UFUNCTION(BlueprintNativeEvent)
-	float CustomOnTakeAnyDamage(float DamageAmount, FVector Force, AController* EventInstigator, AActor* DamageCauser) override;
 	
 	UFUNCTION(BlueprintNativeEvent)
-	float CustomTakePointDamage(FPointDamageEvent const& PointDamageEvent, float Force, AController* EventInstigator, AActor* DamageCauser) override;
+	float CustomTakePointDamage(FPointDamageEvent const& PointDamageEvent, float Force, AController* EventInstigator, AActor* DamageCauser);
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void OnHealthDepleted(float Damage, FVector Force, FVector HitLocation = FVector(0,0,0), FName HitBoneName = "", AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
@@ -70,8 +67,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetSmartObject(ASmartObject* NewSmartObject);
-	
-	virtual UHealthComponent* GetHealthComponent() override;
+
+	UFUNCTION(BlueprintNativeEvent)
+	UHealthComponent* GetHealthComponent();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void Melee();

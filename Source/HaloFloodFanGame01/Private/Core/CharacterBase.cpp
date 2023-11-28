@@ -48,9 +48,9 @@ void ACharacterBase::BeginPlay()
 
 	GetMesh()->OnComponentSleep.AddDynamic(this, &ACharacterBase::RagdollSettled);
 
-	//UE_LOG(LogTemp, Warning, TEXT("Char: %s %f"), *GetActorLabel(), GetHealthComponent()->GetHealth());
-	//if (GetHealthComponent()) UE_LOG(LogTemp, Warning, TEXT("%s's Health component is owned by %s (Should be %s)"), *GetActorLabel(), *GetHealthComponent()->GetOwner()->GetActorLabel(), *GetActorLabel());
-	if (GetHealthComponent()) GetHealthComponent()->OnHealthDepleted.AddDynamic(this, &ACharacterBase::OnHealthDepleted);	
+	//UE_LOG(LogTemp, Warning, TEXT("Char: %s %f"), *GetActorLabel(), Execute_GetHealthComponent(this)->GetHealth());
+	//if (Execute_GetHealthComponent(this)) UE_LOG(LogTemp, Warning, TEXT("%s's Health component is owned by %s (Should be %s)"), *GetActorLabel(), *Execute_GetHealthComponent(this)->GetOwner()->GetActorLabel(), *GetActorLabel());
+	Execute_GetHealthComponent(this)->OnHealthDepleted.AddDynamic(this, &ACharacterBase::OnHealthDepleted);	
 }
 
 // Called every frame
@@ -73,15 +73,9 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 }
 
-float ACharacterBase::CustomOnTakeAnyDamage_Implementation(float DamageAmount, FVector Force,
-	AController* EventInstigator, AActor* DamageCauser)
-{
-	return IDamageableInterface::CustomOnTakeAnyDamage(DamageAmount, Force, EventInstigator, DamageCauser);
-}
-
 float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent const& PointDamageEvent, float Force, AController* EventInstigator, AActor* DamageCauser)
 {
-	float x = IDamageableInterface::CustomTakePointDamage(PointDamageEvent, Force, EventInstigator, DamageCauser);
+	//float x = IDamageableInterface::Execute_CustomTakePointDamage(this, PointDamageEvent, Force, EventInstigator, DamageCauser);
 	if (EventInstigator && Cast<AAIControllerBase>(GetController()))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Reported damage event"));
@@ -90,7 +84,7 @@ float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent con
 		//UAISense_Sight::RegisterEvent()
 	}
 	
-	if (GetHealthComponent()->GetShields() <= 0)
+	if (Execute_GetHealthComponent(this)->GetShields() <= 0)
 	{
 		if (HurtAnim)
 		{
@@ -103,7 +97,7 @@ float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent con
 		if (BloodPFX)
 		{
 			UNiagaraComponent* BloodNiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(BloodPFX, GetMesh(), PointDamageEvent.HitInfo.BoneName, PointDamageEvent.HitInfo.ImpactPoint, PointDamageEvent.HitInfo.Normal.Rotation(), EAttachLocation::KeepWorldPosition, true);
-			BloodNiagaraComponent->SetNiagaraVariableActor("Character", this);
+			//BloodNiagaraComponent->SetNiagaraVariableActor("Character", this);
 		}
 		if (BloodSplatterMat)
 		{
@@ -113,7 +107,7 @@ float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent con
 		if (BloodDecalMaterial)
 		{
 			float DecalSize = FMath::RandRange(10, 130);
-			if (GetHealthComponent()->GetHealth() > 0)
+			if (Execute_GetHealthComponent(this)->GetHealth() > 0)
 			{
 				FHitResult HitResult;
 				FCollisionQueryParams QueryParams;
@@ -132,13 +126,13 @@ float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent con
 		}
 	}
 	
-	return x;
+	return 0;
 }
 
 void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector DamageForce, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
 	UAIPerceptionSystem::GetCurrent( GetWorld() )->UnregisterSource(*this);
-	GetHealthComponent()->Deactivate();
+	Execute_GetHealthComponent(this)->Deactivate();
 	for (auto GrenadeStruct : GrenadeInventory)
 	{
 		for (int i = 0; i < FMath::RandRange(0, GrenadeStruct.GrenadeAmount); i++)
@@ -201,7 +195,7 @@ void ACharacterBase::SetSmartObject(ASmartObject* NewSmartObject)
 	}
 }
 
-UHealthComponent* ACharacterBase::GetHealthComponent()
+UHealthComponent* ACharacterBase::GetHealthComponent_Implementation()
 {
 	return HealthComponent;
 }
