@@ -25,12 +25,11 @@ void UMyCustomBlueprintFunctionLibrary::FireHitScanBullet(FHitResult& Hit, const
 		{
 			FVector HitDir = (Hit.Location - StartLocation).GetSafeNormal();
 			UAISense_Hearing::ReportNoiseEvent(World, Hit.Location, 1.0f, EventInstigator);
-			if (Hit.GetActor()->Implements<UDamageableInterface>())
+			if (IDamageableInterface* DamageableActor = Cast<IDamageableInterface>(Hit.GetActor()))
 			{
 				Damage = FalloffCurve!=nullptr ? Damage * FalloffCurve->GetFloatValue(Hit.Distance/Range) : Damage;
 				FPointDamageEvent PointDamageEvent = FPointDamageEvent(Damage, Hit, HitDir, UDamageType::StaticClass());
-				IDamageableInterface::Execute_CustomTakePointDamage(Hit.GetActor(), PointDamageEvent, Force, EventInstigator, DamageCauser);
-				//DamageableActor->CustomTakePointDamage(PointDamageEvent, Force, EventInstigator, DamageCauser);
+				DamageableActor->CustomTakePointDamage(PointDamageEvent, Force, EventInstigator, DamageCauser);
 			}
 			if (Hit.GetComponent() && Hit.GetComponent()->IsSimulatingPhysics())
 			{
@@ -69,10 +68,9 @@ void UMyCustomBlueprintFunctionLibrary::FireExplosion(const UObject* WorldContex
 		UKismetSystemLibrary::SphereOverlapActors(World, Location, OuterRadius, Objects, AActor::StaticClass(), ActorsToIgnore, HitActors);
 		for (auto HitActor : HitActors)
 		{
-			if (HitActor->Implements<UDamageableInterface>())
+			if (IDamageableInterface* HitDamageable = Cast<IDamageableInterface>(HitActor))
 			{
-				IDamageableInterface::Execute_CustomTakeRadialDamage(HitActor, Force, RadialDamageEvent, EventInstigator, DamageCauser);
-				//HitDamageable->CustomTakeRadialDamage(Force, RadialDamageEvent, EventInstigator, DamageCauser);
+				HitDamageable->CustomTakeRadialDamage(Force, RadialDamageEvent, EventInstigator, DamageCauser);
 			}
 			if (UPrimitiveComponent* PrimComponent = Cast<UPrimitiveComponent>(HitActor->GetRootComponent()))
 			{
@@ -80,6 +78,7 @@ void UMyCustomBlueprintFunctionLibrary::FireExplosion(const UObject* WorldContex
 				{
 					PrimComponent->AddImpulse((HitActor->GetActorLocation() - Location).GetSafeNormal() * Force);
 					//PrimComponent->AddImpulse((HitActor->GetActorLocation() - Location).GetSafeNormal() * FMath::Lerp(0, Force, (FVector::Distance(HitActor->GetActorLocation(), Location)) + InnerRadius));
+
 				}
 			}
 		}

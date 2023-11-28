@@ -96,6 +96,6 @@ public:
 	UFUNCTION()
 	virtual void Pickup(APlayerCharacter* Character) override;
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	float CustomOnTakeAnyDamage(float DamageAmount, FVector Force, AController* EventInstigator, AActor* DamageCauser);
+	UFUNCTION()
+	virtual float CustomOnTakeAnyDamage(float DamageAmount, FVector Force, AController* EventInstigator, AActor* DamageCauser) override;
 };
