@@ -103,7 +103,8 @@ float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent con
 		if (BloodPFX)
 		{
 			UNiagaraComponent* BloodNiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(BloodPFX, GetMesh(), PointDamageEvent.HitInfo.BoneName, PointDamageEvent.HitInfo.ImpactPoint, PointDamageEvent.HitInfo.Normal.Rotation(), EAttachLocation::KeepWorldPosition, true);
-			BloodNiagaraComponent->SetNiagaraVariableActor("Character", this);
+			//BloodNiagaraComponent->SetNiagaraVariableActor("Character", this);
+			BloodNiagaraComponent->SetVariableActor("Character", this);
 		}
 		if (BloodSplatterMat)
 		{
@@ -288,8 +289,10 @@ void ACharacterBase::SwitchWeapon()
 void ACharacterBase::EquipWeapon(AGunBase* Gun)
 {
 	//EquippedWeapon = Gun;
+	
 	Gun->SetActorHiddenInGame(false);
 	Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
+	Gun->OnEquipped();
 }
 
 void ACharacterBase::HolsterWeapon(AGunBase* Gun)

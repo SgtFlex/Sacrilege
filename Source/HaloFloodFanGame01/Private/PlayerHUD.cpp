@@ -298,6 +298,7 @@ void UPlayerHUD::UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredG
 		EquippedGunWidget->SetBrushFromTexture(EquippedGun->WeaponIcon);
 		ConstructAmmoGrid(EquippedGun);
 		UpdateHUDMagazineElements();
+		MagazineTotal->SetText(FText::AsNumber(EquippedGun->MaxMagazine));
 		EquippedGun->OnFire.AddUniqueDynamic(this, &UPlayerHUD::UpdateHUDMagazineElements);
 		EquippedGun->OnReload.AddUniqueDynamic(this, &UPlayerHUD::UpdateHUDMagazineElements);
 	} else
@@ -326,7 +327,7 @@ void UPlayerHUD::UpdateInteractable(AActor* Actor)
 		
 		IInteractableInterface::Execute_GetInteractInfo(Actor, IntText, IntIcon);
 		SetInteractInfo(IntText, IntIcon);
-		InteractName->SetText(FText::FromString(Actor->GetActorLabel()));
+		//InteractName->SetText(FText::FromString(Actor->GetActorLabel()));
 	} else
 	{
 		SetCanInteract(false);

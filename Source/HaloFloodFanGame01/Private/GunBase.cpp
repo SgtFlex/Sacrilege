@@ -47,10 +47,12 @@ void AGunBase::Tick(float DeltaTime)
 void AGunBase::OnPickup(ACharacterBase* Char)
 {
 	SetOwner(Char);
+	
 }
 
 void AGunBase::OnEquipped()
 {
+	if (DrawSFX) UGameplayStatics::PlaySoundAtLocation(GetWorld(), DrawSFX, GetActorLocation());
 }
 
 void AGunBase::OnDropped()

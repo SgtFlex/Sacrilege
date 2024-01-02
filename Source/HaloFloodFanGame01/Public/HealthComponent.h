@@ -81,9 +81,6 @@ public:
 	USoundBase* ShieldStartRegenSFX;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	USoundBase* ShieldRegenSFX;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	USoundBase* ShieldFinishRegenSFX;
 
 	UPROPERTY()

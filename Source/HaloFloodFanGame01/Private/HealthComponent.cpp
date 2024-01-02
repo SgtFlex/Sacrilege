@@ -101,7 +101,7 @@ void UHealthComponent::Multi_TakeDamage_Implementation(float Damage, FVector For
 {
 	//if (GetHealth() <= 0) return;
 	UE_LOG(LogTemp, Warning, TEXT("Called TakeDamage on: %s. Health: %f"), *UEnum::GetValueAsString(GetOwnerRole()), GetHealth());
-	if (MaxShields > 0)
+	if (MaxShields > 0 && IsAlive())
 	{
 		GetOwner()->GetWorldTimerManager().ClearTimer(ShieldRegenTimer);
 		GetOwner()->GetWorldTimerManager().SetTimer(ShieldDelayTimerHandle, this, &UHealthComponent::StartShieldRegen, ShieldRegenDelay);
@@ -118,6 +118,10 @@ void UHealthComponent::Multi_TakeDamage_Implementation(float Damage, FVector For
 void UHealthComponent::HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Called HealthDepleted on: %s"), *UEnum::GetValueAsString(GetOwnerRole()));
+	ShieldAudioComponent->Deactivate();
+	Deactivate();
+	ShieldRegenTimer.Invalidate();
+	ShieldDelayTimerHandle.Invalidate();
 	GetWorld()->GetTimerManager().ClearTimer(ShieldDelayTimerHandle);
 	OnHealthDepleted.Broadcast(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
 }

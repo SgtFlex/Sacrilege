@@ -236,6 +236,9 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	UAnimMontage* MeleeAnimation1P;
 
+	UPROPERTY(EditDefaultsOnly)
+	USoundBase* DrawSFX;
+
 	UPROPERTY()
 	FTimerHandle ReloadTimer;
 private:
