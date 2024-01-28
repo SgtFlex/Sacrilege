@@ -6,6 +6,7 @@
 #include "AIControllerBase.h"
 #include "GrenadeBase.h"
 #include "GunBase.h"
+#include "HaloGameState.h"
 #include "HealthComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/DamageEvents.h"
@@ -164,7 +165,7 @@ void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector Damag
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->AddImpulseAtLocation(DamageForce, HitLocation, HitBoneName);
 	OnKilled.Broadcast(EventInstigator, DamageCauser);
-	
+	Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageRagdoll(this);
 	if (GetController()) GetController()->Destroy();
 	
 	if (EquippedWeapon)

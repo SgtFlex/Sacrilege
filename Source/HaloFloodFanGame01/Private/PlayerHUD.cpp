@@ -344,7 +344,7 @@ void UPlayerHUD::UpdateSetAndWaveCount(int Set, int Wave)
 
 void UPlayerHUD::PushTextNotification_Implementation(const FText& Text)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Pushing notif"));
+	
 }
 
 
