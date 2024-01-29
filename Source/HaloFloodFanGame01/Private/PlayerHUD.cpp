@@ -128,15 +128,17 @@ void UPlayerHUD::UpdateGrenadeInventory(TArray<FGrenadeStruct> GrenadeInventory)
 }
 
 
-void UPlayerHUD::SetCompassDirection_Implementation(float Yaw)
+void UPlayerHUD::SetCompassDirection_Implementation(float PlayerYaw)
 {
-	CompassDirection = (Yaw+180);
+	
+	CompassDirection = (PlayerYaw+180);
 	float Offset = 45;
-	float x = ((Yaw+Offset)*-10);
+	float x = ((PlayerYaw+Offset)*-10);
 	UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Compass->Slot);
 	CanvasSlot->SetPosition(FVector2d(x, 0));
+	CompassText->SetText(FText::AsNumber(CompassDirection));
 	//UE_LOG(LogTemp, Warning, TEXT("%f"), Yaw);
-	CompassNum->SetText(FText::AsNumber(x));
+	
 }
 
 

@@ -2,6 +2,7 @@
 
 #include "GunBase.h"
 
+#include "HaloGameState.h"
 #include "MyCustomBlueprintFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
@@ -47,7 +48,7 @@ void AGunBase::Tick(float DeltaTime)
 void AGunBase::OnPickup(ACharacterBase* Char)
 {
 	SetOwner(Char);
-	
+	Cast<AHaloGameState>(GetWorld()->GetGameState())->StopManagingWeapon(this);
 }
 
 void AGunBase::OnEquipped()
@@ -57,6 +58,7 @@ void AGunBase::OnEquipped()
 
 void AGunBase::OnDropped()
 {
+	
 	GetWorldTimerManager().ClearTimer(ReloadTimer);
 	bReloading = false;
 	SetOwner(nullptr);
@@ -65,6 +67,7 @@ void AGunBase::OnDropped()
 		//Disable collision query responses to prevent being picked up.
 		Mesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	}
+	Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageWeapon(this);
 }
 
 void AGunBase::StartReload_Implementation()
@@ -206,6 +209,7 @@ void AGunBase::SpawnBullet_Implementation()
 					FRotator Rotation = Hit.Normal.Rotation() + FRotator(-90, 0, 0);
 					AActor* Decal = GetWorld()->SpawnActor(ImpactDecal, &Location, &Rotation);
 					Decal->AttachToComponent(Hit.GetComponent(), FAttachmentTransformRules::KeepWorldTransform);
+					//UGameplayStatics::SpawnDecalAttached(GetWorld(), FVector(10,10,10), ) //Perhaps optimize this in the future
 				}
 			}
 		}

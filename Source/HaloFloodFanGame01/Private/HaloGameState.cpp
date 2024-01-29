@@ -3,22 +3,26 @@
 
 #include "HaloGameState.h"
 
+#include "Components/DecalComponent.h"
+
 void AHaloGameState::ManageRagdoll_Implementation(AActor* Actor)
 {
 	Ragdolls.Add(Actor);
 	if (Ragdolls.Num() > MaxRagdolls)
 	{
-		Ragdolls[0]->Destroy();
+		if (Ragdolls[0])
+			Ragdolls[0]->Destroy();
 		Ragdolls.RemoveAt(0);
 	}
 }
 
-void AHaloGameState::ManageDecal_Implementation(AActor* Actor)
+void AHaloGameState::ManageDecal_Implementation(UDecalComponent* Decal)
 {
-	Decals.Add(Actor);
+	Decals.Add(Decal);
 	if (Decals.Num() > MaxDecals)
 	{
-		Decals[0]->Destroy();
+		if (Decals[0])
+			Decals[0]->DestroyComponent();
 		Decals.RemoveAt(0);
 	}
 }
@@ -26,4 +30,23 @@ void AHaloGameState::ManageDecal_Implementation(AActor* Actor)
 void AHaloGameState::ManageActor_Implementation(AActor* Actor)
 {
 	
+}
+
+void AHaloGameState::ManageWeapon_Implementation(AActor* Weapon)
+{
+	Weapons.Add(Weapon);
+	if (Weapons.Num() > MaxWeapons)
+	{
+		if (Weapons[0])
+			Weapons[0]->Destroy();
+		Weapons.RemoveAt(0);
+	}
+}
+
+void AHaloGameState::StopManagingWeapon_Implementation(AActor* Weapon)
+{
+	if (Weapons.Contains(Weapon))
+	{
+		Weapons.Remove(Weapon);
+	}
 }

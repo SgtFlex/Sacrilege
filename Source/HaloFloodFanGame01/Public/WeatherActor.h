@@ -26,12 +26,24 @@ public:
 
 
 public:
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UDirectionalLightComponent* DirectionalLight;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USkyLightComponent* SkyLight;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float TimeScale = 1;
 	
 	UPROPERTY()
 	float Time;
 
-	float StartingTime = 0;
+	float StartTime;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool RandomStartTime = false;
+
+	float DirectLightIntensity;
+
+	float SkyLightIntensity;
 };

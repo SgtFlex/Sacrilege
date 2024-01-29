@@ -83,11 +83,13 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void Explode();
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void SetArmed(bool NewArmed = false);
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void StartFuse(float NewFuseTime = 4);
 
 	UFUNCTION(BlueprintNativeEvent)

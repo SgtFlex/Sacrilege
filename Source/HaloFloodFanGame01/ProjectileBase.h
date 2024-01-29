@@ -44,6 +44,9 @@ public:
 	UNiagaraSystem* HitPFX;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UMaterialInterface* ImpactDecalMaterial;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (DeprecatedProperty))
 	TSubclassOf<ADecalActor> ImpactDecalClass;
 
 private:

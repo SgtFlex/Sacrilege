@@ -17,6 +17,7 @@
 #include "Animation/AnimInstance.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Components/DecalComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISense_Damage.h"
@@ -115,22 +116,22 @@ float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent con
 		if (BloodDecalMaterial)
 		{
 			float DecalSize = FMath::RandRange(10, 130);
-			if (GetHealthComponent()->GetHealth() > 0)
+			// if (GetHealthComponent()->GetHealth() > 0)
+			// {
+			FHitResult HitResult;
+			FCollisionQueryParams QueryParams;
+			QueryParams.AddIgnoredActor(this);
+			float BoxMax = GetMesh()->Bounds.GetBoxExtrema(1).Z;
+			GetWorld()->LineTraceSingleByChannel(HitResult, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Location + (PointDamageEvent.ShotDirection * 4000),ECollisionChannel::ECC_Visibility, QueryParams);
+			if (HitResult.bBlockingHit)
 			{
-				FHitResult HitResult;
-				FCollisionQueryParams QueryParams;
-				QueryParams.AddIgnoredActor(this);
-				float BoxMax = GetMesh()->Bounds.GetBoxExtrema(1).Z;
-				GetWorld()->LineTraceSingleByChannel(HitResult, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Location + (PointDamageEvent.ShotDirection * 4000),ECollisionChannel::ECC_Visibility, QueryParams);
-				if (HitResult.bBlockingHit)
-				{
-					UGameplayStatics::SpawnDecalAttached(BloodDecalMaterial, FVector(DecalSize,DecalSize,DecalSize), HitResult.GetComponent(), HitResult.BoneName, HitResult.Location, HitResult.Normal.Rotation() + FRotator(-180,0,FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition);
-				}
+				Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAttached(BloodDecalMaterial, FVector(DecalSize,DecalSize,DecalSize), HitResult.GetComponent(), HitResult.BoneName, HitResult.Location, HitResult.Normal.Rotation() + FRotator(-180,0,FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition));
 			}
-			else
-			{
-				UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(DecalSize, DecalSize, DecalSize), PointDamageEvent.HitInfo.Location + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), 0), FRotator(-90,0,FMath::RandRange(-180, 180)));
-			}
+			// }
+			// else
+			// {
+			// 	Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(DecalSize, DecalSize, DecalSize), PointDamageEvent.HitInfo.Location + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), 0), FRotator(-90,0,FMath::RandRange(-180, 180))));
+			// }
 		}
 	}
 	
@@ -156,7 +157,7 @@ void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector Damag
 				
 		}
 	}
-	if (BloodDecalMaterial) UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(100, 100, 100), GetActorLocation(), FRotator(-90,0,0));
+	if (BloodDecalMaterial) Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(100, 100, 100), GetActorLocation(), FRotator(-90,0,0)));
 	if (DeathSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), DeathSound, GetActorLocation());
 	GetMesh()->GetAnimInstance()->Montage_Play(DeathAnim);
 	GetCapsuleComponent()->DestroyComponent();
@@ -165,11 +166,13 @@ void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector Damag
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->AddImpulseAtLocation(DamageForce, HitLocation, HitBoneName);
 	OnKilled.Broadcast(EventInstigator, DamageCauser);
-	Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageRagdoll(this);
+	
 	if (GetController()) GetController()->Destroy();
 	
 	if (EquippedWeapon)
 		DropWeapon();
+
+	Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageRagdoll(this);
 }
 
 void ACharacterBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
@@ -224,8 +227,12 @@ void ACharacterBase::Melee_Implementation()
 	GetWorld()->SweepMultiByChannel(SweepResult, GetActorLocation(), GetActorLocation() + GetActorForwardVector()*100, FQuat(0,0,0,0), ECollisionChannel::ECC_Pawn, BoxShape, CollisionParams);
 	for (auto Result : SweepResult)
 	{
-		FDamageEvent DamageEvent;
-		Result.GetActor()->TakeDamage(MeleeDamage, DamageEvent, nullptr, this);
+		if (Result.GetActor() && Result.GetActor()->Implements<UDamageableInterface>())
+		{
+			FDamageEvent DamageEvent;
+			Result.GetActor()->TakeDamage(MeleeDamage, DamageEvent, nullptr, this);
+		}
+		
 		UPrimitiveComponent* HitComp = Result.GetComponent();
 		
 		if (HitComp->IsSimulatingPhysics())

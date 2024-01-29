@@ -62,7 +62,7 @@ public:
 	// void SetIncenCounter(int32 NewIncenCount);
 
 	UFUNCTION(BlueprintNativeEvent)
-	void SetCompassDirection(float Yaw);
+	void SetCompassDirection(float PlayerYaw);
 
 	
 
@@ -206,7 +206,7 @@ public:
 	class UImage* Compass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	class UTextBlock* CompassNum;
+	class UTextBlock* CompassText;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UImage* InteractIcon;

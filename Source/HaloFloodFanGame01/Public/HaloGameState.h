@@ -38,7 +38,13 @@ public:
 	void ManageRagdoll(AActor* Actor);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void ManageDecal(AActor* Actor);
+	void ManageDecal(UDecalComponent* Decal);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void ManageWeapon(AActor* Weapon);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void StopManagingWeapon(AActor* Weapon);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void ManageActor(AActor* Actor);
@@ -51,13 +57,19 @@ public:
 	TArray<AActor*> Ragdolls;
 
 	UPROPERTY()
-	TArray<AActor*> Decals;
+	TArray<UDecalComponent*> Decals;
+
+	UPROPERTY()
+	TArray<AActor*> Weapons;
 
 	UPROPERTY()
 	TArray<FManagedActorStruct> ManagedActors;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	uint8 MaxRagdolls = 10;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	uint8 MaxWeapons = 20;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	uint8 MaxDecals = 20;
