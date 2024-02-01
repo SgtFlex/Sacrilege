@@ -3,14 +3,11 @@
 
 #include "AIControllerBase.h"
 
-#include "NavigationSystem.h"
 #include "SmartObject.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Core/CharacterBase.h"
-#include "Core/PawnBase.h"
-#include "Kismet/GameplayStatics.h"
 #include "Perception/AISenseConfig.h"
 #include "Perception/AISenseConfig_Damage.h"
 #include "Perception/AISenseConfig_Hearing.h"
@@ -40,9 +37,11 @@ AAIControllerBase::AAIControllerBase()
 void AAIControllerBase::BeginPlay()
 {
 	Super::BeginPlay();
+	if (ACharacterBase* Char = Cast<ACharacterBase>(GetPawn()))
+		SetGenericTeamId(FGenericTeamId(Char->TeamId));
 	GetWorldTimerManager().SetTimer(Delay, this, &AAIControllerBase::BeginPlayDelayed, 0.1f, false);
 	BehaviorTreeComp->StartLogic();
-	SetGenericTeamId(FGenericTeamId(TeamNumber));
+	
 }
 
 void AAIControllerBase::UpdateControlRotation(float DeltaTime, bool bUpdatePawn)
@@ -88,8 +87,8 @@ void AAIControllerBase::UpdateControlRotation(float DeltaTime, bool bUpdatePawn)
 void AAIControllerBase::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
-	// if (ACharacterBase* Char = Cast<ACharacterBase>(InPawn))
-	// 	SetGenericTeamId(Char->TeamNumber);
+	if (ACharacterBase* Char = Cast<ACharacterBase>(InPawn))
+		SetGenericTeamId(Char->TeamId);
 	
 }
 
@@ -102,6 +101,7 @@ void AAIControllerBase::BeginPlayDelayed()
 	{
 		if (ASmartObject* SmartObj = Char->SmartObject) {
 			SetSmartObject(SmartObj);
+			SetGenericTeamId(Char->TeamId);
 		}
 	}
 }

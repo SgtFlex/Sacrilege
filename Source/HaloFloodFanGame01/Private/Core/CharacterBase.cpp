@@ -142,6 +142,29 @@ void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector Damag
 {
 	UAIPerceptionSystem::GetCurrent( GetWorld() )->UnregisterSource(*this);
 	GetHealthComponent()->Deactivate();
+	OnKilled.Broadcast(this, EventInstigator, DamageCauser);
+	DropGrenades();
+	
+	if (BloodDecalMaterial) Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(100, 100, 100), GetActorLocation(), FRotator(-90,0,0)));
+	if (DeathSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), DeathSound, GetActorLocation());
+	GetMesh()->GetAnimInstance()->Montage_Play(DeathAnim);
+	GetCapsuleComponent()->DestroyComponent();
+	SetRootComponent(GetMesh());
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->AddImpulseAtLocation(DamageForce, HitLocation, HitBoneName);
+	
+	
+	if (GetController()) GetController()->Destroy();
+	
+	if (EquippedWeapon)
+		DropWeapon();
+
+	Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageRagdoll(this);
+}
+
+void ACharacterBase::DropGrenades_Implementation()
+{
 	for (auto GrenadeStruct : GrenadeInventory)
 	{
 		for (int i = 0; i < FMath::RandRange(0, GrenadeStruct.GrenadeAmount); i++)
@@ -152,31 +175,15 @@ void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector Damag
 			if (AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActor(GrenadeStruct.GrenadeClass, &Loc)))
 			{
 				Grenade->Mesh->SetSimulatePhysics(true);
-				Grenade->Mesh->AddImpulse(DamageForce * 0.025);
+				//Grenade->Mesh->AddImpulse(Get * 0.025);
 			}
 				
 		}
 	}
-	if (BloodDecalMaterial) Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(100, 100, 100), GetActorLocation(), FRotator(-90,0,0)));
-	if (DeathSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), DeathSound, GetActorLocation());
-	GetMesh()->GetAnimInstance()->Montage_Play(DeathAnim);
-	GetCapsuleComponent()->DestroyComponent();
-	SetRootComponent(GetMesh());
-	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	GetMesh()->SetSimulatePhysics(true);
-	GetMesh()->AddImpulseAtLocation(DamageForce, HitLocation, HitBoneName);
-	OnKilled.Broadcast(EventInstigator, DamageCauser);
-	
-	if (GetController()) GetController()->Destroy();
-	
-	if (EquippedWeapon)
-		DropWeapon();
-
-	Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageRagdoll(this);
 }
 
 void ACharacterBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-	FVector NormalImpulse, const FHitResult& Hit)
+                           FVector NormalImpulse, const FHitResult& Hit)
 {
 	LaunchCharacter(NormalImpulse/100, true, true);
 	float DamageCalculation;
@@ -211,6 +218,12 @@ UHealthComponent* ACharacterBase::GetHealthComponent()
 	return HealthComponent;
 }
 
+bool ACharacterBase::CanMelee_Implementation()
+{
+	if (GetWorld()->GetTimerManager().TimerExists(MeleeTimer)) return false;
+	return true;
+}
+
 void ACharacterBase::EquipGrenadeType_Implementation(TSubclassOf<AGrenadeBase> Grenade)
 {
 	// EquippedGrenadeClass = Grenade;
@@ -219,23 +232,30 @@ void ACharacterBase::EquipGrenadeType_Implementation(TSubclassOf<AGrenadeBase> G
 void ACharacterBase::Melee_Implementation()
 {
 	//GetMesh()->GetAnimInstance()->Montage_Play(MeleeAnim);
+	if (!CanMelee()) return;
+	GetWorld()->GetTimerManager().SetTimer(MeleeTimer, 1, false);
 	UE_LOG(LogTemp, Warning, TEXT("Melee"));
 	FCollisionShape BoxShape = FCollisionShape::MakeBox(FVector(50, 50, 50));
 	TArray<FHitResult> SweepResult;
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(this);
-	GetWorld()->SweepMultiByChannel(SweepResult, GetActorLocation(), GetActorLocation() + GetActorForwardVector()*100, FQuat(0,0,0,0), ECollisionChannel::ECC_Pawn, BoxShape, CollisionParams);
+	//GetWorld()->SweepMultiByChannel(SweepResult, GetActorLocation(), GetActorLocation() + GetActorForwardVector()*100, FQuat(0,0,0,0), ECollisionChannel::ECC_Pawn, BoxShape, CollisionParams);
+	//GetWorld()->SweepMultiByChannel(SweepResult, GetActorLocation(), GetActorLocation() + GetActorForwardVector()*100, FQuat(0,0,0,0), ECollisionChannel::ECC_Pawn, BoxShape, CollisionParams);
+	GetWorld()->SweepMultiByObjectType(SweepResult, GetActorLocation(), GetActorLocation() + GetActorForwardVector()*100, FQuat(0,0,0,0), ECollisionChannel::ECC_Pawn, BoxShape, CollisionParams);
 	for (auto Result : SweepResult)
 	{
+		
 		if (Result.GetActor() && Result.GetActor()->Implements<UDamageableInterface>())
 		{
+			UE_LOG(LogTemp, Warning, TEXT("Melee'd Actor: %s"), *Result.GetComponent()->GetName());
 			FDamageEvent DamageEvent;
-			Result.GetActor()->TakeDamage(MeleeDamage, DamageEvent, nullptr, this);
+			Cast<IDamageableInterface>(Result.GetActor())->CustomTakeDamage(MeleeDamage, FVector(0,0,0), DamageEvent, nullptr, this);
+			//Result.GetActor()->TakeDamage(MeleeDamage, DamageEvent, nullptr, this);
 		}
 		
 		UPrimitiveComponent* HitComp = Result.GetComponent();
 		
-		if (HitComp->IsSimulatingPhysics())
+		if (HitComp && HitComp->IsSimulatingPhysics())	
 		{
 			FVector ForceVector = (HitComp->GetComponentLocation() - GetActorLocation());
 			ForceVector.Normalize();
@@ -368,7 +388,7 @@ void ACharacterBase::RagdollSettled(UPrimitiveComponent* Component, FName Name)
 {
 
 	GetMesh()->PutAllRigidBodiesToSleep();
-	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+	//GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 	
 }
 

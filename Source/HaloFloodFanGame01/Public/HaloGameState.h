@@ -6,6 +6,7 @@
 #include "GameFramework/GameState.h"
 #include "HaloGameState.generated.h"
 
+class ACharacterBase;
 /**
  * 
  */

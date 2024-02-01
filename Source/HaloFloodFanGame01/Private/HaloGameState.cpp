@@ -4,6 +4,7 @@
 #include "HaloGameState.h"
 
 #include "Components/DecalComponent.h"
+#include "Core/CharacterBase.h"
 
 void AHaloGameState::ManageRagdoll_Implementation(AActor* Actor)
 {

@@ -33,9 +33,8 @@ void AFirefightGameMode::BeginPlay()
 	//ACharacterBase::TestDelegate.BindSP(this, &AHaloFloodFanGame01GameMode::TestFunc);
 }
 
-void AFirefightGameMode::OnEnemyKilled(AController* EventInstigator, AActor* DamageCauser)
+void AFirefightGameMode::OnEnemyKilled(ACharacterBase* Character, AController* EventInstigator, AActor* DamageCauser)
 {
-	
 	if (APlayerController* PlayerController = Cast<APlayerController>(EventInstigator))
 	{
 		

@@ -235,20 +235,16 @@ void UPlayerHUD::DetermineCrosshairColor()
 	FHitResult PlayerAim = PlayerCharacter->GetPlayerAim();
 	if (PlayerAim.GetActor())
 	{
-		if (APawn* Pawn = Cast<APawn>(PlayerAim.GetActor()))
+		if (ACharacterBase* Char = Cast<ACharacterBase>(PlayerAim.GetActor()))
 		{
-			APlayerControllerBase* PlayerController = Cast<APlayerControllerBase>(PlayerCharacter->GetController());
-			if (AAIControllerBase* AIController = Cast<AAIControllerBase>(Pawn->GetController()))
+			if (Char->TeamId == PlayerCharacter->TeamId)
 			{
-				if (AIController->TeamNumber == PlayerController->TeamNumber)
-				{
-					SetCrosshairType(3);
-					return;
-				} else if (AIController->Team)
-				{
-					SetCrosshairType(4);
-					return;
-				}
+				SetCrosshairType(3);
+				return;
+			} else
+			{
+				SetCrosshairType(4);
+				return;
 			}
 		}
 	}

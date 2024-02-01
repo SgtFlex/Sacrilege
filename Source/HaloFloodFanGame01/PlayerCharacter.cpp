@@ -232,6 +232,9 @@ void APlayerCharacter::SetCurrentInteractable()
 
 void APlayerCharacter::Melee_Implementation()
 {
+	if (GetWorld()->GetTimerManager().TimerExists(MeleeTimer)) return;
+	GetWorld()->GetTimerManager().SetTimer(MeleeTimer, 1, false);
+	
 	FVector TraceStart = GetFirstPersonCameraComponent()->GetComponentLocation();
 	FVector TraceEnd = GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*500;
 	FCollisionQueryParams CollisionParameters;
@@ -315,7 +318,7 @@ void APlayerCharacter::ThrowEquippedGrenade_Implementation()
 	ActorSpawnParameters.Instigator = this;
 	ActorSpawnParameters.Owner = this;
 
-	if (AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActorDeferred<AGrenadeBase>(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, SpawnTransform, this, this, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding)))
+	if (AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActorDeferred<AGrenadeBase>(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, SpawnTransform, this, this, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn)))
 	{
 		Grenade->SetInstigator(this);
 		Grenade->SetArmed(true);

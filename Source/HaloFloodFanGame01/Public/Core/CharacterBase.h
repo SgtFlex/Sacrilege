@@ -16,7 +16,7 @@ class UHealthComponent;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPickupWeapon);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDropWeapon);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponsUpdated, AGunBase*, NewGun, AGunBase*, OldGun);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnKilled, AController*, Instigator, AActor*, Causer);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnKilled, ACharacterBase*, Character, AController*, Instigator, AActor*, Causer);
 DECLARE_DELEGATE_OneParam(FTest, ACharacterBase*);
 
 
@@ -65,6 +65,9 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	void OnHealthDepleted(float Damage, FVector Force, FVector HitLocation = FVector(0,0,0), FName HitBoneName = "", AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
+	UFUNCTION(BlueprintNativeEvent)
+	void DropGrenades();
+	
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit );
 
@@ -75,6 +78,9 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void Melee();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	bool CanMelee();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void EquipGrenadeType(TSubclassOf<AGrenadeBase> Grenade);
@@ -198,16 +204,23 @@ public:
 	float StunAmount = 100;
 
 	int CurGrenadeTypeI = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
+	uint8 TeamId = 0;
 private:
 	
 protected:
-	
+	UPROPERTY(BlueprintReadWrite)
+	FTimerHandle MeleeTimer;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MeleeDamage = 30;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MeleeForce = 100000;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MeleeCooldown = 1;
 
 	FTimerHandle RagdollTimer;
 };

@@ -36,7 +36,7 @@ public:
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
-	void OnEnemyKilled(AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
+	void OnEnemyKilled(ACharacterBase* Character = nullptr, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 	int GetCurrentWave();
 	void StartSet();
 	void FinishSet();
