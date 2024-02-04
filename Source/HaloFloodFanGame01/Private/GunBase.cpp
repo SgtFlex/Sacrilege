@@ -170,6 +170,8 @@ void AGunBase::SpawnBullet_Implementation()
 	if (!OwningChar) return;
 	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, OwningChar, 0.0f);
 	if (OwningChar->FiringAnim) OwningChar->GetMesh()->GetAnimInstance()->Montage_Play(OwningChar->FiringAnim);
+	APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetOwner());
+		if (PlayerChar && PlayerChar->FireAnimation1P) PlayerChar->GetMesh1P()->GetAnimInstance()->Montage_Play(PlayerChar->FireAnimation1P);
 	for (int i = 0; i < MultiShot; ++i)
 	{
 		if (ProjectileClass)
