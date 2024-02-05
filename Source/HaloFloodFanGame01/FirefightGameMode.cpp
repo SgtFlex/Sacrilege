@@ -3,6 +3,7 @@
 #include "FirefightGamemode.h"
 
 #include "AISpawner.h"
+#include "PlayerCharacter.h"
 #include "Components/AudioComponent.h"
 #include "Core/CharacterBase.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -30,6 +31,9 @@ void AFirefightGameMode::BeginPlay()
 	}
 	AvailableSpawners = Spawners;
 	StartSet();
+
+
+	OnPlayerCharDied.AddDynamic(this, &AFirefightGameMode::PlayerDied);
 	//ACharacterBase::TestDelegate.BindSP(this, &AHaloFloodFanGame01GameMode::TestFunc);
 }
 
@@ -205,17 +209,19 @@ int AFirefightGameMode::SetPlayerResource(APlayerController* PlayerController, i
 	return PlayerResource = NewPlayerResource;
 }
 
-void AFirefightGameMode::TestFunc(ACharacterBase* Character)
-{
-	UE_LOG(LogTemp, Warning, TEXT("ENEMY KILLED"));
-}
-
 int AFirefightGameMode::GetPlayerScore(APlayerController* PlayerController)
 {
 	return PlayerScore;
+	//PlayerCharDied.Broadcast
+}
+
+void AFirefightGameMode::PlayerDied(APlayerCharacter* PlayerCharacter, APlayerController* PlayerController)
+{
+	RestartPlayer(PlayerCharacter->GetController());
 }
 
 UAudioComponent* AFirefightGameMode::GetSoundtrackComponent()
 {
 	return SoundtrackComponent;
+	
 }

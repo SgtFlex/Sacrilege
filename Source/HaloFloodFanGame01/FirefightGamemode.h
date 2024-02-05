@@ -4,14 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
-#include "GameFramework/GameModeBase.h"
 #include "FirefightGamemode.generated.h"
 
 class ACharacterBase;
 class AAISpawner;
+class APlayerCharacter;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWaveStart, int, CurrentSet, int, CurrentWave);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnScoreUpdated, APlayerController*, PlayerController, int, NewScore, int, NewResource);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerCharDied, APlayerCharacter*, PlayerCharacter, APlayerController*, PlayerController);
 
 USTRUCT(BlueprintType)
 struct FSquadStruct
@@ -54,21 +55,23 @@ public:
 	UFUNCTION(BlueprintCallable)
 	int SetPlayerResource(APlayerController* PlayerController, int NewPlayerResource);
 
-	UFUNCTION()
-	void TestFunc(ACharacterBase* Character);
-
 	UFUNCTION(BlueprintGetter)
 	int GetPlayerScore(APlayerController* PlayerController);
 
 	UFUNCTION()
+	void PlayerDied(APlayerCharacter* PlayerCharacter, APlayerController* PlayerController);
+
+	UFUNCTION()
 	UAudioComponent* GetSoundtrackComponent();
 
+public:
 	FTimerHandle SetFinishDelayTimer;
-
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, BlueprintAssignable)
 	FOnScoreUpdated OnScoreUpdated;
-
-public:
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnPlayerCharDied OnPlayerCharDied;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintAssignable)
 	FOnWaveStart OnWaveStart;

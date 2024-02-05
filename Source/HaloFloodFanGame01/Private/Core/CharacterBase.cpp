@@ -297,7 +297,10 @@ void ACharacterBase::PrimaryAttack_Release()
 
 void ACharacterBase::ReloadWeapon()
 {
-	if (EquippedWeapon) EquippedWeapon->StartReload();
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->StartReload();
+	}
 }
 
 void ACharacterBase::SwitchWeapon()

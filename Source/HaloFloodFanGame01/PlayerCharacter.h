@@ -24,6 +24,7 @@ class USoundBase;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractableChanged, AActor*, Interactable);
 
 
+
 UCLASS(config=Game)
 class APlayerCharacter : public ACharacterBase
 {
@@ -125,6 +126,8 @@ public:
 	virtual void EquipWeapon(AGunBase* Gun) override;
 
 	virtual void HolsterWeapon(AGunBase* Gun) override;
+
+	virtual void ReloadWeapon() override;
 
 	/** Returns Mesh1P subobject **/
 	UFUNCTION(BlueprintCallable)

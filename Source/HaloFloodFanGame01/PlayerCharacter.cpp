@@ -9,6 +9,7 @@
 #include "Components/CapsuleComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "FirefightGamemode.h"
 #include "InteractableInterface.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/SphereComponent.h"
@@ -101,8 +102,8 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	MeleeTimeline.TickTimeline(DeltaSeconds);
-	//if (GetController())
-		//GetMesh1P()->SetWorldRotation(GetControlRotation());
+	if (GetController())
+		GetMesh1P()->SetWorldRotation(FRotator(0, GetViewRotation().Yaw + 90, GetViewRotation().Pitch));
 
 	SetCurrentInteractable();
 }
@@ -177,7 +178,7 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
-		Mesh1P->AddLocalRotation(FRotator(0, 0, -LookAxisVector.Y));
+		//Mesh1P->AddLocalRotation(FRotator(0, 0, -LookAxisVector.Y));
 	}
 }
 
@@ -299,6 +300,7 @@ void APlayerCharacter::MeleeUpdate(float Alpha)
 
 void APlayerCharacter::OnHealthDepleted_Implementation(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
+	Cast<AFirefightGameMode>(GetWorld()->GetAuthGameMode())->OnPlayerCharDied.Broadcast(this, PlayerController);
 	if (PlayerController)
 	{
 		PlayerController->UnPossess();
@@ -382,6 +384,13 @@ void APlayerCharacter::HolsterWeapon(AGunBase* Gun)
 
 	GetMesh1P()->GetAnimInstance()->Montage_Play(HolsterAnimation1P);
 	//Gun->Mesh->PlayAnimation(Gun->HolsterAnimation1P, false);
+}
+
+void APlayerCharacter::ReloadWeapon()
+{
+	Super::ReloadWeapon();
+	UE_LOG(LogTemp, Warning, TEXT("Play length: %f"), EquippedWeapon->ReloadAnimation1P->GetPlayLength());
+	GetMesh1P()->GetAnimInstance()->Montage_Play(EquippedWeapon->ReloadAnimation1P,   EquippedWeapon->ReloadAnimation1P->GetPlayLength() / EquippedWeapon->ReloadSpeed);
 }
 
 void APlayerCharacter::PossessedBy(AController* NewController)
