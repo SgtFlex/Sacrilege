@@ -17,6 +17,8 @@ AFirefightGameMode::AFirefightGameMode()
 	//static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(TEXT("/Game/FirstPerson/Blueprints/BP_FirstPersonCharacter"));
 	//DefaultPawnClass = PlayerPawnClassFinder.Class;
 	SoundtrackComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("SoundtrackComponent"));
+
+	CurPlayerLives = PlayerLives;
 }
 
 void AFirefightGameMode::BeginPlay()
@@ -217,7 +219,30 @@ int AFirefightGameMode::GetPlayerScore(APlayerController* PlayerController)
 
 void AFirefightGameMode::PlayerDied(APlayerCharacter* PlayerCharacter, APlayerController* PlayerController)
 {
-	RestartPlayer(PlayerCharacter->GetController());
+	//UE_LOG(LogTemp, Warning, TEXT("Attempted to respawn player %s from character %s"), *PlayerCharacter->GetActorLabel(), *PlayerController->GetActorLabel());
+	FTimerDelegate TimerDelegate;
+	TimerDelegate.BindUFunction(this, FName("RespawnPlayer"), PlayerController);
+	if (CurPlayerLives > 0)
+	{
+		CurPlayerLives--;
+		GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, TimerDelegate, RespawnTime, false);
+	} else
+	{
+		EndGame();
+	}
+	
+}
+
+void AFirefightGameMode::RespawnPlayer(APlayerController* PlayerController)
+{
+	PlayerController->UnPossess();
+	RestartPlayer(PlayerController);
+}
+
+void AFirefightGameMode::EndGame()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Game ended"));
+	RestartGame();
 }
 
 UAudioComponent* AFirefightGameMode::GetSoundtrackComponent()

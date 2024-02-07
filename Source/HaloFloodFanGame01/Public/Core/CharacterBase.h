@@ -167,6 +167,10 @@ public:
 	UPROPERTY(BlueprintReadOnly, Replicated)
 	AGunBase* HolsteredWeapon;
 
+	FTimerHandle HolsterHandle;
+
+	FTimerHandle DrawHandle;
+
 	//Blood
 	UPROPERTY(EditAnywhere)
 	class UNiagaraSystem* BloodPFX;

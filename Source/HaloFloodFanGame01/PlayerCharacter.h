@@ -127,6 +127,8 @@ public:
 
 	virtual void HolsterWeapon(AGunBase* Gun) override;
 
+	virtual void SwitchWeapon() override;
+
 	virtual void ReloadWeapon() override;
 
 	/** Returns Mesh1P subobject **/

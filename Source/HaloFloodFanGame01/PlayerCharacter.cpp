@@ -81,21 +81,7 @@ void APlayerCharacter::BeginPlay()
 	if (HolsteredWeaponClass)
 		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(HolsteredWeaponClass)));
 
-	//Add Input Mapping Context
-	if (APlayerController* PC = Cast<APlayerController>(GetController()))
-	{
-		PlayerController = PC;
-		//check(IsLocallyControlled());
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
-		}
-
-		if (IsLocallyControlled() && PlayerHUDClass) {
-			PlayerHUD = CreateWidget<UUserWidget>(PlayerController, PlayerHUDClass);
-			PlayerHUD->AddToPlayerScreen();
-		}
-	}
+	
 }
 
 void APlayerCharacter::Tick(float DeltaSeconds)
@@ -300,7 +286,7 @@ void APlayerCharacter::MeleeUpdate(float Alpha)
 
 void APlayerCharacter::OnHealthDepleted_Implementation(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
-	Cast<AFirefightGameMode>(GetWorld()->GetAuthGameMode())->OnPlayerCharDied.Broadcast(this, PlayerController);
+	
 	if (PlayerController)
 	{
 		PlayerController->UnPossess();
@@ -313,6 +299,7 @@ void APlayerCharacter::OnHealthDepleted_Implementation(float Damage, FVector For
 	}
 	
 	Super::OnHealthDepleted_Implementation(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
+	Cast<AFirefightGameMode>(GetWorld()->GetAuthGameMode())->OnPlayerCharDied.Broadcast(this, PlayerController);
 }
 
 void APlayerCharacter::ThrowEquippedGrenade_Implementation()
@@ -370,12 +357,11 @@ void APlayerCharacter::EquipWeapon(AGunBase* Gun)
 {
 	Super::EquipWeapon(Gun);
 	
-	if (IsLocallyControlled())
-	{
-		GetMesh1P()->GetAnimInstance()->Montage_Play(DrawAnimation1P);
-		Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
-		//Gun->Mesh->PlayAnimation(Gun->DrawAnimation1P, false);
-	}
+
+	GetMesh1P()->GetAnimInstance()->Montage_Play(DrawAnimation1P);
+	Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
+	//Gun->Mesh->PlayAnimation(Gun->DrawAnimation1P, false);
+	
 }
 
 void APlayerCharacter::HolsterWeapon(AGunBase* Gun)
@@ -384,6 +370,29 @@ void APlayerCharacter::HolsterWeapon(AGunBase* Gun)
 
 	GetMesh1P()->GetAnimInstance()->Montage_Play(HolsterAnimation1P);
 	//Gun->Mesh->PlayAnimation(Gun->HolsterAnimation1P, false);
+}
+
+void APlayerCharacter::SwitchWeapon()
+{
+	Super::SwitchWeapon();
+
+
+	if (!(EquippedWeapon && HolsteredWeapon))
+		return;
+	HolsterWeapon(EquippedWeapon);
+	
+	if (HolsterAnimation1P)
+		GetMesh1P()->GetAnimInstance()->Montage_Play(EquippedWeapon->HolsterAnimation1P, EquippedWeapon->HolsterAnimation1P->GetPlayLength() * EquippedWeapon->HolsterSpeed);
+
+	GetWorld()->GetTimerManager().SetTimer(HolsterHandle, FTimerDelegate::CreateUObject(this, &APlayerCharacter::EquipWeapon, EquippedWeapon), EquippedWeapon->HolsterSpeed, false);
+	
+	AGunBase* TempGun = EquippedWeapon;
+	EquippedWeapon = HolsteredWeapon;
+	HolsteredWeapon = TempGun;
+
+	EquipWeapon(EquippedWeapon);
+	WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
+	
 }
 
 void APlayerCharacter::ReloadWeapon()
@@ -396,6 +405,24 @@ void APlayerCharacter::ReloadWeapon()
 void APlayerCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
+
+	//Add Input Mapping Context
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		PlayerController = PC;
+		//check(IsLocallyControlled());
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		{
+			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+		}
+		if (PlayerHUDClass && !PlayerHUD && IsLocallyControlled() ) {
+			PlayerHUD = CreateWidget<UUserWidget>(PlayerController, PlayerHUDClass);
+			PlayerHUD->AddToPlayerScreen();
+		}
+	} else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerChar not controlled by PlayerController"));
+	}
 }
 
 void APlayerCharacter::UnPossessed()

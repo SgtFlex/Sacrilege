@@ -145,6 +145,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
 	float ReloadSpeed = 3;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
+	float DrawSpeed = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
+	float HolsterSpeed = 1;
+
 	//How far left/right the gun jumps when firing a bullet
 	UPROPERTY(EditAnywhere, meta = (Category="Attributes"))
 	float HorizontalRecoil = 1;
@@ -210,6 +216,10 @@ public:
 
 	FTimerHandle BurstRetriggerHandle;
 
+	FTimerHandle DrawHandle;
+
+	FTimerHandle HolsterHandle;
+
 	bool bReloading = false;
 
 	UPROPERTY(EditAnywhere)
@@ -221,22 +231,22 @@ public:
 	UPROPERTY(EditDefaultsOnly, meta = (Category="HUD"))
 	TSubclassOf<UUserWidget> BulletWidget;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, meta = (Category="Animations"))
 	UAnimMontage* DrawAnimation1P;
 	
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, meta = (Category="Animations"))
 	UAnimMontage* HolsterAnimation1P;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, meta = (Category="Animations"))
 	UAnimMontage* FireAnimation1P;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, meta = (Category="Animations"))
 	UAnimMontage* ReloadAnimation1P;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, meta = (Category="Animations"))
 	UAnimMontage* MeleeAnimation1P;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, meta = (Category="Sound Effects"))
 	USoundBase* DrawSFX;
 
 	UPROPERTY()

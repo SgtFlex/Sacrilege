@@ -155,7 +155,7 @@ void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector Damag
 	GetMesh()->AddImpulseAtLocation(DamageForce, HitLocation, HitBoneName);
 	
 	
-	if (GetController()) GetController()->Destroy();
+	if (Cast<AAIController>(GetController())) GetController()->Destroy();
 	
 	if (EquippedWeapon)
 		DropWeapon();

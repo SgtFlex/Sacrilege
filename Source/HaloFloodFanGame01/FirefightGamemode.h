@@ -61,6 +61,12 @@ public:
 	UFUNCTION()
 	void PlayerDied(APlayerCharacter* PlayerCharacter, APlayerController* PlayerController);
 
+	UFUNCTION(BlueprintCallable)
+	void RespawnPlayer(APlayerController* PlayerController);
+
+	UFUNCTION(BlueprintCallable)
+	void EndGame();
+
 	UFUNCTION()
 	UAudioComponent* GetSoundtrackComponent();
 
@@ -90,6 +96,17 @@ public:
 
 	UPROPERTY(BlueprintReadWrite)
 	int PlayerScore = 0;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	float RespawnTime = 3;
+
+	UPROPERTY()
+	FTimerHandle RespawnTimerHandle;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	int PlayerLives = 5;
+
+	int CurPlayerLives;
 private:
 	
 
