@@ -305,7 +305,8 @@ void APlayerCharacter::OnHealthDepleted_Implementation(float Damage, FVector For
 void APlayerCharacter::ThrowEquippedGrenade_Implementation()
 {
 	if (GrenadeInventory.Num() <= 0) return;
-
+	if (ThrowGrenadeAnimation1P)
+		GetMesh1P()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation1P);
 	GrenadeInventory[CurGrenadeTypeI].GrenadeAmount -= 1;
 	const FTransform SpawnTransform = FTransform(GetFirstPersonCameraComponent()->GetForwardVector().Rotation(), GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*300);
 	FActorSpawnParameters ActorSpawnParameters;
@@ -356,42 +357,44 @@ void APlayerCharacter::SwitchGrenadeType(int Index = 0)
 void APlayerCharacter::EquipWeapon(AGunBase* Gun)
 {
 	Super::EquipWeapon(Gun);
-	
-
-	GetMesh1P()->GetAnimInstance()->Montage_Play(DrawAnimation1P);
+	if (HolsteredWeapon)
+		HolsteredWeapon->SetActorHiddenInGame(true);
+	if (Gun->DrawAnimation1P)
+		GetMesh1P()->GetAnimInstance()->Montage_Play(Gun->DrawAnimation1P, Gun->DrawAnimation1P->GetPlayLength() / Gun->DrawSpeed);
 	Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
 	//Gun->Mesh->PlayAnimation(Gun->DrawAnimation1P, false);
-	
+	WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
 }
 
 void APlayerCharacter::HolsterWeapon(AGunBase* Gun)
 {
-	Super::HolsterWeapon(Gun);
+	Gun->ReleaseTrigger();
+	GetWorldTimerManager().ClearTimer(Gun->ReloadTimer);
+	Gun->bReloading = false;
+	//Gun->SetActorHiddenInGame(true);
 
-	GetMesh1P()->GetAnimInstance()->Montage_Play(HolsterAnimation1P);
+	if (Gun->HolsterAnimation1P)
+		GetMesh1P()->GetAnimInstance()->Montage_Play(EquippedWeapon->HolsterAnimation1P, EquippedWeapon->HolsterAnimation1P->GetPlayLength() / EquippedWeapon->HolsterSpeed);
 	//Gun->Mesh->PlayAnimation(Gun->HolsterAnimation1P, false);
 }
 
 void APlayerCharacter::SwitchWeapon()
 {
-	Super::SwitchWeapon();
+	//Super::SwitchWeapon();
 
 
 	if (!(EquippedWeapon && HolsteredWeapon))
 		return;
 	HolsterWeapon(EquippedWeapon);
 	
-	if (HolsterAnimation1P)
-		GetMesh1P()->GetAnimInstance()->Montage_Play(EquippedWeapon->HolsterAnimation1P, EquippedWeapon->HolsterAnimation1P->GetPlayLength() * EquippedWeapon->HolsterSpeed);
-
-	GetWorld()->GetTimerManager().SetTimer(HolsterHandle, FTimerDelegate::CreateUObject(this, &APlayerCharacter::EquipWeapon, EquippedWeapon), EquippedWeapon->HolsterSpeed, false);
 	
 	AGunBase* TempGun = EquippedWeapon;
 	EquippedWeapon = HolsteredWeapon;
 	HolsteredWeapon = TempGun;
 
-	EquipWeapon(EquippedWeapon);
-	WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
+	GetWorld()->GetTimerManager().SetTimer(HolsterHandle, FTimerDelegate::CreateUObject(this, &APlayerCharacter::EquipWeapon, EquippedWeapon), HolsteredWeapon->HolsterSpeed, false);
+	//EquipWeapon(EquippedWeapon);
+	//WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
 	
 }
 

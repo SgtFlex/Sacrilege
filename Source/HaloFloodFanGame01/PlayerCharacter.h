@@ -128,7 +128,7 @@ public:
 	virtual void HolsterWeapon(AGunBase* Gun) override;
 
 	virtual void SwitchWeapon() override;
-
+	
 	virtual void ReloadWeapon() override;
 
 	/** Returns Mesh1P subobject **/
@@ -193,14 +193,17 @@ public:
 	UPROPERTY(EditAnywhere, Category="Loadout")
 	int32 IncenCount = 0;
 
-	UPROPERTY(EditDefaultsOnly)
-	UAnimMontage* DrawAnimation1P;
+	// UPROPERTY(EditDefaultsOnly)
+	// UAnimMontage* DrawAnimation1P;
+	//
+	// UPROPERTY(EditDefaultsOnly)
+	// UAnimMontage* HolsterAnimation1P;
+	//
+	// UPROPERTY(EditDefaultsOnly)
+	// UAnimMontage* FireAnimation1P;
 
 	UPROPERTY(EditDefaultsOnly)
-	UAnimMontage* HolsterAnimation1P;
-
-	UPROPERTY(EditDefaultsOnly)
-	UAnimMontage* FireAnimation1P;
+	UAnimMontage* ThrowGrenadeAnimation1P;
 
 	UPROPERTY()
 	TArray<AActor*> InteractableActors;
