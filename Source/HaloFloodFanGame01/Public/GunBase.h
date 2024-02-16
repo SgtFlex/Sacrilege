@@ -251,8 +251,12 @@ public:
 
 	UPROPERTY()
 	FTimerHandle ReloadTimer;
+
+	UPROPERTY(EditDefaultsOnly)
+	UForceFeedbackEffect* FireFeedback;
 private:
-	
+	UPROPERTY()
+	ACharacterBase* CharacterOwner;
 	
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AActor> ImpactDecal;

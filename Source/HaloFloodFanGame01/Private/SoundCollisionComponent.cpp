@@ -50,7 +50,8 @@ void USoundCollisionComponent::OnMyHit(UPrimitiveComponent* HitComponent, AActor
 
 		//UE_LOG(LogTemp, Warning, TEXT("%f"), AngleDifference);
 		if (HitComponent->GetComponentVelocity().Length() > 150 && AngleDifference < 85) {
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, Hit.ImpactPoint, FMath::Max(1, HitComponent->GetComponentVelocity().Length() / 250));
+			if (HitSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, Hit.ImpactPoint, FMath::Max(1, HitComponent->GetComponentVelocity().Length() / 250));
+			//if (ImpactShake) UGameplayStatics::PlayWorldCameraShake(GetWorld(), ImpactShake, GetOwner()->GetActorLocation(), 0, 500);
 		}
 	}
 }

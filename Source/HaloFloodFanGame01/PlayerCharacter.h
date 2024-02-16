@@ -77,6 +77,9 @@ class APlayerCharacter : public ACharacterBase
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* UseEquipmentAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* CrouchAction;
+
 	UPROPERTY()
 	UEnhancedInputComponent* EnhancedInputComponent;
 
@@ -103,6 +106,8 @@ protected:
 public:	
 	UFUNCTION(BlueprintGetter)
 	FHitResult GetPlayerAim();
+
+	void CalculateAimAssist();
 	
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -130,7 +135,7 @@ public:
 	virtual void SwitchWeapon() override;
 	
 	virtual void ReloadWeapon() override;
-
+	
 	/** Returns Mesh1P subobject **/
 	UFUNCTION(BlueprintCallable)
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }

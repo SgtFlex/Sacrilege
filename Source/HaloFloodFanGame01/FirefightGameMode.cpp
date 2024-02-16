@@ -242,6 +242,7 @@ void AFirefightGameMode::RespawnPlayer(APlayerController* PlayerController)
 void AFirefightGameMode::EndGame()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Game ended"));
+	//GetWorld()->GetPlay
 	RestartGame();
 }
 

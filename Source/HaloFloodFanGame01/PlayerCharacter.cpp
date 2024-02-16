@@ -99,6 +99,11 @@ FHitResult APlayerCharacter::GetPlayerAim()
 	return PlayerAim;
 }
 
+void APlayerCharacter::CalculateAimAssist()
+{
+	
+}
+
 
 //////////////////////////////////////////////////////////////////////////// Input
 
@@ -161,9 +166,18 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 	// Server_Look(LookAxisVector.Y);
 	if (Controller != nullptr)
 	{
+		FHitResult Aim = GetPlayerAim();
+		float AimAssistMultiplier = 1;
+		if (Aim.bBlockingHit && Cast<ACharacterBase>(Aim.GetActor()))
+		{
+			AimAssistMultiplier = 0.25;
+		} else
+		{
+			AimAssistMultiplier = 1;
+		}
 		// add yaw and pitch input to controller
-		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
+		AddControllerYawInput(LookAxisVector.X * AimAssistMultiplier);
+		AddControllerPitchInput(LookAxisVector.Y * AimAssistMultiplier);
 		//Mesh1P->AddLocalRotation(FRotator(0, 0, -LookAxisVector.Y));
 	}
 }
@@ -401,8 +415,6 @@ void APlayerCharacter::SwitchWeapon()
 void APlayerCharacter::ReloadWeapon()
 {
 	Super::ReloadWeapon();
-	UE_LOG(LogTemp, Warning, TEXT("Play length: %f"), EquippedWeapon->ReloadAnimation1P->GetPlayLength());
-	GetMesh1P()->GetAnimInstance()->Montage_Play(EquippedWeapon->ReloadAnimation1P,   EquippedWeapon->ReloadAnimation1P->GetPlayLength() / EquippedWeapon->ReloadSpeed);
 }
 
 void APlayerCharacter::PossessedBy(AController* NewController)

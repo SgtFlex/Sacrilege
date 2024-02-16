@@ -48,6 +48,7 @@ void AGunBase::Tick(float DeltaTime)
 void AGunBase::OnPickup(ACharacterBase* Char)
 {
 	SetOwner(Char);
+	CharacterOwner = Char;
 	Cast<AHaloGameState>(GetWorld()->GetGameState())->StopManagingWeapon(this);
 }
 
@@ -62,6 +63,7 @@ void AGunBase::OnDropped()
 	GetWorldTimerManager().ClearTimer(ReloadTimer);
 	bReloading = false;
 	SetOwner(nullptr);
+	CharacterOwner = nullptr;
 	if (CurMagazine + CurReserve <= 0)
 	{
 		//Disable collision query responses to prevent being picked up.
@@ -86,6 +88,8 @@ void AGunBase::Multi_StartReload_Implementation()
 	bReloading = true;
 	if (BurstAmount > 0) GetWorldTimerManager().ClearTimer(FireHandle);
 	GetWorld()->GetTimerManager().SetTimer(ReloadTimer, this, &AGunBase::FinishReload, ReloadSpeed, false);
+	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(CharacterOwner))
+		PlayerChar->GetMesh1P()->GetAnimInstance()->Montage_Play(ReloadAnimation1P,   ReloadAnimation1P->GetPlayLength() / ReloadSpeed);
 	if (ReloadSound) UGameplayStatics::SpawnSoundAttached(ReloadSound, GetRootComponent());
 }
 
@@ -161,7 +165,7 @@ void AGunBase::GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon)
 
 bool AGunBase::CanFire()
 {
-	return bReloading || CurMagazine <= 0;
+	return !(bReloading || CurMagazine <= 0);
 }
 
 void AGunBase::SpawnBullet_Implementation()
@@ -171,7 +175,12 @@ void AGunBase::SpawnBullet_Implementation()
 	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, OwningChar, 0.0f);
 	if (OwningChar->FiringAnim) OwningChar->GetMesh()->GetAnimInstance()->Montage_Play(OwningChar->FiringAnim);
 	APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetOwner());
-		if (PlayerChar && FireAnimation1P) PlayerChar->GetMesh1P()->GetAnimInstance()->Montage_Play(FireAnimation1P);
+	if (PlayerChar)
+	{
+		if (FireAnimation1P) PlayerChar->GetMesh1P()->GetAnimInstance()->Montage_Play(FireAnimation1P);
+		if (APlayerController* PC = Cast<APlayerController>(PlayerChar->GetController())) PC->ClientPlayForceFeedback(FireFeedback);
+	}
+	
 	for (int i = 0; i < MultiShot; ++i)
 	{
 		if (ProjectileClass)
@@ -237,7 +246,7 @@ void AGunBase::SpawnMuzzleFX()
 
 void AGunBase::Fire_Implementation()
 {
-	if (CanFire())
+	if (!CanFire())
 	{
 		ReleaseTrigger();
 		return;

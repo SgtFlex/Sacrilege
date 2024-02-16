@@ -36,4 +36,7 @@ public:
 
 	UPROPERTY()
 	UPrimitiveComponent* PrimitiveComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<UCameraShakeBase> ImpactShake;
 };

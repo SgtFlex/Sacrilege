@@ -8,6 +8,7 @@
 #include "GameFramework/Actor.h"
 #include "GrenadeBase.generated.h"
 
+class UForceFeedbackAttenuation;
 class USphereComponent;
 class UImage;
 class UProjectileMovementComponent;
@@ -74,7 +75,11 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	UMaterialInterface* ExplosionDecal;
 
+	UPROPERTY(EditDefaultsOnly)
+	UForceFeedbackEffect* ExplosionFeedback;
 
+	UPROPERTY(EditDefaultsOnly)
+	UForceFeedbackAttenuation* ExplosionFeedbackAttenuation;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

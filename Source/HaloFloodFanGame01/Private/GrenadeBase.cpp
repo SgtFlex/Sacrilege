@@ -55,12 +55,13 @@ void AGrenadeBase::Explode_Implementation()
 	if (ExplosionPFX) UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ExplosionPFX, GetActorLocation());
 	TArray<AActor*> ActorsToIgnore;
 	UMyCustomBlueprintFunctionLibrary::FireExplosion(GetWorld(), ActorsToIgnore, GetActorLocation(), MaxExplosionDamage, MinExplosionDamage, OuterExplosionRadius, InnerExplosionRadius, ExplosionDamageFalloff, ExplosionForce, this, GetInstigatorController());
+	UGameplayStatics::SpawnForceFeedbackAtLocation(GetWorld(), ExplosionFeedback, GetActorLocation(), FRotator::ZeroRotator, false, 1, 0, ExplosionFeedbackAttenuation);
 	// ADecalActor* DecalActor = GetWorld()->SpawnActor<ADecalActor>(ADecalActor::StaticClass(), GetActorLocation(), FRotator(0,0,0));
 	// DecalActor->SetDecalMaterial(ExplosionDecal);
 	// DecalActor->GetDecal()->DecalSize = FVector(512, 512, 512);
 	Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAtLocation(GetWorld(), ExplosionDecal, FVector(512, 512, 512), GetActorLocation()));
 	Destroy();
-}
+} 
 
 void AGrenadeBase::SetArmed_Implementation(bool NewArmed)
 {
