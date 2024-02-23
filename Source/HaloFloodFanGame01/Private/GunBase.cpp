@@ -2,11 +2,13 @@
 
 #include "GunBase.h"
 
+#include "GrenadeWidget.h"
 #include "HaloGameState.h"
 #include "MyCustomBlueprintFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "VectorTypes.h"
+#include "Camera/CameraComponent.h"
 #include "Components/Image.h"
 #include "Engine/DamageEvents.h"
 #include "HaloFloodFanGame01/PlayerCharacter.h"
@@ -61,6 +63,7 @@ void AGunBase::OnDropped()
 {
 	
 	GetWorldTimerManager().ClearTimer(ReloadTimer);
+	ScopeOut();
 	bReloading = false;
 	SetOwner(nullptr);
 	CharacterOwner = nullptr;
@@ -85,6 +88,7 @@ void AGunBase::Server_StartReload_Implementation()
 void AGunBase::Multi_StartReload_Implementation()
 {
 	if (bReloading || CurReserve <= 0 || CurMagazine == MaxMagazine) return;
+	ScopeOut();
 	bReloading = true;
 	if (BurstAmount > 0) GetWorldTimerManager().ClearTimer(FireHandle);
 	GetWorld()->GetTimerManager().SetTimer(ReloadTimer, this, &AGunBase::FinishReload, ReloadSpeed, false);
@@ -170,12 +174,14 @@ bool AGunBase::CanFire()
 
 void AGunBase::SpawnBullet_Implementation()
 {
-	ACharacterBase* OwningChar = Cast<ACharacterBase>(GetOwner());
-	if (!OwningChar) return;
-	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, OwningChar, 0.0f);
-	if (OwningChar->FiringAnim) OwningChar->GetMesh()->GetAnimInstance()->Montage_Play(OwningChar->FiringAnim);
-	APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetOwner());
-	if (PlayerChar)
+	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, GetOwner(), 0.0f);
+	APawn* OwningPawn = Cast<APawn>(GetOwner());
+	if (ACharacterBase* OwningChar = Cast<ACharacterBase>(GetOwner()))
+	{
+		OwningChar->GetMesh()->GetAnimInstance()->Montage_Play(OwningChar->FiringAnim);
+	}
+	
+	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetOwner()))
 	{
 		if (FireAnimation1P) PlayerChar->GetMesh1P()->GetAnimInstance()->Montage_Play(FireAnimation1P);
 		if (APlayerController* PC = Cast<APlayerController>(PlayerChar->GetController())) PC->ClientPlayForceFeedback(FireFeedback);
@@ -186,7 +192,14 @@ void AGunBase::SpawnBullet_Implementation()
 		if (ProjectileClass)
 		{
 			FVector Location = Mesh->DoesSocketExist("Muzzle") ? Mesh->GetSocketLocation("Muzzle") : GetActorLocation() + GetActorForwardVector()*50000.0f;
-			FRotator Rotation = OwningChar->GetBaseAimRotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
+			FRotator Rotation;
+			if (OwningPawn)
+			{
+				Rotation = OwningPawn->GetBaseAimRotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
+			} else
+			{
+				Rotation = GetActorRotation();
+			}
 			FActorSpawnParameters ActorSpawnParameters;
 			ActorSpawnParameters.Owner = this;
 			ActorSpawnParameters.Instigator = Cast<ACharacterBase>(this->GetOwner());
@@ -196,14 +209,29 @@ void AGunBase::SpawnBullet_Implementation()
 			FHitResult Hit;
 			FVector TraceStart;
 			FRotator EyeRotation;
-			OwningChar->GetActorEyesViewPoint(TraceStart, EyeRotation);
-			EyeRotation = OwningChar->GetBaseAimRotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);;
+			if (OwningPawn && OwningPawn->GetController())
+			{
+				OwningPawn->GetController()->GetPlayerViewPoint(TraceStart, EyeRotation);
+				EyeRotation = EyeRotation + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
+				//OwningPawn->GetActorEyesViewPoint(TraceStart, EyeRotation);
+				//EyeRotation = OwningPawn->GetBaseAimRotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
+
+			} else
+			{
+				TraceStart = GetActorLocation();
+				EyeRotation = GetActorRotation();
+			}
+			
 			TArray<AActor*> ActorsToIgnore;
 			ActorsToIgnore.Add(this);
 			ActorsToIgnore.Add(GetOwner());
 			// The actual bullet trace, with a width for accuracy forgiveness
 			//UKismetSystemLibrary::SphereTraceSingle(GetWorld(), TraceStart, TraceEnd, 20, UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Camera), false, ActorsToIgnore, EDrawDebugTrace::None, Hit, true, FLinearColor::Red, FLinearColor::Green, 5);
-			AController* EventInstigator = Cast<APawn>(GetOwner())->GetController();
+			AController* EventInstigator = nullptr;
+			if (OwningPawn)
+			{
+				EventInstigator = OwningPawn->GetController();
+			}
 			UMyCustomBlueprintFunctionLibrary::FireHitScanBullet(Hit, GetWorld(), ActorsToIgnore, TraceStart, EyeRotation.Vector(), Range, FalloffCurve, Damage, Force, this, EventInstigator);
 			if (Mesh->DoesSocketExist("Muzzle") && TrailPFX)
 			{
@@ -240,8 +268,33 @@ void AGunBase::SpawnMuzzleFX()
 			Cast<APlayerController>(Char->GetController())->PlayerCameraManager->StartCameraShake(FiringCameraShake, 1, ECameraShakePlaySpace::CameraLocal);
 	if (FiringSound)
 		UGameplayStatics::SpawnSoundAttached(FiringSound, GetRootComponent());
-	if (Mesh->DoesSocketExist("Muzzle") && MuzzlePFX)
+	if (Mesh->DoesSocketExist("Muzzle") && MuzzlePFX && !ScopeActive)
 		UNiagaraFunctionLibrary::SpawnSystemAttached(MuzzlePFX, Mesh, "Muzzle", FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
+}
+
+void AGunBase::ScopeIn_Implementation()
+{
+	if (ScopeActive) return;
+	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetOwner()))
+	{
+		ScopeActive = true;
+		ScopeOverlay = CreateWidget<UUserWidget>(Cast<APlayerController>(PlayerChar->GetController()), ScopeWidget);
+		ScopeOverlay->AddToPlayerScreen();
+		//PlayerChar->GetFirstPersonCameraComponent()->SetFieldOfView(10);
+		if (ScopeInSFX) UGameplayStatics::PlaySound2D(GetWorld(), ScopeInSFX);
+	}
+}
+
+void AGunBase::ScopeOut_Implementation()
+{
+	if (!ScopeActive) return;
+	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetOwner()))
+	{
+		ScopeOverlay->RemoveFromParent();
+		//PlayerChar->GetFirstPersonCameraComponent()->SetFieldOfView(90);
+		ScopeActive = false;
+		if (ScopeOutSFX) UGameplayStatics::PlaySound2D(GetWorld(), ScopeOutSFX);
+	}
 }
 
 void AGunBase::Fire_Implementation()

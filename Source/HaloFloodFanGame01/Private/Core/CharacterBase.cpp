@@ -42,17 +42,31 @@ void ACharacterBase::BeginPlay()
 	Super::BeginPlay();
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ACharacterBase::OnHit);
 
-	if (EquippedWeaponClass && HasAuthority())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Spawned weapon!"));
-		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(EquippedWeaponClass)));
-	}
-
 	GetMesh()->OnComponentSleep.AddDynamic(this, &ACharacterBase::RagdollSettled);
-
+	//SpawnWeapons();
 	//UE_LOG(LogTemp, Warning, TEXT("Char: %s %f"), *GetActorLabel(), GetHealthComponent()->GetHealth());
 	//if (GetHealthComponent()) UE_LOG(LogTemp, Warning, TEXT("%s's Health component is owned by %s (Should be %s)"), *GetActorLabel(), *GetHealthComponent()->GetOwner()->GetActorLabel(), *GetActorLabel());
 	if (GetHealthComponent()) GetHealthComponent()->OnHealthDepleted.AddDynamic(this, &ACharacterBase::OnHealthDepleted);	
+}
+
+void ACharacterBase::Restart()
+{
+	Super::Restart();
+
+	SpawnWeapons();
+	Cast<IGenericTeamAgentInterface>(GetController())->SetGenericTeamId(FGenericTeamId(TeamId));
+}
+
+void ACharacterBase::SpawnWeapons()
+{
+	if (EquippedWeaponClass)
+	{
+		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(EquippedWeaponClass)));
+	}
+	if (HolsteredWeapon)
+	{
+		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(HolsteredWeaponClass)));
+	}
 }
 
 // Called every frame
@@ -274,6 +288,7 @@ void ACharacterBase::ThrowEquippedGrenade_Implementation()
 	AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActor(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, &EyesLoc));
 	Grenade->SetInstigator(this);
 	Grenade->SetArmed(true);
+	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Grenade->ThrowSFX, Grenade->GetActorLocation());
 	FVector Force = GetBaseAimRotation().Vector() + FVector(0,0,0.1);
 	Grenade->Mesh->AddImpulse(Force*20000);
 }

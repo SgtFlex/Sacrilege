@@ -237,14 +237,17 @@ void UPlayerHUD::DetermineCrosshairColor()
 	{
 		if (ACharacterBase* Char = Cast<ACharacterBase>(PlayerAim.GetActor()))
 		{
-			if (Char->TeamId == PlayerCharacter->TeamId)
+			if (Char->GetHealthComponent()->IsAlive())
 			{
-				SetCrosshairType(3);
-				return;
-			} else
-			{
-				SetCrosshairType(4);
-				return;
+				if (Char->TeamId == PlayerCharacter->TeamId)
+				{
+					SetCrosshairType(3);
+					return;
+				} else
+				{
+					SetCrosshairType(4);
+					return;
+				}
 			}
 		}
 	}

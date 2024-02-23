@@ -8,6 +8,7 @@
 #include "Core/CharacterBase.h"
 #include "PlayerCharacter.generated.h"
 
+enum class EHardwareDevicePrimaryType : uint8;
 class UInteractableInterface;
 class IInteractableInterface;
 class USphereComponent;
@@ -80,6 +81,9 @@ class APlayerCharacter : public ACharacterBase
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* CrouchAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* ScopeAction;
+
 	UPROPERTY()
 	UEnhancedInputComponent* EnhancedInputComponent;
 
@@ -103,11 +107,13 @@ protected:
 
 	virtual void Tick(float DeltaSeconds) override;
 
-public:	
+public:
+	virtual void SpawnWeapons() override;
+	
 	UFUNCTION(BlueprintGetter)
 	FHitResult GetPlayerAim();
 
-	void CalculateAimAssist();
+	float AimAssist();
 	
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -135,6 +141,8 @@ public:
 	virtual void SwitchWeapon() override;
 	
 	virtual void ReloadWeapon() override;
+
+	virtual void ScopeWeapon();
 	
 	/** Returns Mesh1P subobject **/
 	UFUNCTION(BlueprintCallable)
@@ -225,5 +233,8 @@ private:
 	UCurveFloat* MeleeCurve;
 
 	FHitResult PlayerAim;
+
+	UPROPERTY()
+	UInputDeviceSubsystem* InputDeviceSubsystem;
 };
 

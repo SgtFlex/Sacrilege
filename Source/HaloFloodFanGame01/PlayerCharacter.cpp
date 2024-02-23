@@ -10,12 +10,15 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "FirefightGamemode.h"
+#include "HaloPlayerState.h"
 #include "InteractableInterface.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/SphereComponent.h"
 #include "Components/TimelineComponent.h"
 #include "Engine/DamageEvents.h"
+#include "GameFramework/InputDeviceSubsystem.h"
 #include "GameFramework/SpectatorPawn.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 
@@ -78,10 +81,23 @@ void APlayerCharacter::BeginPlay()
 	InteractionSphere->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnInteractionSphereBeginOverlap);
 	InteractionSphere->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnInteractionSphereEndOverlap);
 	
-	if (HolsteredWeaponClass)
-		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(HolsteredWeaponClass)));
+	InputDeviceSubsystem = GetGameInstance()->GetEngine()->GetEngineSubsystem<UInputDeviceSubsystem>();
+}
 
-	
+void APlayerCharacter::SpawnWeapons()
+{
+	if (AHaloPlayerState* HaloPlayerState = GetPlayerState<AHaloPlayerState>())
+	{
+		TeamId = HaloPlayerState->Team;
+		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(HaloPlayerState->PrimaryWeaponClass)));
+		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(HaloPlayerState->SecondaryWeaponClass)));
+	} else
+	{
+		if (EquippedWeaponClass)
+			PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(EquippedWeaponClass)));
+		if (HolsteredWeaponClass)
+			PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(HolsteredWeaponClass)));
+	}
 }
 
 void APlayerCharacter::Tick(float DeltaSeconds)
@@ -99,10 +115,7 @@ FHitResult APlayerCharacter::GetPlayerAim()
 	return PlayerAim;
 }
 
-void APlayerCharacter::CalculateAimAssist()
-{
-	
-}
+
 
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -112,6 +125,7 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 	// Set up action bindings
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
+	
 	if (EnhancedInputComponent)
 	{
 		//Jumping
@@ -141,6 +155,8 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 		EnhancedInputComponent->BindAction(ThrowGrenadeAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ThrowEquippedGrenade);
 
 		EnhancedInputComponent->BindAction(UseEquipmentAction, ETriggerEvent::Triggered, this, &APlayerCharacter::UseEquipment);
+		
+		EnhancedInputComponent->BindAction(ScopeAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ScopeWeapon);
 	}
 }
 
@@ -156,30 +172,50 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 	}
 }
 
+float APlayerCharacter::AimAssist()
+{
+	if (Controller != nullptr && InputDeviceSubsystem->GetMostRecentlyUsedHardwareDevice(GetPlatformUserId()).PrimaryDeviceType == EHardwareDevicePrimaryType::Gamepad)
+	{
+		FHitResult Aim = GetPlayerAim();
+		if (Aim.GetActor())
+		{
+			ACharacterBase* AimedAtCharacter = Cast<ACharacterBase>(Aim.GetActor());
+			if (AimedAtCharacter && AimedAtCharacter->GetHealthComponent()->IsAlive())
+			{
+				return 0.25;
+			} else
+			{
+				return 1;
+			}
+		}
+		
+	}
+	return 1;
+}
+
 void APlayerCharacter::Look(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	
 	const FVector2D LookAxisVector = Value.Get<FVector2D>();
-
 	// Disabled for now due to incorrect pitch values in standalone
 	// Server_Look(LookAxisVector.Y);
-	if (Controller != nullptr)
+	
+	
+	float AimAssistMultiplier = AimAssist();
+	float ScopeSenseMultiplier = 1;
+	if (EquippedWeapon && EquippedWeapon->ScopeActive)
 	{
-		FHitResult Aim = GetPlayerAim();
-		float AimAssistMultiplier = 1;
-		if (Aim.bBlockingHit && Cast<ACharacterBase>(Aim.GetActor()))
-		{
-			AimAssistMultiplier = 0.25;
-		} else
-		{
-			AimAssistMultiplier = 1;
-		}
-		// add yaw and pitch input to controller
-		AddControllerYawInput(LookAxisVector.X * AimAssistMultiplier);
-		AddControllerPitchInput(LookAxisVector.Y * AimAssistMultiplier);
-		//Mesh1P->AddLocalRotation(FRotator(0, 0, -LookAxisVector.Y));
+		ScopeSenseMultiplier = (EquippedWeapon->ZoomFOV/90);
+	} else
+	{
+		ScopeSenseMultiplier = 1;
 	}
+	
+	// add yaw and pitch input to controller
+	AddControllerYawInput(LookAxisVector.X * AimAssistMultiplier * ScopeSenseMultiplier);
+	AddControllerPitchInput(LookAxisVector.Y * AimAssistMultiplier * ScopeSenseMultiplier);
+	//Mesh1P->AddLocalRotation(FRotator(0, 0, -LookAxisVector.Y));
 }
 
 void APlayerCharacter::Server_Look_Implementation(float Pitch)
@@ -306,10 +342,11 @@ void APlayerCharacter::OnHealthDepleted_Implementation(float Damage, FVector For
 		PlayerController->UnPossess();
 		if (PlayerHUD)
 			PlayerHUD->RemoveFromParent();
-		FVector Loc = GetFirstPersonCameraComponent()->GetComponentLocation();
-		FRotator Rot = GetFirstPersonCameraComponent()->GetComponentRotation();
-		ASpectatorPawn* SpectatorPawn = Cast<ASpectatorPawn>(GetWorld()->SpawnActor(ASpectatorPawn::StaticClass(), &Loc, &Rot));
-		PlayerController->Possess(SpectatorPawn);
+		// FVector Loc = GetFirstPersonCameraComponent()->GetComponentLocation();
+		// FRotator Rot = GetFirstPersonCameraComponent()->GetComponentRotation();
+		// ASpectatorPawn* SpectatorPawn = Cast<ASpectatorPawn>(GetWorld()->SpawnActor(GetWorld()->GetAuthGameMode()->SpectatorClass, &Loc, &Rot));
+		// PlayerController->Possess(SpectatorPawn);
+		// SpectatorPawn->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 	}
 	
 	Super::OnHealthDepleted_Implementation(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
@@ -332,6 +369,7 @@ void APlayerCharacter::ThrowEquippedGrenade_Implementation()
 		Grenade->SetInstigator(this);
 		Grenade->SetArmed(true);
 		Grenade->FinishSpawning(SpawnTransform);
+		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Grenade->ThrowSFX, Grenade->GetActorLocation());
 		FVector Direction = GetFirstPersonCameraComponent()->GetForwardVector() + FVector(0,0,0.15);
 		Direction.Normalize();
 		Grenade->Mesh->AddImpulse(Direction*2000.0f, NAME_None, true);
@@ -384,6 +422,7 @@ void APlayerCharacter::HolsterWeapon(AGunBase* Gun)
 {
 	Gun->ReleaseTrigger();
 	GetWorldTimerManager().ClearTimer(Gun->ReloadTimer);
+	Gun->ScopeOut();
 	Gun->bReloading = false;
 	//Gun->SetActorHiddenInGame(true);
 
@@ -405,6 +444,7 @@ void APlayerCharacter::SwitchWeapon()
 	AGunBase* TempGun = EquippedWeapon;
 	EquippedWeapon = HolsteredWeapon;
 	HolsteredWeapon = TempGun;
+	
 
 	GetWorld()->GetTimerManager().SetTimer(HolsterHandle, FTimerDelegate::CreateUObject(this, &APlayerCharacter::EquipWeapon, EquippedWeapon), HolsteredWeapon->HolsterSpeed, false);
 	//EquipWeapon(EquippedWeapon);
@@ -415,6 +455,21 @@ void APlayerCharacter::SwitchWeapon()
 void APlayerCharacter::ReloadWeapon()
 {
 	Super::ReloadWeapon();
+}
+
+void APlayerCharacter::ScopeWeapon()
+{
+	if (EquippedWeapon)
+	{
+		if (EquippedWeapon->ScopeActive)
+		{
+			EquippedWeapon->ScopeOut();
+		} else
+		{
+			EquippedWeapon->ScopeIn();
+		}
+		
+	}
 }
 
 void APlayerCharacter::PossessedBy(AController* NewController)
@@ -442,12 +497,14 @@ void APlayerCharacter::PossessedBy(AController* NewController)
 
 void APlayerCharacter::UnPossessed()
 {
-	Super::UnPossessed();
 	if (APlayerController* PC = Cast<APlayerController>(Controller))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
 		{
 			Subsystem->RemoveMappingContext(DefaultMappingContext);
+			UE_LOG(LogTemp, Warning, TEXT("Player unpossessed"));
+			
 		}
 	}
+	Super::UnPossessed();
 }

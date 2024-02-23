@@ -50,6 +50,9 @@ public:
 	float ExplosionForce = 50000;
 
 	UPROPERTY(EditAnywhere)
+	USoundBase* ThrowSFX;
+
+	UPROPERTY(EditAnywhere)
 	UNiagaraSystem* ExplosionPFX;
 
 	UPROPERTY(EditAnywhere)

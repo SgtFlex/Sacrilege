@@ -57,13 +57,13 @@ public:
 
 	void OnDropped();
 	
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void Fire();
 
 	UFUNCTION(BlueprintCallable)
 	bool CanFire();
 	
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void SpawnBullet();
 
 	UFUNCTION(BlueprintCallable)
@@ -75,7 +75,13 @@ public:
 	// UFUNCTION(NetMulticast, Reliable, WithValidation)
 	// void Multi_Fire();
 
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void ScopeIn();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void ScopeOut();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void StartReload();
 
 	UFUNCTION(Server, Reliable)
@@ -84,10 +90,10 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multi_StartReload();
 
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void FinishReload();
 
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void PullTrigger();
 
 	UFUNCTION(Server, Reliable, WithValidation)
@@ -96,7 +102,7 @@ public:
 	UFUNCTION(NetMulticast, Reliable, WithValidation)
 	void Multi_PullTrigger();
 
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void ReleaseTrigger();
 	
 	UFUNCTION(Server, Reliable, WithValidation)
@@ -201,6 +207,24 @@ public:
 
 	UPROPERTY(EditAnywhere, meta = (Category="HUD"))
 	UTexture2D* CrosshairTexture;
+
+	UPROPERTY(EditAnywhere, meta = (Category="HUD"))
+	TSubclassOf<UUserWidget> ScopeWidget;
+
+	UPROPERTY()
+	UUserWidget* ScopeOverlay;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool ScopeActive = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	USoundBase* ScopeInSFX;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	USoundBase* ScopeOutSFX;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float ZoomFOV = 20;
 	
 	UPROPERTY(EditAnywhere, meta = (Category="HUD"))
 	UTexture2D* WeaponIcon;

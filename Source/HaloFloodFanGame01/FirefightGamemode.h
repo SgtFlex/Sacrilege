@@ -6,6 +6,7 @@
 #include "GameFramework/GameMode.h"
 #include "FirefightGamemode.generated.h"
 
+class AGunBase;
 class ACharacterBase;
 class AAISpawner;
 class APlayerCharacter;
@@ -34,6 +35,8 @@ class AFirefightGameMode : public AGameMode
 public:
 	AFirefightGameMode();
 
+
+	
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
@@ -58,8 +61,11 @@ public:
 	UFUNCTION(BlueprintGetter)
 	int GetPlayerScore(APlayerController* PlayerController);
 
-	UFUNCTION()
+	UFUNCTION(BlueprintNativeEvent)
 	void PlayerDied(APlayerCharacter* PlayerCharacter, APlayerController* PlayerController);
+
+	UFUNCTION(BlueprintCallable)
+	bool FinishSpawning(APlayerController* PlayerController, uint8 Team = 0, TSubclassOf<AGunBase> PrimaryWeaponClass = nullptr, TSubclassOf<AGunBase> SecondaryWeaponClass = nullptr);
 
 	UFUNCTION(BlueprintCallable)
 	void RespawnPlayer(APlayerController* PlayerController);
@@ -69,6 +75,11 @@ public:
 
 	UFUNCTION()
 	UAudioComponent* GetSoundtrackComponent();
+
+	void HandleMatchHasStarted() override;
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void AddLoadoutScreen(APlayerController* PlayerController, FTimerHandle RespawnTimer);
 
 public:
 	FTimerHandle SetFinishDelayTimer;
@@ -100,13 +111,19 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	float RespawnTime = 3;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	FTimerHandle RespawnTimerHandle;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int PlayerLives = 5;
 
 	int CurPlayerLives;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TArray<TSubclassOf<AGunBase>> PrimaryWeaponClasses;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TArray<TSubclassOf<AGunBase>> SecondaryWeaponClasses;
 private:
 	
 
@@ -140,6 +157,9 @@ public:
 
 	UPROPERTY()
 	UAudioComponent* SoundtrackComponent;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> LoadoutScreenClass;
 };
 
 

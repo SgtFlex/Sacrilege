@@ -3,9 +3,14 @@
 #include "FirefightGamemode.h"
 
 #include "AISpawner.h"
+#include "GrenadeWidget.h"
+#include "GunBase.h"
+#include "HaloPlayerState.h"
 #include "PlayerCharacter.h"
 #include "Components/AudioComponent.h"
 #include "Core/CharacterBase.h"
+#include "GameFramework/CheatManager.h"
+#include "GameFramework/GameSession.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet\GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
@@ -217,20 +222,51 @@ int AFirefightGameMode::GetPlayerScore(APlayerController* PlayerController)
 	//PlayerCharDied.Broadcast
 }
 
-void AFirefightGameMode::PlayerDied(APlayerCharacter* PlayerCharacter, APlayerController* PlayerController)
+void AFirefightGameMode::PlayerDied_Implementation(APlayerCharacter* PlayerCharacter, APlayerController* PlayerController)
 {
 	//UE_LOG(LogTemp, Warning, TEXT("Attempted to respawn player %s from character %s"), *PlayerCharacter->GetActorLabel(), *PlayerController->GetActorLabel());
-	FTimerDelegate TimerDelegate;
-	TimerDelegate.BindUFunction(this, FName("RespawnPlayer"), PlayerController);
+	//FTimerDelegate TimerDelegate;
+	//TimerDelegate.BindUFunction(this, FName("RespawnPlayer"), PlayerController);
 	if (CurPlayerLives > 0)
 	{
 		CurPlayerLives--;
-		GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, TimerDelegate, RespawnTime, false);
+		//GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, TimerDelegate, RespawnTime, false);
+		GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, RespawnTime, false);
+		AddLoadoutScreen(PlayerController, RespawnTimerHandle);
+		// UUserWidget* LoadoutWidget = CreateWidget<UUserWidget>(PlayerController, LoadoutScreenClass);
+		// LoadoutWidget->AddToPlayerScreen();
 	} else
 	{
 		EndGame();
 	}
-	
+}
+
+bool AFirefightGameMode::FinishSpawning(APlayerController* PlayerController, uint8 Team, TSubclassOf<AGunBase> PrimaryWeaponClass, TSubclassOf<AGunBase> SecondaryWeaponClass)
+{
+	AHaloPlayerState* HaloPlayerState = PlayerController->GetPlayerState<AHaloPlayerState>();
+	if (HaloPlayerState)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("Got player state"));
+		HaloPlayerState->Team = Team;
+		if (PrimaryWeaponClass)
+		{
+			HaloPlayerState->PrimaryWeaponClass = PrimaryWeaponClass;
+		}
+			
+		if (SecondaryWeaponClass)
+		{
+			HaloPlayerState->SecondaryWeaponClass = SecondaryWeaponClass;
+		}
+			
+	}
+	if (GetWorld()->GetTimerManager().TimerExists(RespawnTimerHandle))
+	{
+		return false;
+	} else
+	{
+		RespawnPlayer(PlayerController);
+		return true;
+	}
 }
 
 void AFirefightGameMode::RespawnPlayer(APlayerController* PlayerController)
@@ -250,4 +286,50 @@ UAudioComponent* AFirefightGameMode::GetSoundtrackComponent()
 {
 	return SoundtrackComponent;
 	
+}
+
+void AFirefightGameMode::HandleMatchHasStarted()
+{
+	GameSession->HandleMatchHasStarted();
+
+	// start human players first
+	for( FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator )
+	{
+		APlayerController* PlayerController = Iterator->Get();
+		if (PlayerController && (PlayerController->GetPawn() == nullptr) && PlayerCanRestart(PlayerController))
+		{
+			GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, RespawnTime, false);
+			AddLoadoutScreen(PlayerController, RespawnTimerHandle);
+			//RestartPlayer(PlayerController);
+		}
+	}
+
+	// Make sure level streaming is up to date before triggering NotifyMatchStarted
+	GEngine->BlockTillLevelStreamingCompleted(GetWorld());
+
+	// First fire BeginPlay, if we haven't already in waiting to start match
+	GetWorldSettings()->NotifyBeginPlay();
+
+	// Then fire off match started
+	GetWorldSettings()->NotifyMatchStarted();
+
+	// if passed in bug info, send player to right location
+	const FString BugLocString = UGameplayStatics::ParseOption(OptionsString, TEXT("BugLoc"));
+	const FString BugRotString = UGameplayStatics::ParseOption(OptionsString, TEXT("BugRot"));
+	if( !BugLocString.IsEmpty() || !BugRotString.IsEmpty() )
+	{
+		for( FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator )
+		{
+			APlayerController* PlayerController = Iterator->Get();
+			if (PlayerController &&  PlayerController->CheatManager != nullptr)
+			{
+				PlayerController->CheatManager->BugItGoString( BugLocString, BugRotString );
+			}
+		}
+	}
+
+	if (IsHandlingReplays() && GetGameInstance() != nullptr)
+	{
+		GetGameInstance()->StartRecordingReplay(GetWorld()->GetMapName(), GetWorld()->GetMapName());
+	}
 }
