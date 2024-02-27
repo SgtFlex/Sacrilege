@@ -70,7 +70,8 @@ void APDA::Tick(float DeltaTime)
 	if (bIsPreviewing && PreviewActor)
 	{
 		FVector Location = Pawn->GetActorLocation() + (UKismetMathLibrary::GetForwardVector(Pawn->GetBaseAimRotation())*500);
-		PreviewActor->SetActorTransform(UKismetMathLibrary::MakeTransform(Location, FRotator(0,0,0)));
+		float Yaw = Pawn->GetControlRotation().Yaw;
+		PreviewActor->SetActorTransform(UKismetMathLibrary::MakeTransform(Location, FRotator(0, Yaw, 0)));
 	}
 }
 
@@ -130,7 +131,9 @@ AActor* APDA::BuildItem(FBuyable Buyable)
 		if (PreviewActor)
 		{
 			FTransform Transform = PreviewActor->GetTransform();
-			SpawnedBuyable = GetWorld()->SpawnActor(Buyable.SpawnableActor, &Transform);
+			FActorSpawnParameters ActorSpawnParameters = FActorSpawnParameters();
+			ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			SpawnedBuyable = GetWorld()->SpawnActor(Buyable.SpawnableActor, &Transform, ActorSpawnParameters);
 		}
 		if (SpawnedBuyable) GameMode->SetPlayerResource(PlayerController, GameMode->GetPlayerResource(PlayerController) - Buyable.Cost);
 		return SpawnedBuyable;

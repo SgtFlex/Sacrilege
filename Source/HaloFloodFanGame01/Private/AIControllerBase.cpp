@@ -110,16 +110,19 @@ ETeamAttitude::Type AAIControllerBase::GetTeamAttitudeTowards(const AActor& Othe
 {
 	//return Super::GetTeamAttitudeTowards(Other);
 	if (const APawn* OtherPawn = Cast<APawn>(&Other)) {
+
 		if (const IGenericTeamAgentInterface* TeamAgent = Cast<IGenericTeamAgentInterface>(OtherPawn->GetController()))
 		{
-			if (TeamAgent->GetGenericTeamId().GetId() == 0)
+			//UE_LOG(LogTemp, Warning, TEXT("%s get attitude"), *Other.GetActorLabel());
+			if (TeamAgent->GetGenericTeamId().GetId() == 0 || TeamAgent->GetGenericTeamId() == 255)
 				return ETeamAttitude::Neutral;
 			else if (TeamAgent->GetGenericTeamId().GetId() == GetGenericTeamId().GetId())
 				return ETeamAttitude::Friendly;
 			else
 				return ETeamAttitude::Hostile;
-			return Super::GetTeamAttitudeTowards(Other);
+			//return Super::GetTeamAttitudeTowards(Other);
 		}
+		
 	}
 	return ETeamAttitude::Neutral;
 }
@@ -136,7 +139,7 @@ void AAIControllerBase::SetSmartObject(ASmartObject* SmartObject)
 
 void AAIControllerBase::UpdatedPerception(AActor* Actor, FAIStimulus Stimulus, bool AlertedByAllies)
 {
-
+	//UE_LOG(LogTemp, Warning, TEXT("Attitude towards: %s %s"), *Actor->GetActorLabel(), *UEnum::GetValueAsString(GetTeamAttitudeTowards(*Actor)));
 	if (GetTeamAttitudeTowards(*Actor)!=ETeamAttitude::Hostile)
 	{
 		return;
