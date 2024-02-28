@@ -29,7 +29,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	
-	virtual void OnInteract_Implementation(APlayerCharacter* Character) override;
+	//virtual void OnInteract_Implementation(APlayerCharacter* Character) override;
 
 	virtual void EnterSeat(ACharacterBase* Character);
 

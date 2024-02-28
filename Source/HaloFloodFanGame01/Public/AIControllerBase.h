@@ -91,8 +91,8 @@ public:
 	UPROPERTY()
 	class UAISenseConfig_Touch* Touch;
 
-	//UPROPERTY(EditAnywhere, meta = (DeprecatedProperty))
-	//uint8 TeamNumber = 2;
+	UPROPERTY(EditAnywhere, meta = (DeprecatedProperty))
+	uint8 TeamNumber = 2;
 
 	UPROPERTY(EditAnywhere)
 	TArray<AActor*> KnownEnemies;

@@ -111,7 +111,7 @@ public:
 	UFUNCTION(NetMulticast, Reliable, WithValidation)
 	void Multi_ReleaseTrigger();
 	
-	virtual void OnInteract_Implementation(APlayerCharacter* Character) override;
+	virtual void OnInteract_Implementation(ACharacterBase* Character) override;
 
 	virtual void GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon) override;
 

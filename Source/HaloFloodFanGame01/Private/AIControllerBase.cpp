@@ -39,6 +39,8 @@ void AAIControllerBase::BeginPlay()
 	Super::BeginPlay();
 	if (ACharacterBase* Char = Cast<ACharacterBase>(GetPawn()))
 		SetGenericTeamId(FGenericTeamId(Char->TeamId));
+	else
+		SetGenericTeamId(FGenericTeamId(TeamNumber));
 	GetWorldTimerManager().SetTimer(Delay, this, &AAIControllerBase::BeginPlayDelayed, 0.1f, false);
 	BehaviorTreeComp->StartLogic();
 	
@@ -89,6 +91,8 @@ void AAIControllerBase::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 	if (ACharacterBase* Char = Cast<ACharacterBase>(InPawn))
 		SetGenericTeamId(Char->TeamId);
+	else
+		SetGenericTeamId(FGenericTeamId(TeamNumber));
 	
 }
 
@@ -192,6 +196,10 @@ void AAIControllerBase::UpdateTargetedEnemy(AActor* Actor)
 		{
 			BlackboardComp->SetValueAsEnum(TEXT("AlertState"), EAlertState::Alerted);
 			BlackboardComp->SetValueAsObject(TEXT("Enemy"), ClosestEnemy);
+			// if (ACharacterBase* EnemyChar = Cast<ACharacterBase>(ClosestEnemy))
+			// {
+			// 	EnemyChar->OnKilled.AddDynamic(this, &AAIControllerBase::UpdateTargetedEnemy);
+			// }
 			BlackboardComp->SetValueAsVector(TEXT("StimulusLocation"), ClosestEnemy->GetActorLocation());
 			return;
 		}
@@ -219,7 +227,7 @@ void AAIControllerBase::AlertAllies(float AlertRadius, AActor* Actor, FAIStimulu
 	TArray<AActor*> Actors;
 	TArray<TEnumAsByte<EObjectTypeQuery>> Objects;
 	TArray<AActor*> ActorsToIgnore;
-	ActorsToIgnore.Add(this->GetPawn());
+	ActorsToIgnore.Add(GetPawn());
 	UKismetSystemLibrary::SphereOverlapActors(GetWorld(), GetPawn()->GetActorLocation(), AlertRadius, Objects, ACharacterBase::StaticClass(), ActorsToIgnore, Actors);
 	for (auto FoundActor : Actors)
 	{
@@ -240,5 +248,6 @@ void AAIControllerBase::AlertAllies(float AlertRadius, AActor* Actor, FAIStimulu
 
 void AAIControllerBase::OnPerceptionUpdated_Implementation(AActor* Actor, FAIStimulus Stimulus)
 {
+	if (!GetPawn()) return;
 	UpdatedPerception(Actor, Stimulus);
 }

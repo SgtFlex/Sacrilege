@@ -152,7 +152,7 @@ void AGunBase::ReleaseTrigger_Implementation()
 	Server_ReleaseTrigger();
 }
 
-void AGunBase::OnInteract_Implementation(APlayerCharacter* Character)
+void AGunBase::OnInteract_Implementation(ACharacterBase* Character)
 {
 	IInteractableInterface::OnInteract_Implementation(Character);
 	Character->PickupWeapon(this);

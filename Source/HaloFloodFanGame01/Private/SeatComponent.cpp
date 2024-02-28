@@ -37,12 +37,12 @@ void USeatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	// ...
 }
 
-void USeatComponent::OnInteract_Implementation(APlayerCharacter* Character)
-{
-	IInteractableInterface::OnInteract_Implementation(Character);
-
-	EnterSeat(Character);
-}
+// void USeatComponent::OnInteract_Implementation(APlayerCharacter* Character)
+// {
+// 	IInteractableInterface::OnInteract_Implementation(Character);
+//
+// 	EnterSeat(Character);
+// }
 
 void USeatComponent::EnterSeat(ACharacterBase* Character)
 {
