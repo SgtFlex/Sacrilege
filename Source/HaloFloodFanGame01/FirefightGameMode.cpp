@@ -29,19 +29,7 @@ AFirefightGameMode::AFirefightGameMode()
 void AFirefightGameMode::BeginPlay()
 {
 	Super::BeginPlay();
-	TArray<AActor*> OutActors;
 	
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AAISpawner::StaticClass(), OutActors);
-	for (AActor* a : OutActors)
-	{
-		Spawners.Add(Cast<AAISpawner>(a));
-	}
-	AvailableSpawners = Spawners;
-	StartSet();
-
-
-	OnPlayerCharDied.AddDynamic(this, &AFirefightGameMode::PlayerDied);
-	//ACharacterBase::TestDelegate.BindSP(this, &AHaloFloodFanGame01GameMode::TestFunc);
 }
 
 void AFirefightGameMode::OnEnemyKilled(ACharacterBase* Character, AController* EventInstigator, AActor* DamageCauser)
@@ -94,6 +82,25 @@ void AFirefightGameMode::FinishWave()
 int AFirefightGameMode::GetCurrentWave()
 {
 	return curWave;
+}
+
+void AFirefightGameMode::StartMatch()
+{
+	Super::StartMatch();
+
+	TArray<AActor*> OutActors;
+	
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AAISpawner::StaticClass(), OutActors);
+	for (AActor* a : OutActors)
+	{
+		Spawners.Add(Cast<AAISpawner>(a));
+	}
+	AvailableSpawners = Spawners;
+	StartSet();
+
+
+	OnPlayerCharDied.AddDynamic(this, &AFirefightGameMode::PlayerDied);
+	//ACharacterBase::TestDelegate.BindSP(this, &AHaloFloodFanGame01GameMode::TestFunc);
 }
 
 void AFirefightGameMode::StartSet()

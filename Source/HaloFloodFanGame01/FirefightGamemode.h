@@ -42,6 +42,8 @@ public:
 	UFUNCTION()
 	void OnEnemyKilled(ACharacterBase* Character = nullptr, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 	int GetCurrentWave();
+
+	void StartMatch() override;
 	void StartSet();
 	void FinishSet();
 	void StartWave();

@@ -31,7 +31,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TSubclassOf<AGunBase> SecondaryWeaponClass;
 
-	
-
-	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	float SensitivityMultiplier = 1;	
 };
