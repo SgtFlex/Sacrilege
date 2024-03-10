@@ -49,6 +49,9 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	void Select(const FInputActionValue& InputActionValue);
 
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	AActor* BuildItem(FBuyable Buyable);
+
 private:
 	UFUNCTION(BlueprintCallable)
 	AActor* StartBuildPreview(TSubclassOf<AActor> ActorToPreview);
@@ -59,8 +62,7 @@ private:
 	UFUNCTION(BlueprintCallable)
 	bool CanBuildItem(FBuyable Buyable);
 
-	UFUNCTION(BlueprintCallable)
-	AActor* BuildItem(FBuyable Buyable);
+
 
 	UFUNCTION()
 	void ClosePDA(const FInputActionValue& InputActionValue);

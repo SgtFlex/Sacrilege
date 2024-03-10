@@ -7,9 +7,12 @@
 #include "AI/NavigationSystemBase.h"
 #include "Camera/CameraComponent.h"
 #include "Engine/DamageEvents.h"
+#include "GeometryCollection/GeometryCollectionSimulationTypes.h"
 #include "HaloFloodFanGame01/PlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Perception/AISense_Hearing.h"
+#include "PhysicsEngine/PhysicsObjectBlueprintLibrary.h"
 
 void UMyCustomBlueprintFunctionLibrary::Ignite(UPrimitiveComponent* Component, float DamagePerSecond, float Duration)
 {
@@ -74,7 +77,7 @@ void UMyCustomBlueprintFunctionLibrary::FireExplosion(const UObject* WorldContex
 			}
 			if (UPrimitiveComponent* PrimComponent = Cast<UPrimitiveComponent>(HitActor->GetRootComponent()))
 			{
-				if (PrimComponent->IsSimulatingPhysics())
+				if (PrimComponent->IsSimulatingPhysics() && PrimComponent->GetCollisionEnabled() == ECollisionEnabled::QueryAndPhysics)
 				{
 					PrimComponent->AddImpulse((HitActor->GetActorLocation() - Location).GetSafeNormal() * Force);
 					//PrimComponent->AddImpulse((HitActor->GetActorLocation() - Location).GetSafeNormal() * FMath::Lerp(0, Force, (FVector::Distance(HitActor->GetActorLocation(), Location)) + InnerRadius));

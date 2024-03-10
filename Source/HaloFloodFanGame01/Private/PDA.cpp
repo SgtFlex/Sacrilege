@@ -120,7 +120,7 @@ bool APDA::CanBuildItem(FBuyable Buyable)
 	return GameMode->GetPlayerResource(PlayerController) >= Buyable.Cost;
 }
 
-AActor* APDA::BuildItem(FBuyable Buyable)
+AActor* APDA::BuildItem_Implementation(FBuyable Buyable)
 {
 	UE_LOG(LogTemp, Warning, TEXT("build item request"));
 	AFirefightGameMode* GameMode = Cast<AFirefightGameMode>(UGameplayStatics::GetGameMode(GetWorld()));

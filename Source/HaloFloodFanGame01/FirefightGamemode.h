@@ -83,6 +83,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void AddLoadoutScreen(APlayerController* PlayerController, FTimerHandle RespawnTimer);
 
+	
+	UFUNCTION(BlueprintNativeEvent)
+	AActor* SpawnRespawnVehicle(APlayerController* PlayerController);
 public:
 	FTimerHandle SetFinishDelayTimer;
 	
@@ -112,6 +115,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	float RespawnTime = 3;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	TSubclassOf<AActor> RespawnVehicle;
 
 	UPROPERTY(BlueprintReadOnly)
 	FTimerHandle RespawnTimerHandle;

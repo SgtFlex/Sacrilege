@@ -280,6 +280,10 @@ void AFirefightGameMode::RespawnPlayer(APlayerController* PlayerController)
 {
 	PlayerController->UnPossess();
 	RestartPlayer(PlayerController);
+	if (RespawnVehicle)
+	{
+		SpawnRespawnVehicle(PlayerController);
+	}
 }
 
 void AFirefightGameMode::EndGame()
@@ -339,4 +343,17 @@ void AFirefightGameMode::HandleMatchHasStarted()
 	{
 		GetGameInstance()->StartRecordingReplay(GetWorld()->GetMapName(), GetWorld()->GetMapName());
 	}
+}
+
+AActor* AFirefightGameMode::SpawnRespawnVehicle_Implementation(APlayerController* PlayerController)
+{
+	FVector Loc = FVector(0, 0, 30000);
+	FRotator Rot = FRotator(0,0,0);
+	FActorSpawnParameters ActorSpawnParameters = FActorSpawnParameters();
+	ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	AActor* Vehicle = GetWorld()->SpawnActor(RespawnVehicle, &Loc, &Rot, ActorSpawnParameters);
+	if (Vehicle)
+		IInteractableInterface::Execute_OnInteract(Vehicle, Cast<ACharacterBase>(PlayerController->GetPawn()));
+
+	return Vehicle;
 }
