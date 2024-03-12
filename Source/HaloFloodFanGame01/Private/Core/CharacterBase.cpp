@@ -89,15 +89,28 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 }
 
-float ACharacterBase::CustomOnTakeAnyDamage_Implementation(float DamageAmount, FVector Force,
+float ACharacterBase::CustomTakeRadialDamage_Implementation(float Force, FRadialDamageEvent const& RadialDamageEvent,
 	AController* EventInstigator, AActor* DamageCauser)
 {
-	return IDamageableInterface::CustomOnTakeAnyDamage(DamageAmount, Force, EventInstigator, DamageCauser);
+	return ChangeHealth(this, RadialDamageEvent.Params.BaseDamage, (Cast<AActor>(this)->GetActorLocation() - RadialDamageEvent.Origin).GetSafeNormal() * Force, FVector(0,0,0), FName(""), EventInstigator, DamageCauser);
 }
+
+float ACharacterBase::CustomTakeDamage_Implementation(float DamageAmount, FVector Force,
+                                                      FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	return ChangeHealth(this, DamageAmount, Force, FVector(0,0,0), FName(""), EventInstigator, DamageCauser);
+}
+
+// float ACharacterBase::CustomOnTakeAnyDamage_Implementation(float DamageAmount, FVector Force,
+// 	AController* EventInstigator, AActor* DamageCauser)
+// {
+// 	return IDamageableInterface::CustomOnTakeAnyDamage(DamageAmount, Force, EventInstigator, DamageCauser);
+// }
 
 float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent const& PointDamageEvent, float Force, AController* EventInstigator, AActor* DamageCauser)
 {
-	float x = IDamageableInterface::CustomTakePointDamage(PointDamageEvent, Force, EventInstigator, DamageCauser);
+	float x = IDamageableInterface::ChangeHealth(this, PointDamageEvent.Damage, PointDamageEvent.ShotDirection * Force, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.BoneName, EventInstigator, DamageCauser);
+	//float x = IDamageableInterface::CustomTakePointDamage(PointDamageEvent, Force, EventInstigator, DamageCauser);
 	if (EventInstigator && Cast<AAIControllerBase>(GetController()))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Reported damage event"));
@@ -151,6 +164,13 @@ float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent con
 	
 	return x;
 }
+
+
+UHealthComponent* ACharacterBase::GetHealthComponent_Implementation()
+{
+	return HealthComponent;
+}
+
 
 void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector DamageForce, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
@@ -225,11 +245,6 @@ void ACharacterBase::SetSmartObject(ASmartObject* NewSmartObject)
 	{
 		AIController->SetSmartObject(NewSmartObject);
 	}
-}
-
-UHealthComponent* ACharacterBase::GetHealthComponent()
-{
-	return HealthComponent;
 }
 
 bool ACharacterBase::CanMelee_Implementation()
