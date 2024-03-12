@@ -7,6 +7,7 @@
 #include "GunBase.h"
 #include "HaloPlayerState.h"
 #include "PlayerCharacter.h"
+#include "VehicleBase.h"
 #include "Components/AudioComponent.h"
 #include "Core/CharacterBase.h"
 #include "GameFramework/CheatManager.h"
@@ -345,15 +346,16 @@ void AFirefightGameMode::HandleMatchHasStarted()
 	}
 }
 
-AActor* AFirefightGameMode::SpawnRespawnVehicle_Implementation(APlayerController* PlayerController)
+AVehicleBase* AFirefightGameMode::SpawnRespawnVehicle_Implementation(APlayerController* PlayerController)
 {
-	FVector Loc = FVector(0, 0, 30000);
-	FRotator Rot = FRotator(0,0,0);
-	FActorSpawnParameters ActorSpawnParameters = FActorSpawnParameters();
-	ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	AActor* Vehicle = GetWorld()->SpawnActor(RespawnVehicle, &Loc, &Rot, ActorSpawnParameters);
-	if (Vehicle)
-		IInteractableInterface::Execute_OnInteract(Vehicle, Cast<ACharacterBase>(PlayerController->GetPawn()));
-
-	return Vehicle;
+	return nullptr;
+	// FVector Loc = FVector(0, 0, 30000);
+	// FRotator Rot = FRotator(0,0,0);
+	// FActorSpawnParameters ActorSpawnParameters = FActorSpawnParameters();
+	// ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	// AVehicleBase* Vehicle = GetWorld()->SpawnActor(RespawnVehicle, &Loc, &Rot, ActorSpawnParameters);
+	// if (Vehicle)
+	// 	IInteractableInterface::Execute_OnInteract(Vehicle, Cast<ACharacterBase>(PlayerController->GetPawn()));
+	//
+	// return Vehicle;
 }

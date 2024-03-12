@@ -6,6 +6,7 @@
 #include "GameFramework/GameMode.h"
 #include "FirefightGamemode.generated.h"
 
+class AVehicleBase;
 class AGunBase;
 class ACharacterBase;
 class AAISpawner;
@@ -85,7 +86,7 @@ public:
 
 	
 	UFUNCTION(BlueprintNativeEvent)
-	AActor* SpawnRespawnVehicle(APlayerController* PlayerController);
+	AVehicleBase* SpawnRespawnVehicle(APlayerController* PlayerController);
 public:
 	FTimerHandle SetFinishDelayTimer;
 	
@@ -117,7 +118,7 @@ public:
 	float RespawnTime = 3;
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	TSubclassOf<AActor> RespawnVehicle;
+	TSubclassOf<AVehicleBase> RespawnVehicle;
 
 	UPROPERTY(BlueprintReadOnly)
 	FTimerHandle RespawnTimerHandle;

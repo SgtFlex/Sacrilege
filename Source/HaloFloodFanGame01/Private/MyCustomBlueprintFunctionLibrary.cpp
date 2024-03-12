@@ -4,6 +4,8 @@
 #include "MyCustomBlueprintFunctionLibrary.h"
 
 #include "DamageableInterface.h"
+#include "NiagaraEmitterHandle.h"
+#include "NiagaraFunctionLibrary.h"
 #include "AI/NavigationSystemBase.h"
 #include "Camera/CameraComponent.h"
 #include "Engine/DamageEvents.h"
@@ -86,4 +88,15 @@ void UMyCustomBlueprintFunctionLibrary::FireExplosion(const UObject* WorldContex
 			}
 		}
 	}
+}
+
+void UMyCustomBlueprintFunctionLibrary::FireExplosionWithCosmetics(const UObject* WorldContextObject,
+	TArray<AActor*>& ActorsToIgnore, FVector Location, float BaseDamage, float MinimumDamage, float OuterRadius,
+	float InnerRadius, float DamageFalloff, float Force, AActor* DamageCauser, AController* EventInstigator, UNiagaraSystem* Particles, USoundBase* Sound, TSubclassOf<UCameraShakeBase> CameraShake, UForceFeedbackEffect* ForceFeedbackEffect)
+{
+	FireExplosion(WorldContextObject, ActorsToIgnore, Location, BaseDamage, MinimumDamage, OuterRadius, InnerRadius, DamageFalloff, Force, DamageCauser, EventInstigator);
+	if (Particles) UNiagaraFunctionLibrary::SpawnSystemAtLocation(WorldContextObject, Particles, Location);
+	if (Sound) UGameplayStatics::PlaySoundAtLocation(WorldContextObject, Sound, Location);
+	if (CameraShake) UGameplayStatics::PlayWorldCameraShake(WorldContextObject, CameraShake, Location, InnerRadius, OuterRadius * 10);
+	if (ForceFeedbackEffect) UGameplayStatics::SpawnForceFeedbackAtLocation(WorldContextObject, ForceFeedbackEffect, Location);
 }
