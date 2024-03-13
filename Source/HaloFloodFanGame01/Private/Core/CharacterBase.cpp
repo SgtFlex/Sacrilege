@@ -119,7 +119,7 @@ float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent con
 		//UAISense_Sight::RegisterEvent()
 	}
 	
-	if (GetHealthComponent()->GetShields() <= 0)
+	if (IDamageableInterface::Execute_GetHealthComponent(this)->GetShields() <= 0)
 	{
 		if (HurtAnim)
 		{

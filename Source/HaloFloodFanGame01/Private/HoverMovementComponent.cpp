@@ -35,5 +35,5 @@ void UHoverMovementComponent::TorqueToTargetRotation()
 {
 	const FRotator DeltaRotation = UKismetMathLibrary::NormalizedDeltaRotator(TargetRotation, CurrentRotation);
 	const FVector CurrentTorque = PrimitiveComponent->GetPhysicsAngularVelocityInDegrees();
-	PrimitiveComponent->AddTorqueInDegrees((FVector(0, DeltaRotation.Pitch, DeltaRotation.Yaw) - (CurrentTorque * TorqueDamping)) * TorqueForce, NAME_None, true);
+	PrimitiveComponent->AddTorqueInDegrees((FVector(DeltaRotation.Roll, DeltaRotation.Pitch, DeltaRotation.Yaw) - (CurrentTorque * TorqueDamping)) * TorqueForce, NAME_None, true);
 }
