@@ -31,6 +31,8 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	FVector TargetForceLocal;
 	FVector CurrentVelocity;
+
+	
 	
 	UPROPERTY(EditAnywhere)
 	float ThrustForce = 1000000.0;
@@ -38,9 +40,14 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	FRotator TargetRotation;
 	FRotator CurrentRotation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxSpeed = 500.0f;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float TorqueForce = 15.0f;
-	UPROPERTY(EditAnywhere)
-	float TorqueDamping = 0.5f;	
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float TorqueDamping = 0.5f;
+	
 };

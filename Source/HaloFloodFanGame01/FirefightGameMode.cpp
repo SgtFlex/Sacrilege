@@ -214,6 +214,11 @@ void AFirefightGameMode::GameFinished()
 	UGameplayStatics::OpenLevel(GetWorld(), FName(UGameplayStatics::GetCurrentLevelName(GetWorld())));
 }
 
+void AFirefightGameMode::RestartPlayer(AController* NewPlayer)
+{
+	RestartPlayerBP(NewPlayer);
+}
+
 int AFirefightGameMode::GetPlayerResource(APlayerController* PlayerController)
 {
 	return PlayerResource;

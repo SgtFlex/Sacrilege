@@ -55,6 +55,11 @@ public:
 	void OnSpawnerAvailable(AAISpawner* Spawner);
 	void GameFinished();
 
+	virtual void RestartPlayer(AController* NewPlayer) override;
+	
+	UFUNCTION(BlueprintImplementableEvent)
+	void RestartPlayerBP(AController* NewPlayer);
+
 	UFUNCTION(BlueprintGetter)
 	int GetPlayerResource(APlayerController* PlayerController);
 

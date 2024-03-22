@@ -159,13 +159,13 @@ public:
 	UHealthComponent* HealthComponent;
 
 	//Loadout
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true))
 	TSubclassOf<AGunBase> EquippedWeaponClass;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true))
 	TSubclassOf<AGunBase> HolsteredWeaponClass;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true))
 	TArray<FGrenadeStruct> GrenadeInventory;
 
 	UPROPERTY(BlueprintReadOnly, Replicated)

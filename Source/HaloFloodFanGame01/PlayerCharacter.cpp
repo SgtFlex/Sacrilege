@@ -110,13 +110,10 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 	SetCurrentInteractable();
 }
 
-FHitResult APlayerCharacter::GetPlayerAim()
+void APlayerCharacter::GetPlayerAim(FHitResult& HitResult)
 {
-	return PlayerAim;
+	HitResult = PlayerAim;
 }
-
-
-
 
 //////////////////////////////////////////////////////////////////////////// Input
 
@@ -176,7 +173,8 @@ float APlayerCharacter::AimAssist()
 {
 	if (Controller != nullptr && InputDeviceSubsystem->GetMostRecentlyUsedHardwareDevice(GetPlatformUserId()).PrimaryDeviceType == EHardwareDevicePrimaryType::Gamepad)
 	{
-		FHitResult Aim = GetPlayerAim();
+		FHitResult Aim;
+		GetPlayerAim(Aim);
 		if (Aim.GetActor())
 		{
 			ACharacterBase* AimedAtCharacter = Cast<ACharacterBase>(Aim.GetActor());
@@ -242,10 +240,13 @@ void APlayerCharacter::SetCurrentInteractable()
 	ActorsToIgnore.Add(this);
 	UKismetSystemLibrary::SphereTraceSingle(GetWorld(), FirstPersonCameraComponent->GetComponentLocation(), FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector()*10000.0f, 20, UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Visibility), false, ActorsToIgnore, EDrawDebugTrace::None, PlayerAim, true, FLinearColor::Red, FLinearColor::Green, 5);
 	AActor* FoundActor = nullptr;
-	
-	if (GetPlayerAim().GetActor() && PlayerAim.Distance < 250 && GetPlayerAim().GetActor()->Implements<UInteractableInterface>())
+
+
+	FHitResult HitResult;
+	GetPlayerAim(HitResult);
+	if (HitResult.GetActor() && PlayerAim.Distance < 250 && HitResult.GetActor()->Implements<UInteractableInterface>())
 	{
-		FoundActor = GetPlayerAim().GetActor();
+		FoundActor = HitResult.GetActor();
 	} else
 	{
 		TArray<AActor*> Actors;
@@ -476,22 +477,32 @@ void APlayerCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
+	
+}
+
+void APlayerCharacter::NotifyControllerChanged()
+{
+	Super::NotifyControllerChanged();
+
 	//Add Input Mapping Context
+	
+}
+
+void APlayerCharacter::NotifyRestarted()
+{
+	Super::NotifyRestarted();
+
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
 		PlayerController = PC;
-		//check(IsLocallyControlled());
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
-		if (PlayerHUDClass && !PlayerHUD && IsLocallyControlled() ) {
-			PlayerHUD = CreateWidget<UUserWidget>(PlayerController, PlayerHUDClass);
-			PlayerHUD->AddToPlayerScreen();
-		}
-	} else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayerChar not controlled by PlayerController"));
+		// if (PlayerHUDClass && !PlayerHUD) {
+		// 	PlayerHUD = CreateWidget<UUserWidget>(PC, PlayerHUDClass);
+		// 	PlayerHUD->AddToPlayerScreen();
+		// }
 	}
 }
 

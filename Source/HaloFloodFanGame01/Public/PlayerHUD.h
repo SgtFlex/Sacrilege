@@ -25,6 +25,8 @@ class HALOFLOODFANGAME01_API UPlayerHUD : public UUserWidget
 	GENERATED_BODY()
 
 	virtual void NativeConstruct() override;
+
+	virtual void PostLoad() override;
 	
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 

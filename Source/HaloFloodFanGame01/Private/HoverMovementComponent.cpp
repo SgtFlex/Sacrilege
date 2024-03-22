@@ -28,7 +28,8 @@ void UHoverMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType
 
 void UHoverMovementComponent::ThrustToTargetSpeed()
 {
-	PrimitiveComponent->AddForce(PrimitiveComponent->GetComponentRotation().RotateVector(TargetForceLocal) * ThrustForce);
+
+	PrimitiveComponent->AddForce((PrimitiveComponent->GetComponentRotation().RotateVector(TargetForceLocal) * ThrustForce), NAME_None, true);
 }
 
 void UHoverMovementComponent::TorqueToTargetRotation()

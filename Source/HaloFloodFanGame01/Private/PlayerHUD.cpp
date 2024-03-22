@@ -26,23 +26,26 @@
 void UPlayerHUD::NativeConstruct()
 {
 	Super::NativeConstruct();
-	PlayerCharacter = Cast<APlayerCharacter>(GetOwningPlayer()->GetPawn());
-	// SetFragCounter(PlayerCharacter->FragCount);
-	// SetPlasmaCounter(PlayerCharacter->PlasmaCount);
-	// SetSpikeCounter(PlayerCharacter->SpikeCount);
-	// SetIncenCounter(PlayerCharacter->IncenCount);
-	if (PlayerCharacter->EquippedWeapon)
-	{
-		UpdateHUDWeaponData(PlayerCharacter->EquippedWeapon, PlayerCharacter->HolsteredWeapon);
-	}
+	PlayerCharacter = Cast<APlayerCharacter>(GetOwningPlayerPawn());
+	check(PlayerCharacter);
 	PlayerCharacter->WeaponsUpdated.AddDynamic(this, &UPlayerHUD::UpdateHUDWeaponData);
 	PlayerCharacter->OnInteractableChanged.AddDynamic(this, &UPlayerHUD::UpdateInteractable);
 	PlayerCharacter->GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &UPlayerHUD::OnHealthUpdated);
 	PlayerCharacter->OnGrenadeInventoryUpdated.AddDynamic(this, &UPlayerHUD::UpdateGrenadeInventory);
 	PlayerCharacter->OnGrenadeTypeSwitched.AddDynamic(this, &UPlayerHUD::UPlayerHUD::UpdateSelectedGrenadeType);
 	UpdateGrenadeInventory(PlayerCharacter->GrenadeInventory);
+	UpdateHUDWeaponData(PlayerCharacter->EquippedWeapon, PlayerCharacter->HolsteredWeapon);
+
+	
 	//Cast<AHaloFloodFanGame01GameMode>(UGameplayStatics::GetGameMode(GetWorld()))->OnScoreUpdated.AddDynamic(this, &UHaloHUDWidget::OnScoreUpdated);
 	if (AFirefightGameMode* FirefightGamemode = Cast<AFirefightGameMode>(UGameplayStatics::GetGameMode(GetWorld()))) FirefightGamemode->OnWaveStart.AddDynamic(this, &UPlayerHUD::UpdateSetAndWaveCount);
+}
+
+void UPlayerHUD::PostLoad()
+{
+	Super::PostLoad();
+
+	
 }
 
 void UPlayerHUD::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -232,7 +235,8 @@ void UPlayerHUD::SetCrosshairType(int type)
 
 void UPlayerHUD::DetermineCrosshairColor()
 {
-	FHitResult PlayerAim = PlayerCharacter->GetPlayerAim();
+	FHitResult PlayerAim;
+	PlayerCharacter->GetPlayerAim(PlayerAim);
 	if (PlayerAim.GetActor())
 	{
 		if (ACharacterBase* Char = Cast<ACharacterBase>(PlayerAim.GetActor()))

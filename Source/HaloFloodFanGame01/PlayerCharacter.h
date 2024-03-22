@@ -111,7 +111,7 @@ public:
 	virtual void SpawnWeapons() override;
 	
 	UFUNCTION(BlueprintGetter)
-	FHitResult GetPlayerAim();
+	void GetPlayerAim(FHitResult& HitResult);
 
 	float AimAssist();
 	
@@ -131,6 +131,10 @@ public:
 	void SwitchGrenadeType(int Index);
 
 	virtual void PossessedBy(AController* NewController) override;
+
+	virtual void NotifyControllerChanged() override;
+
+	virtual void NotifyRestarted() override;
 	
 	virtual void UnPossessed() override;
 	
