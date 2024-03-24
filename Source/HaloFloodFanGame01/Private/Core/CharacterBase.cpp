@@ -78,8 +78,8 @@ void ACharacterBase::Tick(float DeltaTime)
 void ACharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
 	DOREPLIFETIME(ACharacterBase, EquippedWeapon);
+	DOREPLIFETIME(ACharacterBase, HolsteredWeapon);
 }
 
 // Called to bind functionality to input
@@ -174,6 +174,7 @@ UHealthComponent* ACharacterBase::GetHealthComponent_Implementation()
 
 void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector DamageForce, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
+	if (!HasAuthority()) return;
 	UAIPerceptionSystem::GetCurrent( GetWorld() )->UnregisterSource(*this);
 	GetHealthComponent()->Deactivate();
 	OnKilled.Broadcast(this, EventInstigator, DamageCauser);
@@ -367,7 +368,24 @@ void ACharacterBase::HolsterWeapon(AGunBase* Gun)
 
 void ACharacterBase::PickupWeapon(AGunBase* Gun)
 {
-	Server_PickupWeapon(Gun);
+	// Server_PickupWeapon(Gun);
+	Gun->Mesh->SetSimulatePhysics(false);
+	Gun->SetActorEnableCollision(false);
+	Gun->OnPickup(this);
+	
+	if (!EquippedWeapon)
+	{
+		EquippedWeapon = Gun;
+	} else if (!HolsteredWeapon)
+	{
+		HolsteredWeapon = Gun;
+		Gun->SetActorHiddenInGame(true);
+	} else
+	{
+		DropWeapon();
+		EquippedWeapon = Gun;
+	}
+	EquipWeapon(EquippedWeapon);
 	if (EquippedWeapon)
 	{
 		WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);

@@ -89,14 +89,14 @@ void APlayerCharacter::SpawnWeapons()
 	if (AHaloPlayerState* HaloPlayerState = GetPlayerState<AHaloPlayerState>())
 	{
 		TeamId = HaloPlayerState->Team;
-		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(HaloPlayerState->PrimaryWeaponClass)));
-		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(HaloPlayerState->SecondaryWeaponClass)));
+		PickupWeapon(GetWorld()->SpawnActor<AGunBase>(HaloPlayerState->PrimaryWeaponClass));
+		PickupWeapon(GetWorld()->SpawnActor<AGunBase>(HaloPlayerState->SecondaryWeaponClass));
 	} else
 	{
 		if (EquippedWeaponClass)
-			PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(EquippedWeaponClass)));
+			PickupWeapon(GetWorld()->SpawnActor<AGunBase>(EquippedWeaponClass));
 		if (HolsteredWeaponClass)
-			PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(HolsteredWeaponClass)));
+			PickupWeapon(GetWorld()->SpawnActor<AGunBase>(HolsteredWeaponClass));
 	}
 }
 
@@ -499,10 +499,14 @@ void APlayerCharacter::NotifyRestarted()
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
-		// if (PlayerHUDClass && !PlayerHUD) {
-		// 	PlayerHUD = CreateWidget<UUserWidget>(PC, PlayerHUDClass);
-		// 	PlayerHUD->AddToPlayerScreen();
-		// }
+		if (IsLocallyControlled())
+		{
+			if (PlayerHUDClass && !PlayerHUD) {
+				PlayerHUD = CreateWidget<UUserWidget>(PC, PlayerHUDClass);
+				PlayerHUD->AddToPlayerScreen();
+			}
+		}
+		
 	}
 }
 

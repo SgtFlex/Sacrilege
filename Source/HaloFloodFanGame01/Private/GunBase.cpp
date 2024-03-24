@@ -174,6 +174,7 @@ bool AGunBase::CanFire()
 
 void AGunBase::SpawnBullet_Implementation()
 {
+	Multi_SpawnBullet();
 	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, GetOwner(), 0.0f);
 	APawn* OwningPawn = Cast<APawn>(GetOwner());
 	if (ACharacterBase* OwningChar = Cast<ACharacterBase>(GetOwner()))
@@ -253,12 +254,16 @@ void AGunBase::SpawnBullet_Implementation()
 			}
 		}
 	}
-	SpawnMuzzleFX();
 	BulletsFired++;
 	if (BulletsFired==BurstAmount)
 	{
 		ReleaseTrigger();
 	}
+}
+
+void AGunBase::Multi_SpawnBullet_Implementation()
+{
+	SpawnMuzzleFX();
 }
 
 void AGunBase::SpawnMuzzleFX()

@@ -66,6 +66,9 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void SpawnBullet();
 
+	UFUNCTION(BlueprintCallable, NetMulticast, Unreliable)
+	void Multi_SpawnBullet();
+
 	UFUNCTION(BlueprintCallable)
 	void SpawnMuzzleFX();
 
