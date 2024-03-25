@@ -99,17 +99,17 @@ void AGunBase::Multi_StartReload_Implementation()
 
 void AGunBase::PullTrigger_Implementation()
 {
-	Server_PullTrigger();
+
+	if (GetWorldTimerManager().TimerExists(BurstRetriggerHandle) || CurMagazine <= 0 || bReloading)
+		return;
+	BulletsFired = 0;
+	GetWorldTimerManager().SetTimer(FireHandle, this, &AGunBase::Fire, 60/FireRate, true, 0);
+	GetWorldTimerManager().SetTimer(BurstRetriggerHandle, BurstRetriggerDelay, false);
 }
 
 void AGunBase::Server_PullTrigger_Implementation()
 {
 	Multi_PullTrigger();
-}
-
-bool AGunBase::Server_PullTrigger_Validate()
-{
-	return true;
 }
 
 void AGunBase::Multi_PullTrigger_Implementation()
@@ -121,30 +121,16 @@ void AGunBase::Multi_PullTrigger_Implementation()
 	GetWorldTimerManager().SetTimer(BurstRetriggerHandle, BurstRetriggerDelay, false);
 }
 
-bool AGunBase::Multi_PullTrigger_Validate()
-{
-	return true;
-}
 
 void AGunBase::Server_ReleaseTrigger_Implementation()
 {
 	Multi_ReleaseTrigger();
 }
 
-bool AGunBase::Server_ReleaseTrigger_Validate()
-{
-	return true;
-}
-
 void AGunBase::Multi_ReleaseTrigger_Implementation()
 {
 	if (BulletsFired >= BurstAmount)
 		GetWorldTimerManager().ClearTimer(FireHandle);
-}
-
-bool AGunBase::Multi_ReleaseTrigger_Validate()
-{
-	return true;
 }
 
 void AGunBase::ReleaseTrigger_Implementation()
@@ -174,7 +160,17 @@ bool AGunBase::CanFire()
 
 void AGunBase::SpawnBullet_Implementation()
 {
+	Server_SpawnBullet();
+	
+}
+
+void AGunBase::Server_SpawnBullet_Implementation()
+{
 	Multi_SpawnBullet();
+}
+
+void AGunBase::Multi_SpawnBullet_Implementation()
+{
 	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, GetOwner(), 0.0f);
 	APawn* OwningPawn = Cast<APawn>(GetOwner());
 	if (ACharacterBase* OwningChar = Cast<ACharacterBase>(GetOwner()))
@@ -259,14 +255,10 @@ void AGunBase::SpawnBullet_Implementation()
 	{
 		ReleaseTrigger();
 	}
-}
-
-void AGunBase::Multi_SpawnBullet_Implementation()
-{
 	SpawnMuzzleFX();
 }
 
-void AGunBase::SpawnMuzzleFX()
+void AGunBase::SpawnMuzzleFX_Implementation()
 {
 	if (APlayerCharacter* Char = Cast<APlayerCharacter>(GetOwner()))
 		if (FiringCameraShake && Char->IsLocallyControlled())

@@ -316,8 +316,28 @@ void ACharacterBase::UseEquipment()
 
 void ACharacterBase::PrimaryAttack_Pull()
 {
+
+	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Green, FString::Printf(TEXT("Client called Primary attack, calling Server RPC")));
+	Server_PrimaryAttack_Pull();
+	
+}
+
+void ACharacterBase::Server_PrimaryAttack_Pull_Implementation()
+{
+	if (HasAuthority())
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Green, FString::Printf(TEXT("Server calling Multicast primary attack RPC")));
+		Multi_PrimaryAttack_Pull();
+	}
+}
+
+void ACharacterBase::Multi_PrimaryAttack_Pull_Implementation()
+{
+
+	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Green, FString::Printf(TEXT("Multicast fired on %s"), *UEnum::GetValueAsString(GetRemoteRole())));
 	if (EquippedWeapon)
 		EquippedWeapon->PullTrigger();
+	
 }
 
 void ACharacterBase::PrimaryAttack_Release()
@@ -395,11 +415,6 @@ void ACharacterBase::PickupWeapon(AGunBase* Gun)
 void ACharacterBase::Server_PickupWeapon_Implementation(AGunBase* Gun)
 {
 	Multi_PickupWeapon(Gun);
-}
-
-bool ACharacterBase::Server_PickupWeapon_Validate(AGunBase* Gun)
-{
-	return true;
 }
 
 void ACharacterBase::Multi_PickupWeapon_Implementation(AGunBase* Gun)

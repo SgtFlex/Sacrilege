@@ -100,6 +100,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void PrimaryAttack_Pull();
 
+	UFUNCTION(Server, Reliable)
+	virtual void Server_PrimaryAttack_Pull();
+
+	UFUNCTION(NetMulticast, Reliable)
+	virtual void Multi_PrimaryAttack_Pull();
+
 	UFUNCTION(BlueprintCallable)
 	virtual void PrimaryAttack_Release();
 	
@@ -118,7 +124,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void PickupWeapon(AGunBase* Gun);
 
-	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable)
+	UFUNCTION(Server, Reliable, BlueprintCallable)
 	virtual void Server_PickupWeapon(AGunBase* Gun);
 	
 	UFUNCTION(NetMulticast, Reliable, BlueprintCallable)
