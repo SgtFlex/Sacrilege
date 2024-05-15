@@ -12,6 +12,7 @@
 #include "FirefightGamemode.h"
 #include "HaloPlayerState.h"
 #include "InteractableInterface.h"
+#include "PlayerControllerBase.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/SphereComponent.h"
 #include "Components/TimelineComponent.h"
@@ -84,21 +85,21 @@ void APlayerCharacter::BeginPlay()
 	InputDeviceSubsystem = GetGameInstance()->GetEngine()->GetEngineSubsystem<UInputDeviceSubsystem>();
 }
 
-void APlayerCharacter::SpawnWeapons()
-{
-	if (AHaloPlayerState* HaloPlayerState = GetPlayerState<AHaloPlayerState>())
-	{
-		TeamId = HaloPlayerState->Team;
-		PickupWeapon(GetWorld()->SpawnActor<AGunBase>(HaloPlayerState->PrimaryWeaponClass));
-		PickupWeapon(GetWorld()->SpawnActor<AGunBase>(HaloPlayerState->SecondaryWeaponClass));
-	} else
-	{
-		if (EquippedWeaponClass)
-			PickupWeapon(GetWorld()->SpawnActor<AGunBase>(EquippedWeaponClass));
-		if (HolsteredWeaponClass)
-			PickupWeapon(GetWorld()->SpawnActor<AGunBase>(HolsteredWeaponClass));
-	}
-}
+// void APlayerCharacter::Multi_SpawnWeapons()
+// {
+// 	if (AHaloPlayerState* HaloPlayerState = GetPlayerState<AHaloPlayerState>())
+// 	{
+// 		TeamId = HaloPlayerState->Team;
+// 		PickupWeapon(GetWorld()->SpawnActor<AGunBase>(HaloPlayerState->PrimaryWeaponClass));
+// 		PickupWeapon(GetWorld()->SpawnActor<AGunBase>(HaloPlayerState->SecondaryWeaponClass));
+// 	} else
+// 	{
+// 		if (EquippedWeaponClass)
+// 			PickupWeapon(GetWorld()->SpawnActor<AGunBase>(EquippedWeaponClass));
+// 		if (HolsteredWeaponClass)
+// 			PickupWeapon(GetWorld()->SpawnActor<AGunBase>(HolsteredWeaponClass));
+// 	}
+// }
 
 void APlayerCharacter::Tick(float DeltaSeconds)
 {
@@ -197,7 +198,7 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 	
 	const FVector2D LookAxisVector = Value.Get<FVector2D>();
 	// Disabled for now due to incorrect pitch values in standalone
-	// Server_Look(LookAxisVector.Y);
+	//Server_Look(LookAxisVector.Y);
 	
 	
 	float AimAssistMultiplier = AimAssist();
@@ -343,15 +344,11 @@ void APlayerCharacter::OnHealthDepleted_Implementation(float Damage, FVector For
 		PlayerController->UnPossess();
 		if (PlayerHUD)
 			PlayerHUD->RemoveFromParent();
-		// FVector Loc = GetFirstPersonCameraComponent()->GetComponentLocation();
-		// FRotator Rot = GetFirstPersonCameraComponent()->GetComponentRotation();
-		// ASpectatorPawn* SpectatorPawn = Cast<ASpectatorPawn>(GetWorld()->SpawnActor(GetWorld()->GetAuthGameMode()->SpectatorClass, &Loc, &Rot));
-		// PlayerController->Possess(SpectatorPawn);
-		// SpectatorPawn->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		
 	}
 	
 	Super::OnHealthDepleted_Implementation(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
-	Cast<AFirefightGameMode>(GetWorld()->GetAuthGameMode())->OnPlayerCharDied.Broadcast(this, PlayerController);
+	Cast<AFirefightGameMode>(GetWorld()->GetAuthGameMode())->OnPlayerCharDied.Broadcast(this, Cast<APlayerControllerBase>(PlayerController));
 }
 
 void APlayerCharacter::ThrowEquippedGrenade_Implementation()
@@ -452,11 +449,11 @@ void APlayerCharacter::SwitchWeapon()
 	//WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
 	
 }
-
-void APlayerCharacter::ReloadWeapon()
-{
-	Super::ReloadWeapon();
-}
+//
+// void APlayerCharacter::ReloadWeapon()
+// {
+// 	Super::ReloadWeapon();
+// }
 
 void APlayerCharacter::ScopeWeapon()
 {

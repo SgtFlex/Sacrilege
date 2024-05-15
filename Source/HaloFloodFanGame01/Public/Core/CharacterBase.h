@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "CharacterBase.generated.h"
 
+enum EAlertState : int;
 class ASmartObject;
 class AGrenadeBase;
 class ADecalActor;
@@ -51,7 +52,17 @@ protected:
 public:
 
 	virtual void Restart() override;
+
+	UFUNCTION()
 	virtual void SpawnWeapons();
+
+	UFUNCTION(Server, Reliable)
+	virtual void Server_SpawnWeapons();
+
+	UFUNCTION(NetMulticast, Reliable)
+	virtual void Multi_SpawnWeapons();
+
+	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -108,12 +119,30 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	virtual void PrimaryAttack_Release();
+
+	UFUNCTION(Server, Reliable)
+	virtual void Server_PrimaryAttack_Release();
+
+	UFUNCTION(NetMulticast, Reliable)
+	virtual void Multi_PrimaryAttack_Release();
 	
 	UFUNCTION(BlueprintCallable)
 	virtual void ReloadWeapon();
 
+	UFUNCTION(BlueprintCallable, Server, Reliable)
+	virtual void Server_ReloadWeapon();
+
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
+	virtual void Multi_ReloadWeapon();
+
 	UFUNCTION(BlueprintCallable)
 	virtual void SwitchWeapon();
+
+	UFUNCTION(BlueprintCallable, Server, Reliable)
+	virtual void Server_SwitchWeapon();
+
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
+	virtual void Multi_SwitchWeapon();
 
 	UFUNCTION()
 	virtual void EquipWeapon(AGunBase* Gun);
@@ -174,10 +203,10 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true))
 	TArray<FGrenadeStruct> GrenadeInventory;
 
-	UPROPERTY(BlueprintReadOnly, Replicated)
+	UPROPERTY(BlueprintReadOnly)
 	AGunBase* EquippedWeapon;
 
-	UPROPERTY(BlueprintReadOnly, Replicated)
+	UPROPERTY(BlueprintReadOnly)
 	AGunBase* HolsteredWeapon;
 
 	FTimerHandle HolsterHandle;
@@ -212,6 +241,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ASmartObject* SmartObject;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TEnumAsByte<EAlertState> AlertState;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TEnumAsByte<EAlertState> Emotion;
 	
 	UPROPERTY()
 	FTimerHandle StunTimer;

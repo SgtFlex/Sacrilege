@@ -77,7 +77,14 @@ void AGunBase::OnDropped()
 
 void AGunBase::StartReload_Implementation()
 {
-	Server_StartReload();
+	if (bReloading || CurReserve <= 0 || CurMagazine == MaxMagazine) return;
+	ScopeOut();
+	bReloading = true;
+	if (BurstAmount > 0) GetWorldTimerManager().ClearTimer(FireHandle);
+	GetWorld()->GetTimerManager().SetTimer(ReloadTimer, this, &AGunBase::FinishReload, ReloadSpeed, false);
+	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(CharacterOwner))
+		PlayerChar->GetMesh1P()->GetAnimInstance()->Montage_Play(ReloadAnimation1P,   ReloadAnimation1P->GetPlayLength() / ReloadSpeed);
+	if (ReloadSound) UGameplayStatics::SpawnSoundAttached(ReloadSound, GetRootComponent());
 }
 
 void AGunBase::Server_StartReload_Implementation()
@@ -106,37 +113,39 @@ void AGunBase::PullTrigger_Implementation()
 	GetWorldTimerManager().SetTimer(FireHandle, this, &AGunBase::Fire, 60/FireRate, true, 0);
 	GetWorldTimerManager().SetTimer(BurstRetriggerHandle, BurstRetriggerDelay, false);
 }
+//
+// void AGunBase::Server_PullTrigger_Implementation()
+// {
+// 	Multi_PullTrigger();
+// }
+//
+// void AGunBase::Multi_PullTrigger_Implementation()
+// {
+// 	if (GetWorldTimerManager().TimerExists(BurstRetriggerHandle) || CurMagazine <= 0 || bReloading)
+// 		return;
+// 	BulletsFired = 0;
+// 	GetWorldTimerManager().SetTimer(FireHandle, this, &AGunBase::Fire, 60/FireRate, true, 0);
+// 	GetWorldTimerManager().SetTimer(BurstRetriggerHandle, BurstRetriggerDelay, false);
+// }
 
-void AGunBase::Server_PullTrigger_Implementation()
-{
-	Multi_PullTrigger();
-}
-
-void AGunBase::Multi_PullTrigger_Implementation()
-{
-	if (GetWorldTimerManager().TimerExists(BurstRetriggerHandle) || CurMagazine <= 0 || bReloading)
-		return;
-	BulletsFired = 0;
-	GetWorldTimerManager().SetTimer(FireHandle, this, &AGunBase::Fire, 60/FireRate, true, 0);
-	GetWorldTimerManager().SetTimer(BurstRetriggerHandle, BurstRetriggerDelay, false);
-}
-
-
-void AGunBase::Server_ReleaseTrigger_Implementation()
-{
-	Multi_ReleaseTrigger();
-}
-
-void AGunBase::Multi_ReleaseTrigger_Implementation()
+void AGunBase::ReleaseTrigger_Implementation()
 {
 	if (BulletsFired >= BurstAmount)
 		GetWorldTimerManager().ClearTimer(FireHandle);
 }
+//
+// void AGunBase::Server_ReleaseTrigger_Implementation()
+// {
+// 	Multi_ReleaseTrigger();
+// }
+//
+// void AGunBase::Multi_ReleaseTrigger_Implementation()
+// {
+// 	if (BulletsFired >= BurstAmount)
+// 		GetWorldTimerManager().ClearTimer(FireHandle);
+// }
 
-void AGunBase::ReleaseTrigger_Implementation()
-{
-	Server_ReleaseTrigger();
-}
+
 
 void AGunBase::OnInteract_Implementation(ACharacterBase* Character)
 {
@@ -159,17 +168,6 @@ bool AGunBase::CanFire()
 }
 
 void AGunBase::SpawnBullet_Implementation()
-{
-	Server_SpawnBullet();
-	
-}
-
-void AGunBase::Server_SpawnBullet_Implementation()
-{
-	Multi_SpawnBullet();
-}
-
-void AGunBase::Multi_SpawnBullet_Implementation()
 {
 	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, GetOwner(), 0.0f);
 	APawn* OwningPawn = Cast<APawn>(GetOwner());
@@ -206,18 +204,18 @@ void AGunBase::Multi_SpawnBullet_Implementation()
 			FHitResult Hit;
 			FVector TraceStart;
 			FRotator EyeRotation;
-			if (OwningPawn && OwningPawn->GetController())
-			{
-				OwningPawn->GetController()->GetPlayerViewPoint(TraceStart, EyeRotation);
-				EyeRotation = EyeRotation + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
-				//OwningPawn->GetActorEyesViewPoint(TraceStart, EyeRotation);
-				//EyeRotation = OwningPawn->GetBaseAimRotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
-
-			} else
-			{
-				TraceStart = GetActorLocation();
-				EyeRotation = GetActorRotation();
-			}
+			OwningPawn->GetActorEyesViewPoint(TraceStart, EyeRotation);
+			EyeRotation = EyeRotation + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
+			// if (OwningPawn && OwningPawn->GetController())
+			// {
+			// 	//OwningPawn->GetController()->GetPlayerViewPoint(TraceStart, EyeRotation);
+			// 	//EyeRotation = EyeRotation + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
+			//
+			// } else
+			// {
+			// 	TraceStart = GetActorLocation();
+			// 	EyeRotation = GetActorRotation();
+			// }
 			
 			TArray<AActor*> ActorsToIgnore;
 			ActorsToIgnore.Add(this);
@@ -257,6 +255,100 @@ void AGunBase::Multi_SpawnBullet_Implementation()
 	}
 	SpawnMuzzleFX();
 }
+
+// void AGunBase::Server_SpawnBullet_Implementation()
+// {
+// 	Multi_SpawnBullet();
+// }
+//
+// void AGunBase::Multi_SpawnBullet_Implementation()
+// {
+// 	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, GetOwner(), 0.0f);
+// 	APawn* OwningPawn = Cast<APawn>(GetOwner());
+// 	if (ACharacterBase* OwningChar = Cast<ACharacterBase>(GetOwner()))
+// 	{
+// 		OwningChar->GetMesh()->GetAnimInstance()->Montage_Play(OwningChar->FiringAnim);
+// 	}
+// 	
+// 	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetOwner()))
+// 	{
+// 		if (FireAnimation1P) PlayerChar->GetMesh1P()->GetAnimInstance()->Montage_Play(FireAnimation1P);
+// 		if (APlayerController* PC = Cast<APlayerController>(PlayerChar->GetController())) PC->ClientPlayForceFeedback(FireFeedback);
+// 	}
+// 	
+// 	for (int i = 0; i < MultiShot; ++i)
+// 	{
+// 		if (ProjectileClass)
+// 		{
+// 			FVector Location = Mesh->DoesSocketExist("Muzzle") ? Mesh->GetSocketLocation("Muzzle") : GetActorLocation() + GetActorForwardVector()*50000.0f;
+// 			FRotator Rotation;
+// 			if (OwningPawn)
+// 			{
+// 				Rotation = OwningPawn->GetBaseAimRotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
+// 			} else
+// 			{
+// 				Rotation = GetActorRotation();
+// 			}
+// 			FActorSpawnParameters ActorSpawnParameters;
+// 			ActorSpawnParameters.Owner = this;
+// 			ActorSpawnParameters.Instigator = Cast<ACharacterBase>(this->GetOwner());
+// 			GetWorld()->SpawnActor(ProjectileClass, &Location, &Rotation, ActorSpawnParameters);
+// 		} else
+// 		{
+// 			FHitResult Hit;
+// 			FVector TraceStart;
+// 			FRotator EyeRotation;
+// 			if (OwningPawn && OwningPawn->GetController())
+// 			{
+// 				OwningPawn->GetController()->GetPlayerViewPoint(TraceStart, EyeRotation);
+// 				EyeRotation = EyeRotation + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
+// 				//OwningPawn->GetActorEyesViewPoint(TraceStart, EyeRotation);
+// 				//EyeRotation = OwningPawn->GetBaseAimRotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
+//
+// 			} else
+// 			{
+// 				TraceStart = GetActorLocation();
+// 				EyeRotation = GetActorRotation();
+// 			}
+// 			
+// 			TArray<AActor*> ActorsToIgnore;
+// 			ActorsToIgnore.Add(this);
+// 			ActorsToIgnore.Add(GetOwner());
+// 			// The actual bullet trace, with a width for accuracy forgiveness
+// 			//UKismetSystemLibrary::SphereTraceSingle(GetWorld(), TraceStart, TraceEnd, 20, UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Camera), false, ActorsToIgnore, EDrawDebugTrace::None, Hit, true, FLinearColor::Red, FLinearColor::Green, 5);
+// 			AController* EventInstigator = nullptr;
+// 			if (OwningPawn)
+// 			{
+// 				EventInstigator = OwningPawn->GetController();
+// 			}
+// 			UMyCustomBlueprintFunctionLibrary::FireHitScanBullet(Hit, GetWorld(), ActorsToIgnore, TraceStart, EyeRotation.Vector(), Range, FalloffCurve, Damage, Force, this, EventInstigator);
+// 			if (Mesh->DoesSocketExist("Muzzle") && TrailPFX)
+// 			{
+// 				FVector TrailEnd = (Hit.bBlockingHit) ? Hit.ImpactPoint : Hit.TraceEnd;
+// 				UNiagaraComponent* TrailPFXComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(TrailPFX, Mesh, "Muzzle", FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
+// 				TrailPFXComponent->SetVectorParameter("BeamEnd", TrailEnd);
+// 			}
+// 			if (Hit.bBlockingHit)
+// 			{
+// 				if (HitSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, Hit.Location);
+// 				if (ImpactDecal && !Cast<IDamageableInterface>(Hit.GetActor()))
+// 				{
+// 					FVector Location = Hit.ImpactPoint;
+// 					FRotator Rotation = Hit.Normal.Rotation() + FRotator(-90, 0, 0);
+// 					AActor* Decal = GetWorld()->SpawnActor(ImpactDecal, &Location, &Rotation);
+// 					Decal->AttachToComponent(Hit.GetComponent(), FAttachmentTransformRules::KeepWorldTransform);
+// 					//UGameplayStatics::SpawnDecalAttached(GetWorld(), FVector(10,10,10), ) //Perhaps optimize this in the future
+// 				}
+// 			}
+// 		}
+// 	}
+// 	BulletsFired++;
+// 	if (BulletsFired==BurstAmount)
+// 	{
+// 		ReleaseTrigger();
+// 	}
+// 	SpawnMuzzleFX();
+// }
 
 void AGunBase::SpawnMuzzleFX_Implementation()
 {

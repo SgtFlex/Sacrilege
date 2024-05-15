@@ -34,6 +34,9 @@ public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UUserWidget> PlayerHUDClass;
 
+	UPROPERTY(BlueprintReadOnly)
+	FTimerHandle PlayerRespawnTimerHandle;
+
 public:
 	UPROPERTY(EditAnywhere)
 	uint8 TeamNumber = 2;

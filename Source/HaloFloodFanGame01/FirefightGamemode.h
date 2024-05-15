@@ -14,7 +14,7 @@ class APlayerCharacter;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWaveStart, int, CurrentSet, int, CurrentWave);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnScoreUpdated, APlayerController*, PlayerController, int, NewScore, int, NewResource);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerCharDied, APlayerCharacter*, PlayerCharacter, APlayerController*, PlayerController);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerCharDied, APlayerCharacter*, PlayerCharacter, APlayerControllerBase*, PlayerController);
 
 USTRUCT(BlueprintType)
 struct FSquadStruct
@@ -70,13 +70,19 @@ public:
 	int GetPlayerScore(APlayerController* PlayerController);
 
 	UFUNCTION(BlueprintNativeEvent)
-	void PlayerDied(APlayerCharacter* PlayerCharacter, APlayerController* PlayerController);
+	void PlayerDied(APlayerCharacter* PlayerCharacter, APlayerControllerBase* PlayerController);
 
 	UFUNCTION(BlueprintCallable)
-	bool FinishSpawning(APlayerController* PlayerController, uint8 Team = 0, TSubclassOf<AGunBase> PrimaryWeaponClass = nullptr, TSubclassOf<AGunBase> SecondaryWeaponClass = nullptr);
+	bool FinishSpawning(APlayerControllerBase* PlayerController, uint8 Team = 0, TSubclassOf<AGunBase> PrimaryWeaponClass = nullptr, TSubclassOf<AGunBase> SecondaryWeaponClass = nullptr);
 
 	UFUNCTION(BlueprintCallable)
-	void RespawnPlayer(APlayerController* PlayerController);
+	void RespawnPlayer(APlayerControllerBase* PlayerController);
+
+	UFUNCTION()
+	void StartRespawnProcess(APlayerControllerBase* PC);
+	
+	UFUNCTION()
+	void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
 
 	UFUNCTION(BlueprintCallable)
 	void EndGame();
@@ -87,7 +93,7 @@ public:
 	void HandleMatchHasStarted() override;
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void AddLoadoutScreen(APlayerController* PlayerController, FTimerHandle RespawnTimer);
+	void AddLoadoutScreen(APlayerController* PlayerController, float TimeToSpawn);
 
 	
 	UFUNCTION(BlueprintNativeEvent)

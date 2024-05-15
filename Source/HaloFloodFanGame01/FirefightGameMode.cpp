@@ -7,11 +7,14 @@
 #include "GunBase.h"
 #include "HaloPlayerState.h"
 #include "PlayerCharacter.h"
+#include "PlayerControllerBase.h"
 #include "VehicleBase.h"
+#include "Camera/CameraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Core/CharacterBase.h"
 #include "GameFramework/CheatManager.h"
 #include "GameFramework/GameSession.h"
+#include "GameFramework/SpectatorPawn.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet\GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
@@ -235,17 +238,21 @@ int AFirefightGameMode::GetPlayerScore(APlayerController* PlayerController)
 	//PlayerCharDied.Broadcast
 }
 
-void AFirefightGameMode::PlayerDied_Implementation(APlayerCharacter* PlayerCharacter, APlayerController* PlayerController)
+void AFirefightGameMode::PlayerDied_Implementation(APlayerCharacter* PlayerCharacter, APlayerControllerBase* PlayerController)
 {
 	//UE_LOG(LogTemp, Warning, TEXT("Attempted to respawn player %s from character %s"), *PlayerCharacter->GetActorLabel(), *PlayerController->GetActorLabel());
 	//FTimerDelegate TimerDelegate;
 	//TimerDelegate.BindUFunction(this, FName("RespawnPlayer"), PlayerController);
+	FVector Loc = PlayerCharacter->GetFirstPersonCameraComponent()->GetComponentLocation();
+	FRotator Rot = PlayerCharacter->GetFirstPersonCameraComponent()->GetComponentRotation();
+	ASpectatorPawn* SpectatorPawn = Cast<ASpectatorPawn>(GetWorld()->SpawnActor(GetWorld()->GetAuthGameMode()->SpectatorClass, &Loc, &Rot));
+	PlayerController->Possess(SpectatorPawn);
+	SpectatorPawn->AttachToComponent(PlayerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 	if (CurPlayerLives > 0)
 	{
 		CurPlayerLives--;
 		//GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, TimerDelegate, RespawnTime, false);
-		GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, RespawnTime, false);
-		AddLoadoutScreen(PlayerController, RespawnTimerHandle);
+		StartRespawnProcess(PlayerController);
 		// UUserWidget* LoadoutWidget = CreateWidget<UUserWidget>(PlayerController, LoadoutScreenClass);
 		// LoadoutWidget->AddToPlayerScreen();
 	} else
@@ -254,7 +261,7 @@ void AFirefightGameMode::PlayerDied_Implementation(APlayerCharacter* PlayerChara
 	}
 }
 
-bool AFirefightGameMode::FinishSpawning(APlayerController* PlayerController, uint8 Team, TSubclassOf<AGunBase> PrimaryWeaponClass, TSubclassOf<AGunBase> SecondaryWeaponClass)
+bool AFirefightGameMode::FinishSpawning(APlayerControllerBase* PlayerController, uint8 Team, TSubclassOf<AGunBase> PrimaryWeaponClass, TSubclassOf<AGunBase> SecondaryWeaponClass)
 {
 	AHaloPlayerState* HaloPlayerState = PlayerController->GetPlayerState<AHaloPlayerState>();
 	if (HaloPlayerState)
@@ -272,7 +279,7 @@ bool AFirefightGameMode::FinishSpawning(APlayerController* PlayerController, uin
 		}
 			
 	}
-	if (GetWorld()->GetTimerManager().TimerExists(RespawnTimerHandle))
+	if (GetWorld()->GetTimerManager().TimerExists(PlayerController->PlayerRespawnTimerHandle))
 	{
 		return false;
 	} else
@@ -282,7 +289,7 @@ bool AFirefightGameMode::FinishSpawning(APlayerController* PlayerController, uin
 	}
 }
 
-void AFirefightGameMode::RespawnPlayer(APlayerController* PlayerController)
+void AFirefightGameMode::RespawnPlayer(APlayerControllerBase* PlayerController)
 {
 	PlayerController->UnPossess();
 	RestartPlayer(PlayerController);
@@ -291,6 +298,24 @@ void AFirefightGameMode::RespawnPlayer(APlayerController* PlayerController)
 		SpawnRespawnVehicle(PlayerController);
 	}
 }
+
+void AFirefightGameMode::StartRespawnProcess(APlayerControllerBase* PC)
+{
+	GetWorld()->GetTimerManager().SetTimer(PC->PlayerRespawnTimerHandle, RespawnTime, false);
+	AddLoadoutScreen(PC, RespawnTime);
+}
+
+void AFirefightGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
+{
+	//Super::HandleStartingNewPlayer_Implementation(NewPlayer);
+	StartRespawnProcess(Cast<APlayerControllerBase>(NewPlayer));
+}
+
+// void AFirefightGameMode::PostLogin(APlayerController* NewPlayer)
+// {
+// 	Super::PostLogin(NewPlayer);
+// 	StartRespawnProcess(Cast<APlayerControllerBase>(NewPlayer));
+// }
 
 void AFirefightGameMode::EndGame()
 {
@@ -310,16 +335,16 @@ void AFirefightGameMode::HandleMatchHasStarted()
 	GameSession->HandleMatchHasStarted();
 
 	// start human players first
-	for( FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator )
-	{
-		APlayerController* PlayerController = Iterator->Get();
-		if (PlayerController && (PlayerController->GetPawn() == nullptr) && PlayerCanRestart(PlayerController))
-		{
-			GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, RespawnTime, false);
-			AddLoadoutScreen(PlayerController, RespawnTimerHandle);
-			//RestartPlayer(PlayerController);
-		}
-	}
+	// for( FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator )
+	// {
+	// 	APlayerControllerBase* PlayerController = Cast<APlayerControllerBase>(Iterator->Get());
+	// 	if (PlayerController && (PlayerController->GetPawn() == nullptr) && PlayerCanRestart(PlayerController))
+	// 	{
+	// 		GetWorld()->GetTimerManager().SetTimer(PlayerController->PlayerRespawnTimerHandle, RespawnTime, false);
+	// 		AddLoadoutScreen(PlayerController, RespawnTime);
+	// 		//RestartPlayer(PlayerController);
+	// 	}
+	// }
 
 	// Make sure level streaming is up to date before triggering NotifyMatchStarted
 	GEngine->BlockTillLevelStreamingCompleted(GetWorld());

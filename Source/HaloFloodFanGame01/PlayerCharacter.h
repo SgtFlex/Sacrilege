@@ -108,7 +108,9 @@ protected:
 	virtual void Tick(float DeltaSeconds) override;
 
 public:
-	virtual void SpawnWeapons() override;
+	//virtual void SpawnWeapons() override;
+
+	// virtual void Multi_SpawnWeapons() override;
 	
 	UFUNCTION(BlueprintGetter)
 	void GetPlayerAim(FHitResult& HitResult);
@@ -144,7 +146,7 @@ public:
 
 	virtual void SwitchWeapon() override;
 	
-	virtual void ReloadWeapon() override;
+	// virtual void ReloadWeapon() override;
 
 	virtual void ScopeWeapon();
 	
@@ -189,7 +191,7 @@ protected:
 	// End of APawn interface
 	
 public:
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	APlayerController* PlayerController;
 	
 	UPROPERTY()

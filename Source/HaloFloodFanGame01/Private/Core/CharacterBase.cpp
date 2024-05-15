@@ -61,11 +61,36 @@ void ACharacterBase::SpawnWeapons()
 {
 	if (EquippedWeaponClass)
 	{
-		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(EquippedWeaponClass)));
+		AGunBase* Gun = Cast<AGunBase>(GetWorld()->SpawnActor(EquippedWeaponClass));
+		Gun->SetOwner(this);
+		PickupWeapon(Gun);
 	}
 	if (HolsteredWeapon)
 	{
-		PickupWeapon(Cast<AGunBase>(GetWorld()->SpawnActor(HolsteredWeaponClass)));
+		AGunBase* Gun = Cast<AGunBase>(GetWorld()->SpawnActor(HolsteredWeaponClass));
+		Gun->SetOwner(this);
+		PickupWeapon(Gun);
+	}
+}
+
+void ACharacterBase::Server_SpawnWeapons_Implementation()
+{
+	Multi_SpawnWeapons();
+}
+
+void ACharacterBase::Multi_SpawnWeapons_Implementation()
+{
+	if (EquippedWeaponClass)
+	{
+		AGunBase* Gun = Cast<AGunBase>(GetWorld()->SpawnActor(EquippedWeaponClass));
+		Gun->SetOwner(this);
+		PickupWeapon(Gun);
+	}
+	if (HolsteredWeapon)
+	{
+		AGunBase* Gun = Cast<AGunBase>(GetWorld()->SpawnActor(HolsteredWeaponClass));
+		Gun->SetOwner(this);
+		PickupWeapon(Gun);
 	}
 }
 
@@ -75,12 +100,12 @@ void ACharacterBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void ACharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(ACharacterBase, EquippedWeapon);
-	DOREPLIFETIME(ACharacterBase, HolsteredWeapon);
-}
+// void ACharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+// {
+// 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+// 	// DOREPLIFETIME(ACharacterBase, EquippedWeapon);
+// 	// DOREPLIFETIME(ACharacterBase, HolsteredWeapon);
+// }
 
 // Called to bind functionality to input
 void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -317,24 +342,18 @@ void ACharacterBase::UseEquipment()
 void ACharacterBase::PrimaryAttack_Pull()
 {
 
-	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Green, FString::Printf(TEXT("Client called Primary attack, calling Server RPC")));
 	Server_PrimaryAttack_Pull();
 	
 }
 
 void ACharacterBase::Server_PrimaryAttack_Pull_Implementation()
 {
-	if (HasAuthority())
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Green, FString::Printf(TEXT("Server calling Multicast primary attack RPC")));
-		Multi_PrimaryAttack_Pull();
-	}
+	Multi_PrimaryAttack_Pull();
 }
 
 void ACharacterBase::Multi_PrimaryAttack_Pull_Implementation()
 {
 
-	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Green, FString::Printf(TEXT("Multicast fired on %s"), *UEnum::GetValueAsString(GetRemoteRole())));
 	if (EquippedWeapon)
 		EquippedWeapon->PullTrigger();
 	
@@ -342,11 +361,31 @@ void ACharacterBase::Multi_PrimaryAttack_Pull_Implementation()
 
 void ACharacterBase::PrimaryAttack_Release()
 {
+	Server_PrimaryAttack_Release();
+}
+
+void ACharacterBase::Server_PrimaryAttack_Release_Implementation()
+{
+	Multi_PrimaryAttack_Release();
+}
+
+void ACharacterBase::Multi_PrimaryAttack_Release_Implementation()
+{
 	if (EquippedWeapon)
 		EquippedWeapon->ReleaseTrigger();
 }
 
 void ACharacterBase::ReloadWeapon()
+{
+	Server_ReloadWeapon();
+}
+
+void ACharacterBase::Server_ReloadWeapon_Implementation()
+{
+	Multi_ReloadWeapon();
+}
+
+void ACharacterBase::Multi_ReloadWeapon_Implementation()
 {
 	if (EquippedWeapon)
 	{
@@ -355,6 +394,16 @@ void ACharacterBase::ReloadWeapon()
 }
 
 void ACharacterBase::SwitchWeapon()
+{
+	Server_SwitchWeapon();
+}
+
+void ACharacterBase::Server_SwitchWeapon_Implementation()
+{
+	Multi_SwitchWeapon();
+}
+
+void ACharacterBase::Multi_SwitchWeapon_Implementation()
 {
 	if (!(EquippedWeapon && HolsteredWeapon))
 		return;
@@ -373,6 +422,7 @@ void ACharacterBase::EquipWeapon(AGunBase* Gun)
 	//EquippedWeapon = Gun;
 	
 	Gun->SetActorHiddenInGame(false);
+	if (IsLocallyControlled()) {}
 	Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
 	Gun->OnEquipped();
 }
@@ -389,6 +439,7 @@ void ACharacterBase::HolsterWeapon(AGunBase* Gun)
 void ACharacterBase::PickupWeapon(AGunBase* Gun)
 {
 	// Server_PickupWeapon(Gun);
+	Gun->SetOwner(this);
 	Gun->Mesh->SetSimulatePhysics(false);
 	Gun->SetActorEnableCollision(false);
 	Gun->OnPickup(this);

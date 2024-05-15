@@ -66,11 +66,11 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void SpawnBullet();
 
-	UFUNCTION(BlueprintCallable, Server, Reliable)
-	void Server_SpawnBullet();
-
-	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
-	void Multi_SpawnBullet();
+	// UFUNCTION(BlueprintCallable, Server, Reliable)
+	// void Server_SpawnBullet();
+	//
+	// UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
+	// void Multi_SpawnBullet();
 
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
 	void SpawnMuzzleFX();
@@ -102,20 +102,20 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void PullTrigger();
 
-	UFUNCTION(Server, Reliable)
-	void Server_PullTrigger();
-
-	UFUNCTION(NetMulticast, Reliable)
-	void Multi_PullTrigger();
+	// UFUNCTION(Server, Reliable)
+	// void Server_PullTrigger();
+	//
+	// UFUNCTION(NetMulticast, Reliable)
+	// void Multi_PullTrigger();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void ReleaseTrigger();
 	
-	UFUNCTION(Server, Reliable)
-	void Server_ReleaseTrigger();
-
-	UFUNCTION(NetMulticast, Reliable)
-	void Multi_ReleaseTrigger();
+	// UFUNCTION(Server, Reliable)
+	// void Server_ReleaseTrigger();
+	//
+	// UFUNCTION(NetMulticast, Reliable)
+	// void Multi_ReleaseTrigger();
 	
 	virtual void OnInteract_Implementation(ACharacterBase* Character) override;
 
