@@ -10,6 +10,7 @@
 
 class UBehaviorTreeComponent;
 class ASmartObject;
+class ACharacterBase;
 /**
  * 
  */
@@ -53,7 +54,12 @@ public:
 	UFUNCTION()
 	void AlertAllies(float AlertRadius, AActor* Actor, FAIStimulus Stimulus);
 
+	void SetAlertState(TEnumAsByte<EAlertState> AlertState);
+
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ACharacterBase* PawnChar;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TObjectPtr<UAIPerceptionComponent> AIPerceptionComponent;
 

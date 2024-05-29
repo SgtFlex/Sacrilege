@@ -7,7 +7,8 @@
 #include "GameFramework/Character.h"
 #include "CharacterBase.generated.h"
 
-enum EAlertState : int;
+enum EAlertState : uint8;
+enum EEmotion : uint8;
 class ASmartObject;
 class AGrenadeBase;
 class ADecalActor;
@@ -194,19 +195,19 @@ public:
 	UHealthComponent* HealthComponent;
 
 	//Loadout
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true), Replicated)
 	TSubclassOf<AGunBase> EquippedWeaponClass;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true), Replicated)
 	TSubclassOf<AGunBase> HolsteredWeaponClass;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true))
 	TArray<FGrenadeStruct> GrenadeInventory;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Replicated)
 	AGunBase* EquippedWeapon;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Replicated)
 	AGunBase* HolsteredWeapon;
 
 	FTimerHandle HolsterHandle;
@@ -242,11 +243,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ASmartObject* SmartObject;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
 	TEnumAsByte<EAlertState> AlertState;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
+	TEnumAsByte<EEmotion> Emotion;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TEnumAsByte<EAlertState> Emotion;
+	float MaxSpeed = 100.0f;
 	
 	UPROPERTY()
 	FTimerHandle StunTimer;

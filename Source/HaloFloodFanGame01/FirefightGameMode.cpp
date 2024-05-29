@@ -25,7 +25,7 @@ AFirefightGameMode::AFirefightGameMode()
 	// set default pawn class to our Blueprinted character
 	//static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(TEXT("/Game/FirstPerson/Blueprints/BP_FirstPersonCharacter"));
 	//DefaultPawnClass = PlayerPawnClassFinder.Class;
-	SoundtrackComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("SoundtrackComponent"));
+	// SoundtrackComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("SoundtrackComponent"));
 
 	CurPlayerLives = PlayerLives;
 }
@@ -112,17 +112,17 @@ void AFirefightGameMode::StartSet()
 	curSet++;
 	curWave = 0;
 	StartWave();
-	if (bEnableMusic)
-	{
-		SoundtrackComponent->SetSound(Soundtracks[FMath::RandRange(0, Soundtracks.Num()-1)]);
-		SoundtrackComponent->FadeIn(3, 0.3);
-	}
+	// if (bEnableMusic)
+	// {
+	// 	SoundtrackComponent->SetSound(Soundtracks[FMath::RandRange(0, Soundtracks.Num()-1)]);
+	// 	SoundtrackComponent->FadeIn(3, 0.3);
+	// }
 }
 
 void AFirefightGameMode::FinishSet()
 {
 	MaxSquadCost = (MaxSquadCost + 1) * 2;
-	if (bEnableMusic) GetSoundtrackComponent()->FadeOut(10, 0);
+	// if (bEnableMusic) GetSoundtrackComponent()->FadeOut(10, 0);
 	GetWorldTimerManager().SetTimer(SetFinishDelayTimer, this, &AFirefightGameMode::StartSet, 10);
 }
 
@@ -323,12 +323,12 @@ void AFirefightGameMode::EndGame()
 	//GetWorld()->GetPlay
 	RestartGame();
 }
-
-UAudioComponent* AFirefightGameMode::GetSoundtrackComponent()
-{
-	return SoundtrackComponent;
-	
-}
+//
+// UAudioComponent* AFirefightGameMode::GetSoundtrackComponent()
+// {
+// 	return SoundtrackComponent;
+// 	
+// }
 
 void AFirefightGameMode::HandleMatchHasStarted()
 {

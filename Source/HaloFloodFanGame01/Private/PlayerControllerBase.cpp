@@ -3,6 +3,7 @@
 
 #include "PlayerControllerBase.h"
 
+#include "AlertState.h"
 #include "PlayerHUD.h"
 #include "Core/CharacterBase.h"
 #include "GameFramework/GameModeBase.h"
@@ -27,7 +28,9 @@ void APlayerControllerBase::OnPossess(APawn* InPawn)
 
 	// if (ACharacterBase* Char = Cast<ACharacterBase>(InPawn))
 	// 	SetGenericTeamId(Char->TeamNumber);
-
+	if (ACharacterBase* Char = Cast<ACharacterBase>(InPawn))
+		Char->AlertState = EAlertState::Alerted;
+	// 	SetGenericTeamId(Char->TeamNumber);
 	UE_LOG(LogTemp, Warning, TEXT("Possessed"));
 	// check(this);
 	// if (PlayerHUDClass)

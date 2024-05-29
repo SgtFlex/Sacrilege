@@ -127,6 +127,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void Interact();
 
+	UFUNCTION(Server, Reliable)
+	void Server_Interact();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multi_Interact();
+	
 	UFUNCTION(BlueprintCallable)
 	void SwitchGrenadeType();
 
@@ -145,6 +151,10 @@ public:
 	virtual void HolsterWeapon(AGunBase* Gun) override;
 
 	virtual void SwitchWeapon() override;
+
+	virtual void Server_SwitchWeapon_Implementation() override;
+
+	virtual void Multi_SwitchWeapon_Implementation() override;
 	
 	// virtual void ReloadWeapon() override;
 

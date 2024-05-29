@@ -2,6 +2,7 @@
 
 #include "PlayerCharacter.h"
 
+#include "AlertState.h"
 #include "HealthComponent.h"
 #include "GrenadeBase.h"
 #include "GunBase.h"
@@ -384,6 +385,16 @@ void APlayerCharacter::ThrowEquippedGrenade_Implementation()
 
 void APlayerCharacter::Interact()
 {
+	Server_Interact();
+}
+
+void APlayerCharacter::Server_Interact_Implementation()
+{
+	Multi_Interact();
+}
+
+void APlayerCharacter::Multi_Interact_Implementation()
+{
 	if (InteractableActor && InteractableActor->Implements<UInteractableInterface>())
 	{
 		IInteractableInterface::Execute_OnInteract(InteractableActor, this);
@@ -431,24 +442,46 @@ void APlayerCharacter::HolsterWeapon(AGunBase* Gun)
 
 void APlayerCharacter::SwitchWeapon()
 {
-	//Super::SwitchWeapon();
+	Server_SwitchWeapon();
 
 
+	// if (!(EquippedWeapon && HolsteredWeapon))
+	// 	return;
+	// HolsterWeapon(EquippedWeapon);
+	//
+	//
+	// AGunBase* TempGun = EquippedWeapon;
+	// EquippedWeapon = HolsteredWeapon;
+	// HolsteredWeapon = TempGun;
+	
+
+	//GetWorld()->GetTimerManager().SetTimer(HolsterHandle, FTimerDelegate::CreateUObject(this, &APlayerCharacter::EquipWeapon, EquippedWeapon), HolsteredWeapon->HolsterSpeed, false);
+	//EquipWeapon(EquippedWeapon);
+	//WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
+	
+}
+
+void APlayerCharacter::Server_SwitchWeapon_Implementation()
+{
+	Multi_SwitchWeapon();
+}
+
+void APlayerCharacter::Multi_SwitchWeapon_Implementation()
+{
 	if (!(EquippedWeapon && HolsteredWeapon))
 		return;
 	HolsterWeapon(EquippedWeapon);
-	
 	
 	AGunBase* TempGun = EquippedWeapon;
 	EquippedWeapon = HolsteredWeapon;
 	HolsteredWeapon = TempGun;
 	
+	//EquipWeapon(EquippedWeapon);
 
 	GetWorld()->GetTimerManager().SetTimer(HolsterHandle, FTimerDelegate::CreateUObject(this, &APlayerCharacter::EquipWeapon, EquippedWeapon), HolsteredWeapon->HolsterSpeed, false);
-	//EquipWeapon(EquippedWeapon);
-	//WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
 	
 }
+
 //
 // void APlayerCharacter::ReloadWeapon()
 // {

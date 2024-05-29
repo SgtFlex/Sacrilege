@@ -65,7 +65,7 @@ void ACharacterBase::SpawnWeapons()
 		Gun->SetOwner(this);
 		PickupWeapon(Gun);
 	}
-	if (HolsteredWeapon)
+	if (HolsteredWeaponClass)
 	{
 		AGunBase* Gun = Cast<AGunBase>(GetWorld()->SpawnActor(HolsteredWeaponClass));
 		Gun->SetOwner(this);
@@ -86,7 +86,7 @@ void ACharacterBase::Multi_SpawnWeapons_Implementation()
 		Gun->SetOwner(this);
 		PickupWeapon(Gun);
 	}
-	if (HolsteredWeapon)
+	if (HolsteredWeaponClass)
 	{
 		AGunBase* Gun = Cast<AGunBase>(GetWorld()->SpawnActor(HolsteredWeaponClass));
 		Gun->SetOwner(this);
@@ -100,12 +100,17 @@ void ACharacterBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-// void ACharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-// {
-// 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-// 	// DOREPLIFETIME(ACharacterBase, EquippedWeapon);
-// 	// DOREPLIFETIME(ACharacterBase, HolsteredWeapon);
-// }
+void ACharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	// DOREPLIFETIME(ACharacterBase, EquippedWeapon);
+	// DOREPLIFETIME(ACharacterBase, HolsteredWeapon);
+	DOREPLIFETIME(ACharacterBase, Emotion);
+	DOREPLIFETIME(ACharacterBase, AlertState);
+	DOREPLIFETIME(ACharacterBase, EquippedWeaponClass);
+	DOREPLIFETIME(ACharacterBase, HolsteredWeaponClass);
+	//DOREPLIFETIME(ACharacterBase, HealthComponent);
+}
 
 // Called to bind functionality to input
 void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

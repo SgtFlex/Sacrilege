@@ -28,16 +28,16 @@ public:
 	UPROPERTY()
 	UPrimitiveComponent* PrimitiveComponent;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Replicated)
 	FVector TargetForceLocal;
 	FVector CurrentVelocity;
 
-	
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 	UPROPERTY(EditAnywhere)
 	float ThrustForce = 1000000.0;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Replicated)
 	FRotator TargetRotation;
 	FRotator CurrentRotation;
 

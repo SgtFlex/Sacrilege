@@ -86,9 +86,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void EndGame();
-
-	UFUNCTION()
-	UAudioComponent* GetSoundtrackComponent();
+	//
+	// UFUNCTION()
+	// UAudioComponent* GetSoundtrackComponent();
 
 	void HandleMatchHasStarted() override;
 
@@ -150,9 +150,9 @@ private:
 	int MaxWavePool = 5;
 	int CurWavePool = 5;
 	int MaxSquadCost = 1;
-	
-	UPROPERTY(EditDefaultsOnly)
-	bool bEnableMusic = true;
+	//
+	// UPROPERTY(EditDefaultsOnly)
+	// bool bEnableMusic = true;
 	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -171,12 +171,12 @@ public:
 	TArray<AAISpawner*> Spawners;
 
 	TArray<AAISpawner*> AvailableSpawners;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TArray<USoundBase*> Soundtracks;
-
-	UPROPERTY()
-	UAudioComponent* SoundtrackComponent;
+	//
+	// UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	// TArray<USoundBase*> Soundtracks;
+	//
+	// UPROPERTY()
+	// UAudioComponent* SoundtrackComponent;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUserWidget> LoadoutScreenClass;

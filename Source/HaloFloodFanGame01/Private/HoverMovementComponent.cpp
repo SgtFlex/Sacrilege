@@ -4,6 +4,7 @@
 #include "HoverMovementComponent.h"
 
 #include "Kismet/KismetMathLibrary.h"
+#include "Net/UnrealNetwork.h"
 
 void UHoverMovementComponent::BeginPlay()
 {
@@ -37,4 +38,11 @@ void UHoverMovementComponent::TorqueToTargetRotation()
 	const FRotator DeltaRotation = UKismetMathLibrary::NormalizedDeltaRotator(TargetRotation, CurrentRotation);
 	const FVector CurrentTorque = PrimitiveComponent->GetPhysicsAngularVelocityInDegrees();
 	PrimitiveComponent->AddTorqueInDegrees((FVector(DeltaRotation.Roll, DeltaRotation.Pitch, DeltaRotation.Yaw) - (CurrentTorque * TorqueDamping)) * TorqueForce, NAME_None, true);
+}
+
+void UHoverMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(UHoverMovementComponent, TargetRotation);
+	DOREPLIFETIME(UHoverMovementComponent, TargetForceLocal);
 }

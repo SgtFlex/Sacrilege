@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 
 UENUM(BlueprintType)
-enum EEmotion
+enum EEmotion : uint8
 {
 	Neutral,
 	Scared,

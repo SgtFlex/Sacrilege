@@ -92,10 +92,13 @@ void AAIControllerBase::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 	if (ACharacterBase* Char = Cast<ACharacterBase>(InPawn))
+	{
+		PawnChar = Char;
 		SetGenericTeamId(Char->TeamId);
-	else
+	} else
+	{
 		SetGenericTeamId(FGenericTeamId(TeamNumber));
-	
+	}
 }
 
 void AAIControllerBase::BeginPlayDelayed()
@@ -139,7 +142,8 @@ void AAIControllerBase::SetSmartObject(ASmartObject* SmartObject)
 	BehaviorTreeComp->SetDynamicSubtree(SubTag, SmartObject->DynamicTree);
 	BlackboardComp->SetValueAsBool(FName("HasSmartObject"), true);
 	BlackboardComp->SetValueAsObject(FName("SmartObject"), SmartObject);
-	BlackboardComp->SetValueAsEnum(TEXT("AlertState"), SmartObject->AlertState);
+	//BlackboardComp->SetValueAsEnum(TEXT("AlertState"), SmartObject->AlertState);
+	SetAlertState(SmartObject->AlertState);
 	// BlackboardComp->SetValueAsVector(FName("StimulusLocation"), SmartObject->GetActorLocation());
 }
 
@@ -170,7 +174,7 @@ void AAIControllerBase::UpdatedPerception(AActor* Actor, FAIStimulus Stimulus, b
 		UpdateTargetedEnemy(Actor);
 	} else
 	{
-		if (BlackboardComp->GetValueAsEnum(TEXT("AlertState")) != EAlertState::Alerted) BlackboardComp->SetValueAsEnum(TEXT("AlertState"), EAlertState::Suspicious);
+		if (BlackboardComp->GetValueAsEnum(TEXT("AlertState")) != EAlertState::Alerted) SetAlertState(Suspicious);
 		BlackboardComp->SetValueAsVector(TEXT("StimulusLocation"), Stimulus.StimulusLocation);
 	}
 	if (!AlertedByAllies) AlertAllies(3000, Actor, Stimulus);
@@ -196,7 +200,8 @@ void AAIControllerBase::UpdateTargetedEnemy(AActor* Actor)
 		}
 		if (ClosestEnemy)
 		{
-			BlackboardComp->SetValueAsEnum(TEXT("AlertState"), EAlertState::Alerted);
+			//BlackboardComp->SetValueAsEnum(TEXT("AlertState"), EAlertState::Alerted);
+			SetAlertState(Alerted);
 			BlackboardComp->SetValueAsObject(TEXT("Enemy"), ClosestEnemy);
 			// if (ACharacterBase* EnemyChar = Cast<ACharacterBase>(ClosestEnemy))
 			// {
@@ -207,7 +212,8 @@ void AAIControllerBase::UpdateTargetedEnemy(AActor* Actor)
 		}
 	}
 	if (Actor) BlackboardComp->SetValueAsVector(TEXT("StimulusLocation"), Actor->GetActorLocation());
-	BlackboardComp->SetValueAsEnum(TEXT("AlertState"), EAlertState::Suspicious);
+	//BlackboardComp->SetValueAsEnum(TEXT("AlertState"), EAlertState::Suspicious);
+	SetAlertState(Suspicious);
 	BlackboardComp->SetValueAsObject(TEXT("Enemy"), nullptr);
 	
 }
@@ -244,6 +250,16 @@ void AAIControllerBase::AlertAllies(float AlertRadius, AActor* Actor, FAIStimulu
 				}
 			}
 		}
+	}
+}
+
+void AAIControllerBase::SetAlertState(TEnumAsByte<EAlertState> NewAlertState)
+{
+	BlackboardComp->SetValueAsEnum(TEXT("AlertState"), NewAlertState);
+	if (PawnChar)
+	{
+		//GEngine->AddOnScreenDebugMessage(-1, 2, FColor(255,255,255,255), "Setting alert state");
+		PawnChar->AlertState = NewAlertState;
 	}
 }
 

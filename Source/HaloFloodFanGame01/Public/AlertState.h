@@ -6,7 +6,7 @@
 #include "AlertState.generated.h"
 
 UENUM(BlueprintType)
-enum EAlertState
+enum EAlertState : uint8
 {
 	Relaxed,
 	Suspicious,
