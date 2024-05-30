@@ -4,6 +4,7 @@
 #include "Core/CharacterBase.h"
 
 #include "AIControllerBase.h"
+#include "EnhancedInputComponent.h"
 #include "GrenadeBase.h"
 #include "GunBase.h"
 #include "HaloGameState.h"
@@ -17,7 +18,9 @@
 #include "Animation/AnimInstance.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Camera/CameraComponent.h"
 #include "Components/DecalComponent.h"
+#include "Components/SphereComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISense_Damage.h"
@@ -34,6 +37,31 @@ ACharacterBase::ACharacterBase()
 	
 	SetReplicates(true);
 	SetReplicateMovement(true);
+
+	// Set size for collision capsule
+	//GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
+		
+	
+
+	// Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
+	Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
+	Mesh1P->SetOnlyOwnerSee(true);
+	Mesh1P->SetupAttachment(GetCapsuleComponent());
+	Mesh1P->bCastDynamicShadow = false;
+	Mesh1P->CastShadow = false;
+
+	// Create a CameraComponent	
+	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+	FirstPersonCameraComponent->SetupAttachment(GetMesh1P(), "HeadSocket");
+	//FirstPersonCameraComponent->SetRelativeLocation(FVector(-10.f, 0.f, 60.f)); // Position the camera
+	FirstPersonCameraComponent->bUsePawnControlRotation = true;
+
+	InteractionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Interaction Sphere"));
+	InteractionSphere->SetupAttachment(GetRootComponent());
+	InteractionSphere->SetSphereRadius(500);
+	InteractionSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
+	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 }
 
 // Called when the game starts or when spawned
@@ -116,6 +144,41 @@ void ACharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
+	
+	if (EnhancedInputComponent)
+	{
+		//Jumping
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+
+		//Moving
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
+
+		//Looking
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
+
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Interact);
+
+		EnhancedInputComponent->BindAction(PrimaryAttackAction, ETriggerEvent::Started, this, &APlayerCharacter::PrimaryAttack_Pull);
+
+		EnhancedInputComponent->BindAction(PrimaryAttackAction, ETriggerEvent::Completed, this, &APlayerCharacter::PrimaryAttack_Release);
+		
+		EnhancedInputComponent->BindAction(SwitchWeaponAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SwitchWeapon);
+
+		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ReloadWeapon);
+		
+		EnhancedInputComponent->BindAction(MeleeAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Melee);
+
+		EnhancedInputComponent->BindAction(SwitchGrenadeAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SwitchGrenadeType);
+		
+		EnhancedInputComponent->BindAction(ThrowGrenadeAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ThrowEquippedGrenade);
+
+		EnhancedInputComponent->BindAction(UseEquipmentAction, ETriggerEvent::Triggered, this, &APlayerCharacter::UseEquipment);
+		
+		EnhancedInputComponent->BindAction(ScopeAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ScopeWeapon);
+	}
 
 }
 
@@ -278,6 +341,9 @@ void ACharacterBase::SetSmartObject(ASmartObject* NewSmartObject)
 	}
 }
 
+
+
+
 bool ACharacterBase::CanMelee_Implementation()
 {
 	if (GetWorld()->GetTimerManager().TimerExists(MeleeTimer)) return false;
@@ -290,6 +356,68 @@ void ACharacterBase::EquipGrenadeType_Implementation(TSubclassOf<AGrenadeBase> G
 }
 
 void ACharacterBase::Melee_Implementation()
+{
+	if (IsPlayerControlled())
+	{
+		PlayerMelee();
+	} else
+	{
+		NPCMelee();
+	}
+}
+
+FVector StartMeleeLoc;
+FVector EndMeleeLoc;
+FHitResult MeleeHit;
+
+void ACharacterBase::PlayerMelee_Implementation()
+{
+	if (GetWorld()->GetTimerManager().TimerExists(MeleeTimer)) return;
+	GetWorld()->GetTimerManager().SetTimer(MeleeTimer, 1, false);
+	
+	FVector TraceStart = GetFirstPersonCameraComponent()->GetComponentLocation();
+	FVector TraceEnd = GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*500;
+	FCollisionQueryParams CollisionParameters;
+	CollisionParameters.AddIgnoredActor(this);
+	CollisionParameters.AddIgnoredActor(GetAttachParentActor());
+	GetWorld()->LineTraceSingleByChannel(MeleeHit, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParameters);
+	DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor(255, 0, 0), false, 3);
+	
+	if (MeleeHit.GetActor())
+	{
+		if (MeleeHit.GetActor()->Implements<UDamageableInterface>())
+		{
+			if (IDamageableInterface::Execute_GetHealthComponent(MeleeHit.GetActor())->GetHealth() > 0) {
+				if (MeleeCurve)
+				{
+					StartMeleeLoc = GetActorLocation();
+					EndMeleeLoc = MeleeHit.GetActor()->GetActorLocation();
+					
+					FOnTimelineFloat TimelineCallback;
+					FOnTimelineEventStatic TimelineFinishedCallback;
+					
+					TimelineCallback.BindUFunction(this, FName("MeleeUpdate"));
+					TimelineFinishedCallback.BindUFunction(this, FName("MeleeDamageCode"));
+					
+					MeleeTimeline.AddInterpFloat(MeleeCurve, TimelineCallback);
+					MeleeTimeline.SetTimelineFinishedFunc(TimelineFinishedCallback);
+					MeleeTimeline.SetPlayRate(10);
+					MeleeTimeline.PlayFromStart();
+				}
+			}
+		}
+		UPrimitiveComponent* HitComp = MeleeHit.GetComponent();
+		
+		if (HitComp && HitComp->IsSimulatingPhysics())
+		{
+			FVector ForceVector = (HitComp->GetComponentLocation() - GetActorLocation());
+			ForceVector.Normalize();
+			HitComp->AddImpulse(ForceVector*MeleeForce);
+		}
+	}
+}
+
+void ACharacterBase::NPCMelee_Implementation()
 {
 	//GetMesh()->GetAnimInstance()->Montage_Play(MeleeAnim);
 	if (!CanMelee()) return;

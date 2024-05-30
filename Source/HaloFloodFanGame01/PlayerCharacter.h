@@ -22,100 +22,26 @@ class UCameraComponent;
 class UAnimMontage;
 class USoundBase;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractableChanged, AActor*, Interactable);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractableChanged, AActor*, Interactable);
 
 
 
 UCLASS(config=Game)
 class APlayerCharacter : public ACharacterBase
 {
-	GENERATED_BODY()
-
-	/** Pawn mesh: 1st person view (arms; seen only by self) */
-	UPROPERTY(EditAnywhere, Category=Mesh)
-	USkeletalMeshComponent* Mesh1P;
-
-	/** First person camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* FirstPersonCameraComponent;
-
-	UPROPERTY(EditAnywhere)
-	USphereComponent* InteractionSphere;
-
-	/** MappingContext */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
-	class UInputMappingContext* DefaultMappingContext;
-
-	/** Jump Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
-	class UInputAction* JumpAction;
-
-	/** Move Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
-	class UInputAction* MoveAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* InteractAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* SwitchWeaponAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* PrimaryAttackAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* MeleeAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* ReloadAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* SwitchGrenadeAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* ThrowGrenadeAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* UseEquipmentAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* CrouchAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* ScopeAction;
-
-	UPROPERTY()
-	UEnhancedInputComponent* EnhancedInputComponent;
-
-	UPROPERTY()
-	FTimerHandle PossessionDelay;
-	
+	GENERATED_BODY()	
 public:
 	APlayerCharacter();
-
-	/** Property replication */
-	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-	UFUNCTION()
-	virtual void OnInteractionSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
-
-	UFUNCTION()
-	virtual void OnInteractionSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
 protected:
-	virtual void BeginPlay();
+	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaSeconds) override;
 
 public:
-	//virtual void SpawnWeapons() override;
-
-	// virtual void Multi_SpawnWeapons() override;
-	
 	UFUNCTION(BlueprintGetter)
-	void GetPlayerAim(FHitResult& HitResult);
+	void GetPlayerAim(FHitResult& HitResult) const;
 
-	float AimAssist();
+	float AimAssist() const;
 	
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -137,11 +63,7 @@ public:
 	void SwitchGrenadeType();
 
 	void SwitchGrenadeType(int Index);
-
-	virtual void PossessedBy(AController* NewController) override;
-
-	virtual void NotifyControllerChanged() override;
-
+	
 	virtual void NotifyRestarted() override;
 	
 	virtual void UnPossessed() override;
@@ -156,19 +78,17 @@ public:
 
 	virtual void Multi_SwitchWeapon_Implementation() override;
 	
-	// virtual void ReloadWeapon() override;
-
 	virtual void ScopeWeapon();
 	
 	/** Returns Mesh1P subobject **/
 	UFUNCTION(BlueprintCallable)
-	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
+	virtual USkeletalMeshComponent* GetMesh1P() const override { return Mesh1P; }
 	
 	/** Returns FirstPersonCameraComponent subobject **/
 	UFUNCTION(BlueprintCallable)
-	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+	virtual UCameraComponent* GetFirstPersonCameraComponent() const override { return FirstPersonCameraComponent; }
 
-	UUserWidget* GetPlayerHUD() const { return PlayerHUD; }
+	virtual UUserWidget* GetPlayerHUD() const override { return PlayerHUD; }
 protected:
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
@@ -190,7 +110,6 @@ protected:
 
 	UFUNCTION()
 	virtual void MeleeDamageCode();
-
 	UFUNCTION()
 	void MeleeUpdate(float Alpha);
 
@@ -221,15 +140,6 @@ public:
 	int32 SpikeCount = 0;
 	UPROPERTY(EditAnywhere, Category="Loadout")
 	int32 IncenCount = 0;
-
-	// UPROPERTY(EditDefaultsOnly)
-	// UAnimMontage* DrawAnimation1P;
-	//
-	// UPROPERTY(EditDefaultsOnly)
-	// UAnimMontage* HolsterAnimation1P;
-	//
-	// UPROPERTY(EditDefaultsOnly)
-	// UAnimMontage* FireAnimation1P;
 
 	UPROPERTY(EditDefaultsOnly)
 	UAnimMontage* ThrowGrenadeAnimation1P;

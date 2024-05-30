@@ -2,7 +2,6 @@
 
 #include "PlayerCharacter.h"
 
-#include "AlertState.h"
 #include "HealthComponent.h"
 #include "GrenadeBase.h"
 #include "GunBase.h"
@@ -11,7 +10,6 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "FirefightGamemode.h"
-#include "HaloPlayerState.h"
 #include "InteractableInterface.h"
 #include "PlayerControllerBase.h"
 #include "Blueprint/UserWidget.h"
@@ -19,7 +17,6 @@
 #include "Components/TimelineComponent.h"
 #include "Engine/DamageEvents.h"
 #include "GameFramework/InputDeviceSubsystem.h"
-#include "GameFramework/SpectatorPawn.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -27,11 +24,6 @@
 
 APlayerCharacter::APlayerCharacter()
 {
-	// Set size for collision capsule
-	//GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
-		
-	
-
 	// Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
 	Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
 	Mesh1P->SetOnlyOwnerSee(true);
@@ -42,67 +34,24 @@ APlayerCharacter::APlayerCharacter()
 	// Create a CameraComponent	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCameraComponent->SetupAttachment(GetMesh1P(), "HeadSocket");
-	//FirstPersonCameraComponent->SetRelativeLocation(FVector(-10.f, 0.f, 60.f)); // Position the camera
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
 
 	InteractionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Interaction Sphere"));
 	InteractionSphere->SetupAttachment(GetRootComponent());
 	InteractionSphere->SetSphereRadius(500);
 	InteractionSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
-}
-
-void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	//DOREPLIFETIME(AHaloFloodFanGame01Character, EnhancedInputComponent);
-}
-
-void APlayerCharacter::OnInteractionSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
-	bool bFromSweep, const FHitResult& SweepResult)
-{
-	// if (Cast<IInteractableInterface>(OtherActor))
-	// {
-	// 	InteractableActor = OtherActor;
-	// }
-}
-
-void APlayerCharacter::OnInteractionSphereEndOverlap(UPrimitiveComponent* OverlappedComponent,
-	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	//InteractableActor = nullptr;
 }
 
 void APlayerCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
-
-	InteractionSphere->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnInteractionSphereBeginOverlap);
-	InteractionSphere->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnInteractionSphereEndOverlap);
 	
 	InputDeviceSubsystem = GetGameInstance()->GetEngine()->GetEngineSubsystem<UInputDeviceSubsystem>();
 }
 
-// void APlayerCharacter::Multi_SpawnWeapons()
-// {
-// 	if (AHaloPlayerState* HaloPlayerState = GetPlayerState<AHaloPlayerState>())
-// 	{
-// 		TeamId = HaloPlayerState->Team;
-// 		PickupWeapon(GetWorld()->SpawnActor<AGunBase>(HaloPlayerState->PrimaryWeaponClass));
-// 		PickupWeapon(GetWorld()->SpawnActor<AGunBase>(HaloPlayerState->SecondaryWeaponClass));
-// 	} else
-// 	{
-// 		if (EquippedWeaponClass)
-// 			PickupWeapon(GetWorld()->SpawnActor<AGunBase>(EquippedWeaponClass));
-// 		if (HolsteredWeaponClass)
-// 			PickupWeapon(GetWorld()->SpawnActor<AGunBase>(HolsteredWeaponClass));
-// 	}
-// }
-
-void APlayerCharacter::Tick(float DeltaSeconds)
+void APlayerCharacter::Tick(const float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	MeleeTimeline.TickTimeline(DeltaSeconds);
@@ -112,7 +61,7 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 	SetCurrentInteractable();
 }
 
-void APlayerCharacter::GetPlayerAim(FHitResult& HitResult)
+void APlayerCharacter::GetPlayerAim(FHitResult& HitResult) const
 {
 	HitResult = PlayerAim;
 }
@@ -123,40 +72,6 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 {
 	// Set up action bindings
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
-	
-	if (EnhancedInputComponent)
-	{
-		//Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-
-		//Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
-
-		//Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
-
-		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Interact);
-
-		EnhancedInputComponent->BindAction(PrimaryAttackAction, ETriggerEvent::Started, this, &APlayerCharacter::PrimaryAttack_Pull);
-
-		EnhancedInputComponent->BindAction(PrimaryAttackAction, ETriggerEvent::Completed, this, &APlayerCharacter::PrimaryAttack_Release);
-		
-		EnhancedInputComponent->BindAction(SwitchWeaponAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SwitchWeapon);
-
-		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ReloadWeapon);
-		
-		EnhancedInputComponent->BindAction(MeleeAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Melee);
-
-		EnhancedInputComponent->BindAction(SwitchGrenadeAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SwitchGrenadeType);
-		
-		EnhancedInputComponent->BindAction(ThrowGrenadeAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ThrowEquippedGrenade);
-
-		EnhancedInputComponent->BindAction(UseEquipmentAction, ETriggerEvent::Triggered, this, &APlayerCharacter::UseEquipment);
-		
-		EnhancedInputComponent->BindAction(ScopeAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ScopeWeapon);
-	}
 }
 
 void APlayerCharacter::Move(const FInputActionValue& Value)
@@ -171,7 +86,7 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 	}
 }
 
-float APlayerCharacter::AimAssist()
+float APlayerCharacter::AimAssist() const
 {
 	if (Controller != nullptr && InputDeviceSubsystem->GetMostRecentlyUsedHardwareDevice(GetPlatformUserId()).PrimaryDeviceType == EHardwareDevicePrimaryType::Gamepad)
 	{
@@ -200,10 +115,10 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 	const FVector2D LookAxisVector = Value.Get<FVector2D>();
 	// Disabled for now due to incorrect pitch values in standalone
 	//Server_Look(LookAxisVector.Y);
-	
-	
-	float AimAssistMultiplier = AimAssist();
-	float ScopeSenseMultiplier = 1;
+
+
+	const float AimAssistMultiplier = AimAssist();
+	float ScopeSenseMultiplier;
 	if (EquippedWeapon && EquippedWeapon->ScopeActive)
 	{
 		ScopeSenseMultiplier = (EquippedWeapon->ZoomFOV/90);
@@ -218,7 +133,7 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 	//Mesh1P->AddLocalRotation(FRotator(0, 0, -LookAxisVector.Y));
 }
 
-void APlayerCharacter::Server_Look_Implementation(float Pitch)
+void APlayerCharacter::Server_Look_Implementation(const float Pitch)
 {
 	Multi_Look(Pitch);
 }
@@ -227,7 +142,7 @@ FVector StartMeleeLoc;
 FVector EndMeleeLoc;
 FHitResult MeleeHit;
 
-void APlayerCharacter::Multi_Look_Implementation(float Pitch)
+void APlayerCharacter::Multi_Look_Implementation(const float Pitch)
 {
 	FRotator Rotation = GetFirstPersonCameraComponent()->GetComponentRotation();
 	Rotation.Pitch = Pitch;
@@ -235,7 +150,7 @@ void APlayerCharacter::Multi_Look_Implementation(float Pitch)
 }
 
 //@TODO Simplify by removing InteractionSphere. Interaction radius and casting should be done by interactables, not the player character.
-//We should simply find the closest Interactable actor within an array of interactables
+//We should simply find the closest Interactable actor within an array of interact-ables
 void APlayerCharacter::SetCurrentInteractable()
 {
 	TArray<AActor*> ActorsToIgnore;
@@ -257,7 +172,7 @@ void APlayerCharacter::SetCurrentInteractable()
 		if (!Actors.IsEmpty())
 		{
 			float ClosestDist = 0;
-			for (auto Actor : Actors)
+			for (const auto Actor : Actors)
 			{
 				if (Actor->Implements<UInteractableInterface>() && (ClosestDist == 0 || GetDistanceTo(Actor) < ClosestDist))
 				{
@@ -279,9 +194,9 @@ void APlayerCharacter::Melee_Implementation()
 {
 	if (GetWorld()->GetTimerManager().TimerExists(MeleeTimer)) return;
 	GetWorld()->GetTimerManager().SetTimer(MeleeTimer, 1, false);
-	
-	FVector TraceStart = GetFirstPersonCameraComponent()->GetComponentLocation();
-	FVector TraceEnd = GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*500;
+
+	const FVector TraceStart = GetFirstPersonCameraComponent()->GetComponentLocation();
+	const FVector TraceEnd = GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*500;
 	FCollisionQueryParams CollisionParameters;
 	CollisionParameters.AddIgnoredActor(this);
 	CollisionParameters.AddIgnoredActor(GetAttachParentActor());
@@ -290,24 +205,25 @@ void APlayerCharacter::Melee_Implementation()
 	
 	if (MeleeHit.GetActor())
 	{
-		IDamageableInterface* DamageableActor = Cast<IDamageableInterface>(MeleeHit.GetActor());
-		if (DamageableActor && DamageableActor->GetHealthComponent()->GetHealth() > 0)
+		if (MeleeHit.GetActor()->Implements<UDamageableInterface>())
 		{
-			if (MeleeCurve)
-			{
-				StartMeleeLoc = GetActorLocation();
-				EndMeleeLoc = MeleeHit.GetActor()->GetActorLocation();
-				
-				FOnTimelineFloat TimelineCallback;
-				FOnTimelineEventStatic TimelineFinishedCallback;
-				
-				TimelineCallback.BindUFunction(this, FName("MeleeUpdate"));
-				TimelineFinishedCallback.BindUFunction(this, FName("MeleeDamageCode"));
-				
-				MeleeTimeline.AddInterpFloat(MeleeCurve, TimelineCallback);
-				MeleeTimeline.SetTimelineFinishedFunc(TimelineFinishedCallback);
-				MeleeTimeline.SetPlayRate(10);
-				MeleeTimeline.PlayFromStart();
+			if (IDamageableInterface::Execute_GetHealthComponent(MeleeHit.GetActor())->GetHealth() > 0) {
+				if (MeleeCurve)
+				{
+					StartMeleeLoc = GetActorLocation();
+					EndMeleeLoc = MeleeHit.GetActor()->GetActorLocation();
+					
+					FOnTimelineFloat TimelineCallback;
+					FOnTimelineEventStatic TimelineFinishedCallback;
+					
+					TimelineCallback.BindUFunction(this, FName("MeleeUpdate"));
+					TimelineFinishedCallback.BindUFunction(this, FName("MeleeDamageCode"));
+					
+					MeleeTimeline.AddInterpFloat(MeleeCurve, TimelineCallback);
+					MeleeTimeline.SetTimelineFinishedFunc(TimelineFinishedCallback);
+					MeleeTimeline.SetPlayRate(10);
+					MeleeTimeline.PlayFromStart();
+				}
 			}
 		}
 		UPrimitiveComponent* HitComp = MeleeHit.GetComponent();
@@ -323,13 +239,13 @@ void APlayerCharacter::Melee_Implementation()
 
 void APlayerCharacter::MeleeDamageCode()
 {
-	IDamageableInterface* HitActor = Cast<IDamageableInterface>(MeleeHit.GetActor());
 	FPointDamageEvent PointDamageEvent;
 	PointDamageEvent.Damage = MeleeDamage;
 	PointDamageEvent.HitInfo = MeleeHit;
 	FVector Dir = MeleeHit.Location - MeleeHit.TraceStart;
 	Dir.Normalize();
-	HitActor->CustomTakePointDamage(PointDamageEvent, MeleeForce);
+	IDamageableInterface::Execute_CustomTakePointDamage(MeleeHit.GetActor(), PointDamageEvent, MeleeForce, GetInstigatorController(), this);
+	//HitActor->CustomTakePointDamage(PointDamageEvent, MeleeForce);
 }
 
 void APlayerCharacter::MeleeUpdate(float Alpha)
@@ -433,32 +349,14 @@ void APlayerCharacter::HolsterWeapon(AGunBase* Gun)
 	GetWorldTimerManager().ClearTimer(Gun->ReloadTimer);
 	Gun->ScopeOut();
 	Gun->bReloading = false;
-	//Gun->SetActorHiddenInGame(true);
 
 	if (Gun->HolsterAnimation1P)
 		GetMesh1P()->GetAnimInstance()->Montage_Play(EquippedWeapon->HolsterAnimation1P, EquippedWeapon->HolsterAnimation1P->GetPlayLength() / EquippedWeapon->HolsterSpeed);
-	//Gun->Mesh->PlayAnimation(Gun->HolsterAnimation1P, false);
 }
 
 void APlayerCharacter::SwitchWeapon()
 {
 	Server_SwitchWeapon();
-
-
-	// if (!(EquippedWeapon && HolsteredWeapon))
-	// 	return;
-	// HolsterWeapon(EquippedWeapon);
-	//
-	//
-	// AGunBase* TempGun = EquippedWeapon;
-	// EquippedWeapon = HolsteredWeapon;
-	// HolsteredWeapon = TempGun;
-	
-
-	//GetWorld()->GetTimerManager().SetTimer(HolsterHandle, FTimerDelegate::CreateUObject(this, &APlayerCharacter::EquipWeapon, EquippedWeapon), HolsteredWeapon->HolsterSpeed, false);
-	//EquipWeapon(EquippedWeapon);
-	//WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
-	
 }
 
 void APlayerCharacter::Server_SwitchWeapon_Implementation()
@@ -482,12 +380,6 @@ void APlayerCharacter::Multi_SwitchWeapon_Implementation()
 	
 }
 
-//
-// void APlayerCharacter::ReloadWeapon()
-// {
-// 	Super::ReloadWeapon();
-// }
-
 void APlayerCharacter::ScopeWeapon()
 {
 	if (EquippedWeapon)
@@ -501,21 +393,6 @@ void APlayerCharacter::ScopeWeapon()
 		}
 		
 	}
-}
-
-void APlayerCharacter::PossessedBy(AController* NewController)
-{
-	Super::PossessedBy(NewController);
-
-	
-}
-
-void APlayerCharacter::NotifyControllerChanged()
-{
-	Super::NotifyControllerChanged();
-
-	//Add Input Mapping Context
-	
 }
 
 void APlayerCharacter::NotifyRestarted()
@@ -542,7 +419,7 @@ void APlayerCharacter::NotifyRestarted()
 
 void APlayerCharacter::UnPossessed()
 {
-	if (APlayerController* PC = Cast<APlayerController>(Controller))
+	if (const APlayerController* PC = Cast<APlayerController>(Controller))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
 		{
