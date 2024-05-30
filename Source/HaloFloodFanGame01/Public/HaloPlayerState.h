@@ -23,7 +23,7 @@ public:
 	uint8 Team;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TSubclassOf<ACharacterBase> Character;
+	TSubclassOf<ACharacterBase> CharacterClass;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TSubclassOf<AGunBase> PrimaryWeaponClass;

@@ -8,6 +8,7 @@
 #include "GameFramework/Character.h"
 #include "CharacterBase.generated.h"
 
+struct FInputActionValue;
 enum EAlertState : uint8;
 enum EEmotion : uint8;
 class ASmartObject;
@@ -64,71 +65,7 @@ class HALOFLOODFANGAME01_API ACharacterBase : public ACharacter, public IDamagea
 public:
 	// Sets default values for this pawn's properties
 	ACharacterBase();
-
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-	/** Pawn mesh: 1st person view (arms; seen only by self) */
-	UPROPERTY(EditAnywhere, Category=Mesh)
-	USkeletalMeshComponent* Mesh1P;
-
-	/** First person camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* FirstPersonCameraComponent;
-
-	UPROPERTY(EditAnywhere)
-	USphereComponent* InteractionSphere;
-
-	/** MappingContext */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
-	class UInputMappingContext* DefaultMappingContext;
-
-	/** Jump Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
-	class UInputAction* JumpAction;
-
-	/** Move Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
-	class UInputAction* MoveAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* InteractAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* SwitchWeaponAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* PrimaryAttackAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* MeleeAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* ReloadAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* SwitchGrenadeAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* ThrowGrenadeAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* UseEquipmentAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* CrouchAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* ScopeAction;
-
-	UPROPERTY()
-	UEnhancedInputComponent* EnhancedInputComponent;
-
-	UPROPERTY()
-	FTimerHandle PossessionDelay;
 	
-public:
 	/** Returns Mesh1P subobject **/
 	UFUNCTION(BlueprintCallable)
 	virtual USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
@@ -138,7 +75,12 @@ public:
 	virtual UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
 	virtual UUserWidget* GetPlayerHUD() const { return PlayerHUD; }
-public:
+
+	UFUNCTION(BlueprintGetter)
+	void GetPlayerAim(FHitResult& HitResult) const;
+
+	float AimAssist() const;
+	
 
 	virtual void Restart() override;
 
@@ -150,7 +92,6 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void Multi_SpawnWeapons();
-
 	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -185,6 +126,12 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void Melee();
 
+	UFUNCTION()
+	virtual void MeleeDamageCode();
+	
+	UFUNCTION()
+	void MeleeUpdate(float Alpha);
+
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void PlayerMelee();
 
@@ -199,6 +146,11 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void ThrowEquippedGrenade();
+
+	UFUNCTION(BlueprintCallable)
+	void SwitchGrenadeType();
+
+	void SwitchGrenadeType(int Index);
 
 	UFUNCTION(BlueprintCallable)
 	virtual void UseEquipment();
@@ -239,6 +191,8 @@ public:
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
 	virtual void Multi_SwitchWeapon();
 
+	virtual void ScopeWeapon();
+
 	UFUNCTION()
 	virtual void EquipWeapon(AGunBase* Gun);
 
@@ -264,6 +218,38 @@ public:
 	virtual void Stun(float StunTime = 1);
 
 	void Unstun();
+
+	UFUNCTION()
+	void SetCurrentInteractable();
+
+	UFUNCTION(BlueprintCallable)
+	void Interact();
+
+	UFUNCTION(Server, Reliable)
+	void Server_Interact();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multi_Interact();
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+	/** Called for movement input */
+	void Move(const FInputActionValue& Value);
+
+	/** Called for looking input */
+	void Look(const FInputActionValue& Value);
+
+	UFUNCTION(Server, Unreliable)
+	void Server_Look(float Pitch);
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multi_Look(float Pitch);
+
+	virtual void NotifyRestarted() override;
+	
+	virtual void UnPossessed() override;
 
 public:
 	//Delegates
@@ -356,24 +342,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
 	uint8 TeamId = 0;
-private:
 	
-protected:
-	UPROPERTY(BlueprintReadWrite)
-	FTimerHandle MeleeTimer;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MeleeDamage = 30;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MeleeForce = 100000;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MeleeCooldown = 1;
-
-	FTimerHandle RagdollTimer;
-
-public:
 	UPROPERTY(BlueprintReadOnly)
 	APlayerController* PlayerController;
 	
@@ -395,20 +364,14 @@ public:
 	UPROPERTY(EditAnywhere, Category="Loadout")
 	int32 IncenCount = 0;
 
-	// UPROPERTY(EditDefaultsOnly)
-	// UAnimMontage* DrawAnimation1P;
-	//
-	// UPROPERTY(EditDefaultsOnly)
-	// UAnimMontage* HolsterAnimation1P;
-	//
-	// UPROPERTY(EditDefaultsOnly)
-	// UAnimMontage* FireAnimation1P;
-
 	UPROPERTY(EditDefaultsOnly)
 	UAnimMontage* ThrowGrenadeAnimation1P;
 
 	UPROPERTY()
 	TArray<AActor*> InteractableActors;
+
+	UPROPERTY(EditDefaultsOnly)
+	UCurveFloat* MeleeCurve;
 
 private:
 	UPROPERTY()
@@ -417,12 +380,94 @@ private:
 	FTimerHandle ShieldDelayTimerHandle;
 
 	FTimeline MeleeTimeline;
-
-	UPROPERTY(EditDefaultsOnly)
-	UCurveFloat* MeleeCurve;
-
+	
 	FHitResult PlayerAim;
 
 	UPROPERTY()
 	UInputDeviceSubsystem* InputDeviceSubsystem;
+	
+protected:
+	UPROPERTY(BlueprintReadWrite)
+	FTimerHandle MeleeTimer;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MeleeDamage = 30;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MeleeForce = 100000;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MeleeCooldown = 1;
+
+	FTimerHandle RagdollTimer;
+	
+	/** Pawn mesh: 1st person view (arms; seen only by self) */
+	UPROPERTY(EditAnywhere, Category=Mesh)
+	USkeletalMeshComponent* Mesh1P;
+
+	/** First person camera */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UCameraComponent* FirstPersonCameraComponent;
+
+	UPROPERTY(EditAnywhere)
+	USphereComponent* InteractionSphere;
+
+	/** MappingContext */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	class UInputMappingContext* DefaultMappingContext;
+
+	/** Look Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* LookAction;
+	
+	/** Jump Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	class UInputAction* JumpAction;
+
+	/** Move Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	class UInputAction* MoveAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* InteractAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* SwitchWeaponAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* PrimaryAttackAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* MeleeAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* ReloadAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* SwitchGrenadeAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* ThrowGrenadeAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* UseEquipmentAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* CrouchAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* ScopeAction;
+
+	UPROPERTY()
+	UEnhancedInputComponent* EnhancedInputComponent;
+
+	UPROPERTY()
+	FTimerHandle PossessionDelay;
+
+	FVector StartMeleeLoc;
+	
+	FVector EndMeleeLoc;
+	
+	FHitResult MeleeHit;
+
 };

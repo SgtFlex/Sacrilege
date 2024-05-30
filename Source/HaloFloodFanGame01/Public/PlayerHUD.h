@@ -235,5 +235,5 @@ public:
 	FLinearColor HUDColor = FColor(255, 150, 50, 255);
 
 	UPROPERTY()
-	class APlayerCharacter* PlayerCharacter;
+	class ACharacterBase* PlayerCharacter;
 };

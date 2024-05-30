@@ -5,6 +5,7 @@
 
 #include "AIControllerBase.h"
 #include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
 #include "GrenadeBase.h"
 #include "GunBase.h"
 #include "HaloGameState.h"
@@ -14,13 +15,17 @@
 #include "Kismet/GameplayStatics.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
+#include "PlayerControllerBase.h"
 #include "TimerManager.h"
 #include "Animation/AnimInstance.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Blueprint/UserWidget.h"
 #include "Camera/CameraComponent.h"
 #include "Components/DecalComponent.h"
 #include "Components/SphereComponent.h"
+#include "GameFramework/InputDeviceSubsystem.h"
+#include "HaloFloodFanGame01/FirefightGamemode.h"
 #include "Net/UnrealNetwork.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISense_Damage.h"
@@ -49,6 +54,8 @@ ACharacterBase::ACharacterBase()
 	Mesh1P->SetupAttachment(GetCapsuleComponent());
 	Mesh1P->bCastDynamicShadow = false;
 	Mesh1P->CastShadow = false;
+	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
+	//Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
 	// Create a CameraComponent	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
@@ -60,8 +67,6 @@ ACharacterBase::ACharacterBase()
 	InteractionSphere->SetupAttachment(GetRootComponent());
 	InteractionSphere->SetSphereRadius(500);
 	InteractionSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
-	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 }
 
 // Called when the game starts or when spawned
@@ -74,7 +79,9 @@ void ACharacterBase::BeginPlay()
 	SpawnWeapons();
 	//UE_LOG(LogTemp, Warning, TEXT("Char: %s %f"), *GetActorLabel(), GetHealthComponent()->GetHealth());
 	//if (GetHealthComponent()) UE_LOG(LogTemp, Warning, TEXT("%s's Health component is owned by %s (Should be %s)"), *GetActorLabel(), *GetHealthComponent()->GetOwner()->GetActorLabel(), *GetActorLabel());
-	if (GetHealthComponent()) GetHealthComponent()->OnHealthDepleted.AddDynamic(this, &ACharacterBase::OnHealthDepleted);	
+	if (GetHealthComponent()) GetHealthComponent()->OnHealthDepleted.AddDynamic(this, &ACharacterBase::OnHealthDepleted);
+
+	InputDeviceSubsystem = GetGameInstance()->GetEngine()->GetEngineSubsystem<UInputDeviceSubsystem>();
 }
 
 void ACharacterBase::Restart()
@@ -126,6 +133,90 @@ void ACharacterBase::Multi_SpawnWeapons_Implementation()
 void ACharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	MeleeTimeline.TickTimeline(DeltaTime);
+	if (GetController())
+		GetMesh1P()->SetWorldRotation(FRotator(0, GetViewRotation().Yaw + 90, GetViewRotation().Pitch));
+
+	SetCurrentInteractable();
+}
+
+void ACharacterBase::Move(const FInputActionValue& Value)
+{
+	// input is a Vector2D
+	const FVector2D MovementVector = Value.Get<FVector2D>();
+	if (Controller != nullptr)
+	{
+		// add movement
+		AddMovementInput(GetActorForwardVector(), MovementVector.Y);
+		AddMovementInput(GetActorRightVector(), MovementVector.X);
+	}
+}
+
+
+
+void ACharacterBase::Look(const FInputActionValue& Value)
+{
+	// input is a Vector2D
+	
+	const FVector2D LookAxisVector = Value.Get<FVector2D>();
+	// Disabled for now due to incorrect pitch values in standalone
+	//Server_Look(LookAxisVector.Y);
+
+
+	const float AimAssistMultiplier = AimAssist();
+	float ScopeSenseMultiplier;
+	if (EquippedWeapon && EquippedWeapon->ScopeActive)
+	{
+		ScopeSenseMultiplier = (EquippedWeapon->ZoomFOV/90);
+	} else
+	{
+		ScopeSenseMultiplier = 1;
+	}
+	
+	// add yaw and pitch input to controller
+	AddControllerYawInput(LookAxisVector.X * AimAssistMultiplier * ScopeSenseMultiplier);
+	AddControllerPitchInput(LookAxisVector.Y * AimAssistMultiplier * ScopeSenseMultiplier);
+	//Mesh1P->AddLocalRotation(FRotator(0, 0, -LookAxisVector.Y));
+}
+
+void ACharacterBase::Server_Look_Implementation(const float Pitch)
+{
+	Multi_Look(Pitch);
+}
+
+void ACharacterBase::Multi_Look_Implementation(const float Pitch)
+{
+	FRotator Rotation = GetFirstPersonCameraComponent()->GetComponentRotation();
+	Rotation.Pitch = Pitch;
+	GetFirstPersonCameraComponent()->SetWorldRotation(Rotation);
+}
+
+void ACharacterBase::GetPlayerAim(FHitResult& HitResult) const
+{
+	HitResult = PlayerAim;
+}
+
+float ACharacterBase::AimAssist() const
+{
+	if (Controller != nullptr && InputDeviceSubsystem->GetMostRecentlyUsedHardwareDevice(GetPlatformUserId()).PrimaryDeviceType == EHardwareDevicePrimaryType::Gamepad)
+	{
+		FHitResult Aim;
+		GetPlayerAim(Aim);
+		if (Aim.GetActor())
+		{
+			ACharacterBase* AimedAtCharacter = Cast<ACharacterBase>(Aim.GetActor());
+			if (AimedAtCharacter && AimedAtCharacter->GetHealthComponent()->IsAlive())
+			{
+				return 0.25;
+			} else
+			{
+				return 1;
+			}
+		}
+		
+	}
+	return 1;
 }
 
 void ACharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -154,30 +245,30 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		//Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ACharacterBase::Move);
 
 		//Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ACharacterBase::Look);
 
-		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Interact);
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ACharacterBase::Interact);
 
-		EnhancedInputComponent->BindAction(PrimaryAttackAction, ETriggerEvent::Started, this, &APlayerCharacter::PrimaryAttack_Pull);
+		EnhancedInputComponent->BindAction(PrimaryAttackAction, ETriggerEvent::Started, this, &ACharacterBase::PrimaryAttack_Pull);
 
-		EnhancedInputComponent->BindAction(PrimaryAttackAction, ETriggerEvent::Completed, this, &APlayerCharacter::PrimaryAttack_Release);
+		EnhancedInputComponent->BindAction(PrimaryAttackAction, ETriggerEvent::Completed, this, &ACharacterBase::PrimaryAttack_Release);
 		
-		EnhancedInputComponent->BindAction(SwitchWeaponAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SwitchWeapon);
+		EnhancedInputComponent->BindAction(SwitchWeaponAction, ETriggerEvent::Triggered, this, &ACharacterBase::SwitchWeapon);
 
-		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ReloadWeapon);
+		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &ACharacterBase::ReloadWeapon);
 		
-		EnhancedInputComponent->BindAction(MeleeAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Melee);
+		EnhancedInputComponent->BindAction(MeleeAction, ETriggerEvent::Triggered, this, &ACharacterBase::Melee);
 
-		EnhancedInputComponent->BindAction(SwitchGrenadeAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SwitchGrenadeType);
+		EnhancedInputComponent->BindAction(SwitchGrenadeAction, ETriggerEvent::Triggered, this, &ACharacterBase::SwitchGrenadeType);
 		
-		EnhancedInputComponent->BindAction(ThrowGrenadeAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ThrowEquippedGrenade);
+		EnhancedInputComponent->BindAction(ThrowGrenadeAction, ETriggerEvent::Triggered, this, &ACharacterBase::ThrowEquippedGrenade);
 
-		EnhancedInputComponent->BindAction(UseEquipmentAction, ETriggerEvent::Triggered, this, &APlayerCharacter::UseEquipment);
+		EnhancedInputComponent->BindAction(UseEquipmentAction, ETriggerEvent::Triggered, this, &ACharacterBase::UseEquipment);
 		
-		EnhancedInputComponent->BindAction(ScopeAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ScopeWeapon);
+		EnhancedInputComponent->BindAction(ScopeAction, ETriggerEvent::Triggered, this, &ACharacterBase::ScopeWeapon);
 	}
 
 }
@@ -289,6 +380,16 @@ void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector Damag
 		DropWeapon();
 
 	Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageRagdoll(this);
+
+	if (Cast<APlayerControllerBase>(GetController()))
+	{
+		APlayerController* PC = PlayerController;
+		PlayerController->UnPossess();
+		if (PlayerHUD)
+			PlayerHUD->RemoveFromParent();
+
+		Cast<AFirefightGameMode>(GetWorld()->GetAuthGameMode())->OnPlayerCharDied.Broadcast(this, Cast<APlayerControllerBase>(PC));
+	}	
 }
 
 void ACharacterBase::DropGrenades_Implementation()
@@ -341,7 +442,21 @@ void ACharacterBase::SetSmartObject(ASmartObject* NewSmartObject)
 	}
 }
 
+void ACharacterBase::MeleeDamageCode()
+{
+	FPointDamageEvent PointDamageEvent;
+	PointDamageEvent.Damage = MeleeDamage;
+	PointDamageEvent.HitInfo = MeleeHit;
+	FVector Dir = MeleeHit.Location - MeleeHit.TraceStart;
+	Dir.Normalize();
+	IDamageableInterface::Execute_CustomTakePointDamage(MeleeHit.GetActor(), PointDamageEvent, MeleeForce, GetInstigatorController(), this);
+	//HitActor->CustomTakePointDamage(PointDamageEvent, MeleeForce);
+}
 
+void ACharacterBase::MeleeUpdate(float Alpha)
+{
+	SetActorLocation(FMath::Lerp(StartMeleeLoc, EndMeleeLoc, Alpha));
+}
 
 
 bool ACharacterBase::CanMelee_Implementation()
@@ -365,10 +480,6 @@ void ACharacterBase::Melee_Implementation()
 		NPCMelee();
 	}
 }
-
-FVector StartMeleeLoc;
-FVector EndMeleeLoc;
-FHitResult MeleeHit;
 
 void ACharacterBase::PlayerMelee_Implementation()
 {
@@ -467,6 +578,21 @@ void ACharacterBase::ThrowEquippedGrenade_Implementation()
 	Grenade->Mesh->AddImpulse(Force*20000);
 }
 
+
+void ACharacterBase::SwitchGrenadeType()
+{
+	SwitchGrenadeType(CurGrenadeTypeI+1);
+}
+
+void ACharacterBase::SwitchGrenadeType(int Index = 0)
+{
+	if (GrenadeInventory.Num() <= 0) return;
+	
+	CurGrenadeTypeI = Index;
+	CurGrenadeTypeI = CurGrenadeTypeI % (GrenadeInventory.Num());
+	OnGrenadeTypeSwitched.Broadcast(GrenadeInventory[CurGrenadeTypeI].GrenadeClass);
+}
+
 void ACharacterBase::UseEquipment()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Used Equipment"));
@@ -548,6 +674,20 @@ void ACharacterBase::Multi_SwitchWeapon_Implementation()
 	
 	EquipWeapon(EquippedWeapon);
 	WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
+}
+
+void ACharacterBase::ScopeWeapon()
+{
+	if (EquippedWeapon)
+	{
+		if (EquippedWeapon->ScopeActive)
+		{
+			EquippedWeapon->ScopeOut();
+		} else
+		{
+			EquippedWeapon->ScopeIn();
+		}
+	}
 }
 
 void ACharacterBase::EquipWeapon(AGunBase* Gun)
@@ -666,4 +806,101 @@ void ACharacterBase::Unstun()
 	}
 }
 
+void ACharacterBase::SetCurrentInteractable()
+{
+	if (!IsPlayerControlled()) return;
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(this);
+	if (IsPlayerControlled())
+	UKismetSystemLibrary::SphereTraceSingle(GetWorld(), FirstPersonCameraComponent->GetComponentLocation(), FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector()*10000.0f, 20, UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Visibility), false, ActorsToIgnore, EDrawDebugTrace::None, PlayerAim, true, FLinearColor::Red, FLinearColor::Green, 5);
+	AActor* FoundActor = nullptr;
+
+
+	FHitResult HitResult;
+	GetPlayerAim(HitResult);
+	if (HitResult.GetActor() && PlayerAim.Distance < 250 && HitResult.GetActor()->Implements<UInteractableInterface>())
+	{
+		FoundActor = HitResult.GetActor();
+	} else
+	{
+		TArray<AActor*> Actors;
+		InteractionSphere->GetOverlappingActors(Actors);
+		
+		if (!Actors.IsEmpty())
+		{
+			float ClosestDist = 0;
+			for (const auto Actor : Actors)
+			{
+				if (Actor->Implements<UInteractableInterface>() && (ClosestDist == 0 || GetDistanceTo(Actor) < ClosestDist))
+				{
+					ClosestDist = GetDistanceTo(Actor);
+					FoundActor = Actor;
+				}
+			}
+		}
+	}
+
+	if (InteractableActor != FoundActor)
+	{
+		InteractableActor = FoundActor;
+		OnInteractableChanged.Broadcast(InteractableActor);
+	}
+}
+
+void ACharacterBase::Interact()
+{
+	Server_Interact();
+}
+
+void ACharacterBase::Server_Interact_Implementation()
+{
+	Multi_Interact();
+}
+
+void ACharacterBase::Multi_Interact_Implementation()
+{
+	if (InteractableActor && InteractableActor->Implements<UInteractableInterface>())
+	{
+		IInteractableInterface::Execute_OnInteract(InteractableActor, this);
+	}
+}
+
+void ACharacterBase::NotifyRestarted()
+{
+	Super::NotifyRestarted();
+
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		PlayerController = PC;
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
+		{
+			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+		}
+		if (IsLocallyControlled())
+		{
+			if (PlayerHUDClass && !PlayerHUD) {
+				PlayerHUD = CreateWidget<UUserWidget>(PC, PlayerHUDClass);
+				PlayerHUD->AddToPlayerScreen();
+			}
+		}
+		
+	}
+}
+
+void ACharacterBase::UnPossessed()
+{
+	if (const APlayerController* PC = Cast<APlayerController>(Controller))
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
+		{
+			Subsystem->RemoveMappingContext(DefaultMappingContext);
+			UE_LOG(LogTemp, Warning, TEXT("Player unpossessed"));
+			
+		}
+		PlayerHUD->RemoveFromParent();
+		PlayerHUD = nullptr;
+	}
+	PlayerController = nullptr;
+	Super::UnPossessed();
+}
 

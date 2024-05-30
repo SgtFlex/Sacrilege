@@ -26,7 +26,7 @@
 void UPlayerHUD::NativeConstruct()
 {
 	Super::NativeConstruct();
-	PlayerCharacter = Cast<APlayerCharacter>(GetOwningPlayerPawn());
+	PlayerCharacter = Cast<ACharacterBase>(GetOwningPlayerPawn());
 	check(PlayerCharacter);
 	PlayerCharacter->WeaponsUpdated.AddDynamic(this, &UPlayerHUD::UpdateHUDWeaponData);
 	PlayerCharacter->OnInteractableChanged.AddDynamic(this, &UPlayerHUD::UpdateInteractable);
@@ -35,6 +35,9 @@ void UPlayerHUD::NativeConstruct()
 	PlayerCharacter->OnGrenadeTypeSwitched.AddDynamic(this, &UPlayerHUD::UPlayerHUD::UpdateSelectedGrenadeType);
 	UpdateGrenadeInventory(PlayerCharacter->GrenadeInventory);
 	UpdateHUDWeaponData(PlayerCharacter->EquippedWeapon, PlayerCharacter->HolsteredWeapon);
+	SetHealth(PlayerCharacter->GetHealthComponent()->GetHealth(), PlayerCharacter->GetHealthComponent()->GetMaxHealth());
+	SetShields(PlayerCharacter->GetHealthComponent()->GetShields(), PlayerCharacter->GetHealthComponent()->GetMaxShields());
+	
 
 	
 	//Cast<AHaloFloodFanGame01GameMode>(UGameplayStatics::GetGameMode(GetWorld()))->OnScoreUpdated.AddDynamic(this, &UHaloHUDWidget::OnScoreUpdated);
@@ -381,8 +384,6 @@ void UPlayerHUD::SetShields_Implementation(float CurrentShields, float MaxShield
 	}
 }
 
-
-
 void UPlayerHUD::SetCanInteract_Implementation(bool CanInteract)
 {
 	if (CanInteract)
@@ -390,28 +391,4 @@ void UPlayerHUD::SetCanInteract_Implementation(bool CanInteract)
 	else
 		InteractBoxWidget->SetVisibility(ESlateVisibility::Hidden);
 }
-// void UHaloHUDWidget::SetFragCounter_Implementation(int32 NewFragCount)
-// {
-// 	if (FragCounter)
-// 		FragCounter->SetText(FText::AsNumber(NewFragCount));
-// }
-//
-// void UHaloHUDWidget::SetPlasmaCounter_Implementation(int32 NewPlasmaCount)
-// {
-// 	if (PlasmaCounter)
-// 		PlasmaCounter->SetText(FText::AsNumber(NewPlasmaCount));
-// }
-//
-// void UHaloHUDWidget::SetSpikeCounter_Implementation(int32 NewSpikeCount)
-// {
-// 	if (SpikeCounter)
-// 		SpikeCounter->SetText(FText::AsNumber(NewSpikeCount));
-// }
-//
-// void UHaloHUDWidget::SetIncenCounter_Implementation(int32 NewIncenCount)
-// {
-// 	if (IncenCounter)
-// 		IncenCounter->SetText(FText::AsNumber(NewIncenCount));
-// }
-
 

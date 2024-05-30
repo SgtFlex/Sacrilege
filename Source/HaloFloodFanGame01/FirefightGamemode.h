@@ -14,7 +14,7 @@ class APlayerCharacter;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWaveStart, int, CurrentSet, int, CurrentWave);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnScoreUpdated, APlayerController*, PlayerController, int, NewScore, int, NewResource);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerCharDied, APlayerCharacter*, PlayerCharacter, APlayerControllerBase*, PlayerController);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerCharDied, ACharacterBase*, PlayerCharacter, APlayerControllerBase*, PlayerController);
 
 USTRUCT(BlueprintType)
 struct FSquadStruct
@@ -70,10 +70,10 @@ public:
 	int GetPlayerScore(APlayerController* PlayerController);
 
 	UFUNCTION(BlueprintNativeEvent)
-	void PlayerDied(APlayerCharacter* PlayerCharacter, APlayerControllerBase* PlayerController);
+	void PlayerDied(ACharacterBase* PlayerCharacter, APlayerControllerBase* PlayerController);
 
 	UFUNCTION(BlueprintCallable)
-	bool FinishSpawning(APlayerControllerBase* PlayerController, uint8 Team = 0, TSubclassOf<AGunBase> PrimaryWeaponClass = nullptr, TSubclassOf<AGunBase> SecondaryWeaponClass = nullptr);
+	bool FinishSpawning(APlayerControllerBase* PlayerController, uint8 Team = 0, TSubclassOf<AGunBase> PrimaryWeaponClass = nullptr, TSubclassOf<AGunBase> SecondaryWeaponClass = nullptr, TSubclassOf<ACharacterBase> CharacterClass = nullptr);
 
 	UFUNCTION(BlueprintCallable)
 	void RespawnPlayer(APlayerControllerBase* PlayerController);
@@ -144,6 +144,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TArray<TSubclassOf<AGunBase>> SecondaryWeaponClasses;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TArray<TSubclassOf<ACharacterBase>> CharacterClasses;
 private:
 	
 

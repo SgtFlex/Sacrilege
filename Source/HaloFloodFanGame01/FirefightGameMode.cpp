@@ -238,30 +238,26 @@ int AFirefightGameMode::GetPlayerScore(APlayerController* PlayerController)
 	//PlayerCharDied.Broadcast
 }
 
-void AFirefightGameMode::PlayerDied_Implementation(APlayerCharacter* PlayerCharacter, APlayerControllerBase* PlayerController)
+void AFirefightGameMode::PlayerDied_Implementation(ACharacterBase* PlayerCharacter, APlayerControllerBase* PlayerController)
 {
-	//UE_LOG(LogTemp, Warning, TEXT("Attempted to respawn player %s from character %s"), *PlayerCharacter->GetActorLabel(), *PlayerController->GetActorLabel());
-	//FTimerDelegate TimerDelegate;
-	//TimerDelegate.BindUFunction(this, FName("RespawnPlayer"), PlayerController);
+
 	FVector Loc = PlayerCharacter->GetFirstPersonCameraComponent()->GetComponentLocation();
 	FRotator Rot = PlayerCharacter->GetFirstPersonCameraComponent()->GetComponentRotation();
 	ASpectatorPawn* SpectatorPawn = Cast<ASpectatorPawn>(GetWorld()->SpawnActor(GetWorld()->GetAuthGameMode()->SpectatorClass, &Loc, &Rot));
 	PlayerController->Possess(SpectatorPawn);
-	SpectatorPawn->AttachToComponent(PlayerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	if (PlayerCharacter && SpectatorPawn)
+		SpectatorPawn->AttachToComponent(PlayerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 	if (CurPlayerLives > 0)
 	{
 		CurPlayerLives--;
-		//GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, TimerDelegate, RespawnTime, false);
 		StartRespawnProcess(PlayerController);
-		// UUserWidget* LoadoutWidget = CreateWidget<UUserWidget>(PlayerController, LoadoutScreenClass);
-		// LoadoutWidget->AddToPlayerScreen();
 	} else
 	{
 		EndGame();
 	}
 }
 
-bool AFirefightGameMode::FinishSpawning(APlayerControllerBase* PlayerController, uint8 Team, TSubclassOf<AGunBase> PrimaryWeaponClass, TSubclassOf<AGunBase> SecondaryWeaponClass)
+bool AFirefightGameMode::FinishSpawning(APlayerControllerBase* PlayerController, uint8 Team, TSubclassOf<AGunBase> PrimaryWeaponClass, TSubclassOf<AGunBase> SecondaryWeaponClass, TSubclassOf<ACharacterBase> CharacterClass)
 {
 	AHaloPlayerState* HaloPlayerState = PlayerController->GetPlayerState<AHaloPlayerState>();
 	if (HaloPlayerState)
@@ -277,7 +273,10 @@ bool AFirefightGameMode::FinishSpawning(APlayerControllerBase* PlayerController,
 		{
 			HaloPlayerState->SecondaryWeaponClass = SecondaryWeaponClass;
 		}
-			
+		if (CharacterClass)
+		{
+			HaloPlayerState->CharacterClass = CharacterClass;
+		}
 	}
 	if (GetWorld()->GetTimerManager().TimerExists(PlayerController->PlayerRespawnTimerHandle))
 	{
