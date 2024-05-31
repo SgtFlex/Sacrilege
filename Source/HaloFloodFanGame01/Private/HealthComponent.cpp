@@ -87,9 +87,9 @@ float UHealthComponent::TakeDamage(float Damage, FVector Force, FVector HitLocat
 			}
 		}
 		
-		OnHealthUpdate.Broadcast(this);
-		UE_LOG(LogTemp, Warning, TEXT("-------------------------------"));
-		Multi_TakeDamage(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
+		//OnHealthUpdate.Broadcast(this);
+		//UE_LOG(LogTemp, Warning, TEXT("-------------------------------"));
+		//Multi_TakeDamage(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
 	
 	
 	return Damage;

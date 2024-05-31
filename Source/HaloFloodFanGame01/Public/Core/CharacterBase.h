@@ -329,6 +329,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
 	TEnumAsByte<EEmotion> Emotion;
 
+	UPROPERTY(EditDefaultsOnly)
+	bool CanInteract = true;
+
+	UPROPERTY(EditDefaultsOnly)
+	bool CanPickupWeapons = true;
+
+	UPROPERTY(EditDefaultsOnly)
+	bool CanEnterVehicles = true;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MaxSpeed = 100.0f;
 	

@@ -360,7 +360,7 @@ void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector Damag
 {
 	if (!HasAuthority()) return;
 	UAIPerceptionSystem::GetCurrent( GetWorld() )->UnregisterSource(*this);
-	GetHealthComponent()->Deactivate();
+	//GetHealthComponent()->Deactivate();
 	OnKilled.Broadcast(this, EventInstigator, DamageCauser);
 	DropGrenades();
 	
@@ -808,7 +808,7 @@ void ACharacterBase::Unstun()
 
 void ACharacterBase::SetCurrentInteractable()
 {
-	if (!IsPlayerControlled()) return;
+	if (!IsPlayerControlled() || !CanInteract) return;
 	TArray<AActor*> ActorsToIgnore;
 	ActorsToIgnore.Add(this);
 	if (IsPlayerControlled())
@@ -849,6 +849,7 @@ void ACharacterBase::SetCurrentInteractable()
 
 void ACharacterBase::Interact()
 {
+	if (!CanInteract) return;
 	Server_Interact();
 }
 
@@ -897,8 +898,11 @@ void ACharacterBase::UnPossessed()
 			UE_LOG(LogTemp, Warning, TEXT("Player unpossessed"));
 			
 		}
-		PlayerHUD->RemoveFromParent();
-		PlayerHUD = nullptr;
+		if (PlayerHUD)
+		{
+			PlayerHUD->RemoveFromParent();
+			PlayerHUD = nullptr;
+		}
 	}
 	PlayerController = nullptr;
 	Super::UnPossessed();
