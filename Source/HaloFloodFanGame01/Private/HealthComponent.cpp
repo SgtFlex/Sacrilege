@@ -8,7 +8,6 @@
 #include "Components/AudioComponent.h"
 #include "Core/CharacterBase.h"
 #include "GameFramework/Actor.h"
-#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values for this component's properties
@@ -55,9 +54,9 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	// ...
 }
 
-float UHealthComponent::TakeDamage(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser, bool bIgnoreShields, bool bIgnoreHealthArmor, bool bIgnoreShieldArmor)
+void UHealthComponent::TakeDamage_Implementation(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser, bool bIgnoreShields, bool bIgnoreHealthArmor, bool bIgnoreShieldArmor)
 {
-	if (GetHealth() <= 0) return 0;
+	if (GetHealth() <= 0) return;
 		float DamageLeft = Damage;
 		if (Shields > 0)
 		{
@@ -87,12 +86,9 @@ float UHealthComponent::TakeDamage(float Damage, FVector Force, FVector HitLocat
 			}
 		}
 		
-		//OnHealthUpdate.Broadcast(this);
-		//UE_LOG(LogTemp, Warning, TEXT("-------------------------------"));
-		//Multi_TakeDamage(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
-	
-	
-	return Damage;
+		OnHealthUpdate.Broadcast(this);
+		UE_LOG(LogTemp, Warning, TEXT("-------------------------------"));
+		Multi_TakeDamage(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
 }
 
 void UHealthComponent::Multi_TakeDamage_Implementation(float Damage, FVector Force, FVector HitLocation,

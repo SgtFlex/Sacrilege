@@ -82,7 +82,7 @@ void AGunBase::StartReload_Implementation()
 	bReloading = true;
 	if (BurstAmount > 0) GetWorldTimerManager().ClearTimer(FireHandle);
 	GetWorld()->GetTimerManager().SetTimer(ReloadTimer, this, &AGunBase::FinishReload, ReloadSpeed, false);
-	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(CharacterOwner))
+	if (ACharacterBase* PlayerChar = Cast<ACharacterBase>(CharacterOwner))
 		PlayerChar->GetMesh1P()->GetAnimInstance()->Montage_Play(ReloadAnimation1P,   ReloadAnimation1P->GetPlayLength() / ReloadSpeed);
 	if (ReloadSound) UGameplayStatics::SpawnSoundAttached(ReloadSound, GetRootComponent());
 }
@@ -99,7 +99,7 @@ void AGunBase::Multi_StartReload_Implementation()
 	bReloading = true;
 	if (BurstAmount > 0) GetWorldTimerManager().ClearTimer(FireHandle);
 	GetWorld()->GetTimerManager().SetTimer(ReloadTimer, this, &AGunBase::FinishReload, ReloadSpeed, false);
-	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(CharacterOwner))
+	if (ACharacterBase* PlayerChar = Cast<ACharacterBase>(CharacterOwner))
 		PlayerChar->GetMesh1P()->GetAnimInstance()->Montage_Play(ReloadAnimation1P,   ReloadAnimation1P->GetPlayLength() / ReloadSpeed);
 	if (ReloadSound) UGameplayStatics::SpawnSoundAttached(ReloadSound, GetRootComponent());
 }
@@ -176,7 +176,7 @@ void AGunBase::SpawnBullet_Implementation()
 		OwningChar->GetMesh()->GetAnimInstance()->Montage_Play(OwningChar->FiringAnim);
 	}
 	
-	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetOwner()))
+	if (ACharacterBase* PlayerChar = Cast<ACharacterBase>(GetOwner()))
 	{
 		if (FireAnimation1P) PlayerChar->GetMesh1P()->GetAnimInstance()->Montage_Play(FireAnimation1P);
 		if (APlayerController* PC = Cast<APlayerController>(PlayerChar->GetController())) PC->ClientPlayForceFeedback(FireFeedback);
@@ -352,8 +352,8 @@ void AGunBase::SpawnBullet_Implementation()
 
 void AGunBase::SpawnMuzzleFX_Implementation()
 {
-	if (APlayerCharacter* Char = Cast<APlayerCharacter>(GetOwner()))
-		if (FiringCameraShake && Char->IsLocallyControlled())
+	if (ACharacterBase* Char = Cast<ACharacterBase>(GetOwner()))
+		if (FiringCameraShake && Char->IsPlayerControlled() && Char->IsLocallyControlled())
 			Cast<APlayerController>(Char->GetController())->PlayerCameraManager->StartCameraShake(FiringCameraShake, 1, ECameraShakePlaySpace::CameraLocal);
 	if (FiringSound)
 		UGameplayStatics::SpawnSoundAttached(FiringSound, GetRootComponent());
@@ -364,7 +364,7 @@ void AGunBase::SpawnMuzzleFX_Implementation()
 void AGunBase::ScopeIn_Implementation()
 {
 	if (ScopeActive) return;
-	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetOwner()))
+	if (ACharacterBase* PlayerChar = Cast<ACharacterBase>(GetOwner()))
 	{
 		ScopeActive = true;
 		ScopeOverlay = CreateWidget<UUserWidget>(Cast<APlayerController>(PlayerChar->GetController()), ScopeWidget);
@@ -377,7 +377,7 @@ void AGunBase::ScopeIn_Implementation()
 void AGunBase::ScopeOut_Implementation()
 {
 	if (!ScopeActive) return;
-	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetOwner()))
+	if (ACharacterBase* PlayerChar = Cast<ACharacterBase>(GetOwner()))
 	{
 		ScopeOverlay->RemoveFromParent();
 		//PlayerChar->GetFirstPersonCameraComponent()->SetFieldOfView(90);

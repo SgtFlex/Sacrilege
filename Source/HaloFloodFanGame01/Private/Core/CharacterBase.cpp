@@ -293,14 +293,12 @@ float ACharacterBase::CustomTakeDamage_Implementation(float DamageAmount, FVecto
 
 float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent const& PointDamageEvent, float Force, AController* EventInstigator, AActor* DamageCauser)
 {
+	if (!HasAuthority()) return 0;
 	float x = IDamageableInterface::ChangeHealth(this, PointDamageEvent.Damage, PointDamageEvent.ShotDirection * Force, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.BoneName, EventInstigator, DamageCauser);
 	//float x = IDamageableInterface::CustomTakePointDamage(PointDamageEvent, Force, EventInstigator, DamageCauser);
 	if (EventInstigator && Cast<AAIControllerBase>(GetController()))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Reported damage event"));
 		UAISense_Damage::ReportDamageEvent(GetWorld(), this, EventInstigator->GetPawn(), PointDamageEvent.Damage, Cast<AActor>(EventInstigator)->GetActorLocation(), PointDamageEvent.HitInfo.Location);
-		
-		//UAISense_Sight::RegisterEvent()
 	}
 	
 	if (IDamageableInterface::Execute_GetHealthComponent(this)->GetShields() <= 0)
@@ -327,25 +325,17 @@ float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent con
 		if (BloodDecalMaterial)
 		{
 			float DecalSize = FMath::RandRange(10, 130);
-			// if (GetHealthComponent()->GetHealth() > 0)
-			// {
+
 			FHitResult HitResult;
 			FCollisionQueryParams QueryParams;
 			QueryParams.AddIgnoredActor(this);
-			float BoxMax = GetMesh()->Bounds.GetBoxExtrema(1).Z;
 			GetWorld()->LineTraceSingleByChannel(HitResult, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Location + (PointDamageEvent.ShotDirection * 4000),ECollisionChannel::ECC_Visibility, QueryParams);
 			if (HitResult.bBlockingHit)
 			{
 				Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAttached(BloodDecalMaterial, FVector(DecalSize,DecalSize,DecalSize), HitResult.GetComponent(), HitResult.BoneName, HitResult.Location, HitResult.Normal.Rotation() + FRotator(-180,0,FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition));
 			}
-			// }
-			// else
-			// {
-			// 	Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(DecalSize, DecalSize, DecalSize), PointDamageEvent.HitInfo.Location + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), 0), FRotator(-90,0,FMath::RandRange(-180, 180))));
-			// }
 		}
 	}
-	
 	return x;
 }
 
@@ -358,12 +348,59 @@ UHealthComponent* ACharacterBase::GetHealthComponent_Implementation()
 
 void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector DamageForce, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
-	if (!HasAuthority()) return;
-	UAIPerceptionSystem::GetCurrent( GetWorld() )->UnregisterSource(*this);
+	SV_OnHealthDepleted(Damage, DamageForce, HitLocation, HitBoneName, EventInstigator, DamageCauser);
+	// if (!HasAuthority()) return;
 	//GetHealthComponent()->Deactivate();
-	OnKilled.Broadcast(this, EventInstigator, DamageCauser);
-	DropGrenades();
+	// OnKilled.Broadcast(this, EventInstigator, DamageCauser);
+	// DropGrenades();
 	
+	// if (BloodDecalMaterial) Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(100, 100, 100), GetActorLocation(), FRotator(-90,0,0)));
+	// if (DeathSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), DeathSound, GetActorLocation());
+	// GetMesh()->GetAnimInstance()->Montage_Play(DeathAnim);
+	// GetCapsuleComponent()->DestroyComponent();
+	// SetRootComponent(GetMesh());
+	// GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	// GetMesh()->SetSimulatePhysics(true);
+	// GetMesh()->AddImpulseAtLocation(DamageForce, HitLocation, HitBoneName);
+	
+	
+	// if (Cast<AAIController>(GetController())) GetController()->Destroy();
+	
+	// if (EquippedWeapon)
+	// 	DropWeapon();
+
+	// Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageRagdoll(this);
+
+	// if (Cast<APlayerControllerBase>(GetController()))
+	// {
+	// 	APlayerController* PC = PlayerController;
+	// 	PlayerController->UnPossess();
+	// 	if (PlayerHUD)
+	// 		PlayerHUD->RemoveFromParent();
+	//
+	// 	Cast<AFirefightGameMode>(GetWorld()->GetAuthGameMode())->OnPlayerCharDied.Broadcast(this, Cast<APlayerControllerBase>(PC));
+	// }
+}
+
+void ACharacterBase::SV_OnHealthDepleted_Implementation(float Damage, FVector Force, FVector HitLocation,
+	FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
+{
+	if (Cast<AAIController>(GetController())) GetController()->Destroy();
+	UAIPerceptionSystem::GetCurrent( GetWorld() )->UnregisterSource(*this);
+	if (Cast<APlayerControllerBase>(GetController()))
+	{
+		APlayerController* PC = PlayerController;
+		PlayerController->UnPossess();
+		Cast<AFirefightGameMode>(GetWorld()->GetAuthGameMode())->OnPlayerCharDied.Broadcast(this, Cast<APlayerControllerBase>(PC));
+	}
+	MC_OnHealthDepleted(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
+}
+
+void ACharacterBase::MC_OnHealthDepleted_Implementation(float Damage, FVector Force, FVector HitLocation,
+	FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
+{
+	if (EquippedWeapon)
+		DropWeapon();
 	if (BloodDecalMaterial) Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(100, 100, 100), GetActorLocation(), FRotator(-90,0,0)));
 	if (DeathSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), DeathSound, GetActorLocation());
 	GetMesh()->GetAnimInstance()->Montage_Play(DeathAnim);
@@ -371,26 +408,13 @@ void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector Damag
 	SetRootComponent(GetMesh());
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetMesh()->SetSimulatePhysics(true);
-	GetMesh()->AddImpulseAtLocation(DamageForce, HitLocation, HitBoneName);
-	
-	
-	if (Cast<AAIController>(GetController())) GetController()->Destroy();
-	
-	if (EquippedWeapon)
-		DropWeapon();
-
+	GetMesh()->AddImpulseAtLocation(Force, HitLocation, HitBoneName);
+	OnKilled.Broadcast(this, EventInstigator, DamageCauser);
+	DropGrenades();
 	Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageRagdoll(this);
-
-	if (Cast<APlayerControllerBase>(GetController()))
-	{
-		APlayerController* PC = PlayerController;
-		PlayerController->UnPossess();
-		if (PlayerHUD)
-			PlayerHUD->RemoveFromParent();
-
-		Cast<AFirefightGameMode>(GetWorld()->GetAuthGameMode())->OnPlayerCharDied.Broadcast(this, Cast<APlayerControllerBase>(PC));
-	}	
 }
+
+
 
 void ACharacterBase::DropGrenades_Implementation()
 {
@@ -410,6 +434,8 @@ void ACharacterBase::DropGrenades_Implementation()
 		}
 	}
 }
+
+
 
 void ACharacterBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
                            FVector NormalImpulse, const FHitResult& Hit)
@@ -570,7 +596,9 @@ void ACharacterBase::ThrowEquippedGrenade_Implementation()
 	FVector EyesLoc;
 	FRotator EyesRot;
 	GetActorEyesViewPoint(EyesLoc, EyesRot);
-	AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActor(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, &EyesLoc));
+	FActorSpawnParameters ActorSpawnParameters;
+	ActorSpawnParameters.Owner = this;
+	AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActor(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, &EyesLoc, &EyesRot, ActorSpawnParameters));
 	Grenade->SetInstigator(this);
 	Grenade->SetArmed(true);
 	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Grenade->ThrowSFX, Grenade->GetActorLocation());
@@ -672,8 +700,11 @@ void ACharacterBase::Multi_SwitchWeapon_Implementation()
 	EquippedWeapon = HolsteredWeapon;
 	HolsteredWeapon = TempGun;
 	
-	EquipWeapon(EquippedWeapon);
-	WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
+	// EquipWeapon(EquippedWeapon);
+	// WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
+
+	GetWorld()->GetTimerManager().SetTimer(HolsterHandle, FTimerDelegate::CreateUObject(this, &ACharacterBase::EquipWeapon, EquippedWeapon), HolsteredWeapon->HolsterSpeed, false);
+	
 }
 
 void ACharacterBase::ScopeWeapon()
@@ -695,9 +726,22 @@ void ACharacterBase::EquipWeapon(AGunBase* Gun)
 	//EquippedWeapon = Gun;
 	
 	Gun->SetActorHiddenInGame(false);
-	if (IsLocallyControlled()) {}
 	Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
 	Gun->OnEquipped();
+
+	if (HolsteredWeapon)
+		HolsteredWeapon->SetActorHiddenInGame(true);
+	//PlayerCharacter
+	if (IsPlayerControlled() && IsLocallyControlled())
+	{
+		
+		if (Gun->DrawAnimation1P)
+			GetMesh1P()->GetAnimInstance()->Montage_Play(Gun->DrawAnimation1P, Gun->DrawAnimation1P->GetPlayLength() / Gun->DrawSpeed);
+		Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
+		//Gun->Mesh->PlayAnimation(Gun->DrawAnimation1P, false);
+		//WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
+	}
+	WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
 }
 
 void ACharacterBase::HolsterWeapon(AGunBase* Gun)
@@ -706,7 +750,14 @@ void ACharacterBase::HolsterWeapon(AGunBase* Gun)
 	Gun->ReleaseTrigger();
 	GetWorldTimerManager().ClearTimer(Gun->ReloadTimer);
 	Gun->bReloading = false;
-	Gun->SetActorHiddenInGame(true);
+	//Gun->SetActorHiddenInGame(true);
+
+	//PlayerCharacter
+	if (IsLocallyControlled())
+	{
+		if (Gun->HolsterAnimation1P)
+			GetMesh1P()->GetAnimInstance()->Montage_Play(EquippedWeapon->HolsterAnimation1P, EquippedWeapon->HolsterAnimation1P->GetPlayLength() / EquippedWeapon->HolsterSpeed);
+	}
 }
 
 void ACharacterBase::PickupWeapon(AGunBase* Gun)
@@ -884,19 +935,23 @@ void ACharacterBase::NotifyRestarted()
 				PlayerHUD->AddToPlayerScreen();
 			}
 		}
-		
 	}
 }
 
 void ACharacterBase::UnPossessed()
+{
+	CL_Unpossessed();
+	PlayerController = nullptr;
+	Super::UnPossessed();
+}
+
+void ACharacterBase::CL_Unpossessed_Implementation()
 {
 	if (const APlayerController* PC = Cast<APlayerController>(Controller))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
 		{
 			Subsystem->RemoveMappingContext(DefaultMappingContext);
-			UE_LOG(LogTemp, Warning, TEXT("Player unpossessed"));
-			
 		}
 		if (PlayerHUD)
 		{
@@ -904,7 +959,5 @@ void ACharacterBase::UnPossessed()
 			PlayerHUD = nullptr;
 		}
 	}
-	PlayerController = nullptr;
-	Super::UnPossessed();
 }
 

@@ -28,14 +28,12 @@ APDA::APDA()
 void APDA::BeginPlay()
 {
 	Super::BeginPlay();
-	Pawn = Cast<APlayerCharacter>(GetOwner());
-	PlayerController = Cast<APlayerController>(Pawn->GetController());
-	
+	PlayerController = Cast<APlayerController>(GetOwner());
+	Pawn = Cast<ACharacterBase>(PlayerController->GetPawn());
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 	{
 		Subsystem->AddMappingContext(MappingContext, 2);
 		EnableInput(PlayerController);
-		UE_LOG(LogTemp, Warning, TEXT("Added mapping context"));
 		UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent);
 		if (EnhancedInputComponent)
 		{
@@ -44,8 +42,6 @@ void APDA::BeginPlay()
 			EnhancedInputComponent->BindAction(SelectInputAction, ETriggerEvent::Triggered, this, &APDA::Select);
 
 			EnhancedInputComponent->BindAction(ClosePDAAction, ETriggerEvent::Triggered, this, &APDA::ClosePDA);
-
-			UE_LOG(LogTemp, Warning, TEXT("Added binds"));
 		}
 	}
 }

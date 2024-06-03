@@ -94,6 +94,12 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void Explode();
 
+	UFUNCTION(BlueprintCallable, Server, Reliable)
+	void SV_Explode();
+
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
+	void MC_Explode();
+
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void SetArmed(bool NewArmed = false);
 

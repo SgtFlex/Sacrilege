@@ -72,6 +72,9 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	void PlayerDied(ACharacterBase* PlayerCharacter, APlayerControllerBase* PlayerController);
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void CreateSpectator(ACharacterBase* Character, APlayerControllerBase* PlayerController, float TimeToSpawn);
+
 	UFUNCTION(BlueprintCallable)
 	bool FinishSpawning(APlayerControllerBase* PlayerController, uint8 Team = 0, TSubclassOf<AGunBase> PrimaryWeaponClass = nullptr, TSubclassOf<AGunBase> SecondaryWeaponClass = nullptr, TSubclassOf<ACharacterBase> CharacterClass = nullptr);
 
@@ -79,7 +82,7 @@ public:
 	void RespawnPlayer(APlayerControllerBase* PlayerController);
 
 	UFUNCTION()
-	void StartRespawnProcess(APlayerControllerBase* PC);
+	void StartRespawnProcess(APlayerControllerBase* PC, ACharacterBase* PreviousCharacter = nullptr);
 	
 	UFUNCTION()
 	void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
@@ -92,8 +95,8 @@ public:
 
 	void HandleMatchHasStarted() override;
 
-	UFUNCTION(BlueprintImplementableEvent)
-	void AddLoadoutScreen(APlayerController* PlayerController, float TimeToSpawn);
+	// UFUNCTION(BlueprintImplementableEvent)
+	// void AddLoadoutScreen(APlayerController* PlayerController, float TimeToSpawn, ASpectatorPawn);
 
 	
 	UFUNCTION(BlueprintNativeEvent)

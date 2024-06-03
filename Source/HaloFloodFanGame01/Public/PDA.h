@@ -9,6 +9,8 @@
 #include "PDA.generated.h"
 struct FInputActionValue;
 class APlayerCharacter;
+class ACharacterBase;
+
 USTRUCT(BlueprintType)
 struct FBuyable
 {
@@ -87,7 +89,7 @@ public:
 	APlayerController* PlayerController;
 
 	UPROPERTY(BlueprintReadOnly)
-	APlayerCharacter* Pawn;
+	ACharacterBase* Pawn;
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category=Input)

@@ -45,6 +45,6 @@ float IDamageableInterface::ChangeHealth(AActor* Actor, float Damage, FVector Fo
 {
 	//CustomOnTakeAnyDamage(Damage, Force, EventInstigator, DamageCauser);
 	//if (Actor->Implements<IDamageableInterface>())
-	return IDamageableInterface::Execute_GetHealthComponent(Actor)->TakeDamage(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser, false, false, false);
+	IDamageableInterface::Execute_GetHealthComponent(Actor)->TakeDamage(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser, false, false, false);
 	return Damage;
 }

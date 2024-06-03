@@ -113,6 +113,12 @@ public:
 	
 	UFUNCTION(BlueprintNativeEvent)
 	void OnHealthDepleted(float Damage, FVector Force, FVector HitLocation = FVector(0,0,0), FName HitBoneName = "", AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
+	
+	UFUNCTION(Server, Reliable)
+	void SV_OnHealthDepleted(float Damage, FVector Force, FVector HitLocation = FVector(0,0,0), FName HitBoneName = "", AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MC_OnHealthDepleted(float Damage, FVector Force, FVector HitLocation = FVector(0,0,0), FName HitBoneName = "", AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
 	UFUNCTION(BlueprintNativeEvent)
 	void DropGrenades();
@@ -250,6 +256,9 @@ protected:
 	virtual void NotifyRestarted() override;
 	
 	virtual void UnPossessed() override;
+
+	UFUNCTION(Client, Reliable)
+	virtual void CL_Unpossessed();
 
 public:
 	//Delegates

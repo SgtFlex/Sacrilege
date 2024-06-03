@@ -46,16 +46,8 @@ public:
 	virtual void Server_SwitchWeapon_Implementation() override;
 
 	virtual void Multi_SwitchWeapon_Implementation() override;
-	
-	/** Returns Mesh1P subobject **/
-	virtual USkeletalMeshComponent* GetMesh1P() const override { return Mesh1P; }
-	
-	/** Returns FirstPersonCameraComponent subobject **/
-	virtual UCameraComponent* GetFirstPersonCameraComponent() const override { return FirstPersonCameraComponent; }
-
-	virtual UUserWidget* GetPlayerHUD() const override { return PlayerHUD; }
 protected:
-	void OnHealthDepleted_Implementation(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
+	// void OnHealthDepleted_Implementation(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
 	// End of APawn interface
 };

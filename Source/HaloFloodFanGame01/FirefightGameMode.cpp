@@ -240,17 +240,16 @@ int AFirefightGameMode::GetPlayerScore(APlayerController* PlayerController)
 
 void AFirefightGameMode::PlayerDied_Implementation(ACharacterBase* PlayerCharacter, APlayerControllerBase* PlayerController)
 {
+	if (!PlayerController) return;
 
-	FVector Loc = PlayerCharacter->GetFirstPersonCameraComponent()->GetComponentLocation();
-	FRotator Rot = PlayerCharacter->GetFirstPersonCameraComponent()->GetComponentRotation();
-	ASpectatorPawn* SpectatorPawn = Cast<ASpectatorPawn>(GetWorld()->SpawnActor(GetWorld()->GetAuthGameMode()->SpectatorClass, &Loc, &Rot));
-	PlayerController->Possess(SpectatorPawn);
-	if (PlayerCharacter && SpectatorPawn)
-		SpectatorPawn->AttachToComponent(PlayerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	// if (PlayerCharacter)
+	// {
+	// 	CreateSpectator(PlayerCharacter, PlayerController, RespawnTime);
+	// }
 	if (CurPlayerLives > 0)
 	{
 		CurPlayerLives--;
-		StartRespawnProcess(PlayerController);
+		StartRespawnProcess(PlayerController, PlayerCharacter);
 	} else
 	{
 		EndGame();
@@ -298,10 +297,11 @@ void AFirefightGameMode::RespawnPlayer(APlayerControllerBase* PlayerController)
 	}
 }
 
-void AFirefightGameMode::StartRespawnProcess(APlayerControllerBase* PC)
+void AFirefightGameMode::StartRespawnProcess(APlayerControllerBase* PC, ACharacterBase* PreviousCharacter)
 {
 	GetWorld()->GetTimerManager().SetTimer(PC->PlayerRespawnTimerHandle, RespawnTime, false);
-	AddLoadoutScreen(PC, RespawnTime);
+	CreateSpectator(PreviousCharacter, PC, RespawnTime);
+	
 }
 
 void AFirefightGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)

@@ -4,12 +4,6 @@
 #include "GrenadeBase.h"
 #include "GunBase.h"
 #include "Camera/CameraComponent.h"
-#include "Components/CapsuleComponent.h"
-#include "EnhancedInputSubsystems.h"
-#include "FirefightGamemode.h"
-#include "PlayerControllerBase.h"
-#include "Blueprint/UserWidget.h"
-#include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -21,21 +15,21 @@ APlayerCharacter::APlayerCharacter()
 
 
 
-
-void APlayerCharacter::OnHealthDepleted_Implementation(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
-{
-	
-	if (PlayerController)
-	{
-		PlayerController->UnPossess();
-		if (PlayerHUD)
-			PlayerHUD->RemoveFromParent();
-		
-	}
-	
-	Super::OnHealthDepleted_Implementation(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
-	Cast<AFirefightGameMode>(GetWorld()->GetAuthGameMode())->OnPlayerCharDied.Broadcast(this, Cast<APlayerControllerBase>(PlayerController));
-}
+//
+// void APlayerCharacter::OnHealthDepleted_Implementation(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
+// {
+// 	
+// 	if (PlayerController)
+// 	{
+// 		PlayerController->UnPossess();
+// 		if (PlayerHUD)
+// 			PlayerHUD->RemoveFromParent();
+// 		
+// 	}
+// 	
+// 	Super::OnHealthDepleted_Implementation(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
+// 	Cast<AFirefightGameMode>(GetWorld()->GetAuthGameMode())->OnPlayerCharDied.Broadcast(this, Cast<APlayerControllerBase>(PlayerController));
+// }
 
 void APlayerCharacter::ThrowEquippedGrenade_Implementation()
 {
