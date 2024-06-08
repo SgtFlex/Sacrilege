@@ -31,9 +31,8 @@ void APDA::BeginPlay()
 	// Pawn = Cast<ACharacterBase>(PlayerController->GetPawn());
 	if (GetOwner())
 	{
-		
-		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Cyan, GetOwner()->GetActorLabel());
-		CL_BeginPlay();
+		if (HasAuthority())
+			CL_BeginPlay();
 	}
 	
 	
@@ -135,8 +134,8 @@ void APDA::StopBuildPreview_Implementation()
 
 bool APDA::CanBuildItem(FBuyable Buyable)
 {
-	AFirefightGameMode* GameMode = Cast<AFirefightGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
-	return GameMode->GetPlayerResource(PlayerController) >= Buyable.Cost;
+	// AFirefightGameMode* GameMode = Cast<AFirefightGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+	// return GameMode->GetPlayerResource(PlayerController) >= Buyable.Cost;
 
 
 	return true;

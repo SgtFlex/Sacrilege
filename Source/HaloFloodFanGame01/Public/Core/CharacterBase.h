@@ -132,6 +132,9 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void Melee();
 
+	UFUNCTION(BlueprintCallable, Server, Reliable)
+	void SV_Melee();
+
 	UFUNCTION()
 	virtual void MeleeDamageCode();
 	

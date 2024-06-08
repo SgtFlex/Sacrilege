@@ -391,13 +391,16 @@ void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector Damag
 void ACharacterBase::SV_OnHealthDepleted_Implementation(float Damage, FVector Force, FVector HitLocation,
 	FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
-	if (Cast<AAIController>(GetController())) GetController()->Destroy();
-	UAIPerceptionSystem::GetCurrent( GetWorld() )->UnregisterSource(*this);
-	if (Cast<APlayerControllerBase>(GetController()))
+	if (GetController())
 	{
-		APlayerController* PC = PlayerController;
-		PlayerController->UnPossess();
-		Cast<AFirefightGameMode>(GetWorld()->GetAuthGameMode())->OnPlayerCharDied.Broadcast(this, Cast<APlayerControllerBase>(PC));
+		if (Cast<AAIController>(GetController())) GetController()->Destroy();
+		UAIPerceptionSystem::GetCurrent( GetWorld() )->UnregisterSource(*this);
+		if (Cast<APlayerControllerBase>(GetController()))
+		{
+			APlayerController* PC = PlayerController;
+			PlayerController->UnPossess();
+			Cast<AFirefightGameMode>(GetWorld()->GetAuthGameMode())->OnPlayerCharDied.Broadcast(this, Cast<APlayerControllerBase>(PC));
+		}
 	}
 	MC_OnHealthDepleted(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
 }
@@ -478,6 +481,8 @@ void ACharacterBase::SetSmartObject(ASmartObject* NewSmartObject)
 	}
 }
 
+
+
 void ACharacterBase::MeleeDamageCode()
 {
 	FPointDamageEvent PointDamageEvent;
@@ -507,6 +512,11 @@ void ACharacterBase::EquipGrenadeType_Implementation(TSubclassOf<AGrenadeBase> G
 }
 
 void ACharacterBase::Melee_Implementation()
+{
+	SV_Melee();
+}
+
+void ACharacterBase::SV_Melee_Implementation()
 {
 	if (IsPlayerControlled())
 	{
