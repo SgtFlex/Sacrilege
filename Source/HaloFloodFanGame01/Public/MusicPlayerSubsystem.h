@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "HaloGameInstance.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "MusicPlayerSubsystem.generated.h"
 
@@ -11,7 +10,7 @@
  * 
  */
 UCLASS()
-class HALOFLOODFANGAME01_API UMusicPlayerSubsystem : public UHaloGameInstance
+class HALOFLOODFANGAME01_API UMusicPlayerSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 	

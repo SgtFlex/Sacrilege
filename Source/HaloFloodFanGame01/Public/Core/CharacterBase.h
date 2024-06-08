@@ -150,14 +150,15 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void EquipGrenadeType(TSubclassOf<AGrenadeBase> Grenade);
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void ThrowEquippedGrenade();
 
 	UFUNCTION(BlueprintCallable)
 	void SwitchGrenadeType();
 
-	void SwitchGrenadeType(int Index);
-
+	UFUNCTION(BlueprintCallable, Server, Unreliable)
+	void SwitchToGrenadeType(int Index);
+	
 	UFUNCTION(BlueprintCallable)
 	virtual void UseEquipment();
 
@@ -201,6 +202,9 @@ public:
 
 	UFUNCTION()
 	virtual void EquipWeapon(AGunBase* Gun);
+
+	UFUNCTION(BlueprintCallable, Client, Unreliable)
+	virtual void SetupViewmodel(bool FirstPerson);
 
 	UFUNCTION()
 	virtual void HolsterWeapon(AGunBase* Gun);
@@ -290,7 +294,7 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true), Replicated)
 	TSubclassOf<AGunBase> HolsteredWeaponClass;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true), Replicated)
 	TArray<FGrenadeStruct> GrenadeInventory;
 
 	UPROPERTY(BlueprintReadOnly, Replicated)
@@ -356,9 +360,10 @@ public:
 	UPROPERTY()
 	float StunAmount = 100;
 
+	UPROPERTY(Replicated)
 	int CurGrenadeTypeI = 0;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"), Replicated)
 	uint8 TeamId = 0;
 	
 	UPROPERTY(BlueprintReadOnly)

@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "AISpawner.generated.h"
 
+class AVehicleBase;
 class UHealthComponent;
 class ASmartObject;
 class UBoxComponent;
@@ -34,7 +35,17 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	TArray<ACharacterBase*> SpawnSquad(TMap<TSubclassOf<ACharacterBase>, int> SquadToSpawn);
+	UFUNCTION(BlueprintCallable)
+	TArray<ACharacterBase*> SpawnSquad(TMap<TSubclassOf<ACharacterBase>, int> SquadToSpawn, bool UseDropship);
+
+	UFUNCTION(BlueprintCallable)
+	ACharacterBase* SpawnUnit(TSubclassOf<ACharacterBase> Unit, bool UseDropPod, FVector SpawnLoc, FRotator SpawnRot);
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	AVehicleBase* RequestDropPod(ACharacterBase* Character, FVector DropLocation);
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	AVehicleBase* RequestDropship(TArray<ACharacterBase*>& Chars);
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TMap<TSubclassOf<ACharacterBase>, int> Squad;

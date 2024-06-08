@@ -37,7 +37,13 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UFUNCTION(Client, Reliable)
+	void CL_BeginPlay();
+
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	UFUNCTION(Client, Reliable)
+	void CL_EndPlay();
 
 public:	
 	// Called every frame
@@ -55,10 +61,10 @@ public:
 	AActor* BuildItem(FBuyable Buyable);
 
 private:
-	UFUNCTION(BlueprintCallable)
-	AActor* StartBuildPreview(TSubclassOf<AActor> ActorToPreview);
+	UFUNCTION(BlueprintCallable, Client, Unreliable)
+	void StartBuildPreview(TSubclassOf<AActor> ActorToPreview);
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Client, Unreliable)
 	void StopBuildPreview();
 
 	UFUNCTION(BlueprintCallable)
@@ -85,7 +91,7 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	UMaterialInterface* PreviewMaterial;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn))
 	APlayerController* PlayerController;
 
 	UPROPERTY(BlueprintReadOnly)

@@ -17,6 +17,7 @@
 #include "NiagaraComponent.h"
 #include "PlayerControllerBase.h"
 #include "TimerManager.h"
+#include "WorldCleanupManager.h"
 #include "Animation/AnimInstance.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
@@ -219,6 +220,7 @@ float ACharacterBase::AimAssist() const
 	return 1;
 }
 
+//@TODO Potentially reduce replicated variables
 void ACharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -226,8 +228,11 @@ void ACharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	// DOREPLIFETIME(ACharacterBase, HolsteredWeapon);
 	DOREPLIFETIME(ACharacterBase, Emotion);
 	DOREPLIFETIME(ACharacterBase, AlertState);
+	DOREPLIFETIME(ACharacterBase, TeamId);
 	DOREPLIFETIME(ACharacterBase, EquippedWeaponClass);
 	DOREPLIFETIME(ACharacterBase, HolsteredWeaponClass);
+	DOREPLIFETIME(ACharacterBase, CurGrenadeTypeI);
+	DOREPLIFETIME(ACharacterBase, GrenadeInventory);
 	//DOREPLIFETIME(ACharacterBase, HealthComponent);
 }
 
@@ -332,7 +337,8 @@ float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent con
 			GetWorld()->LineTraceSingleByChannel(HitResult, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Location + (PointDamageEvent.ShotDirection * 4000),ECollisionChannel::ECC_Visibility, QueryParams);
 			if (HitResult.bBlockingHit)
 			{
-				Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAttached(BloodDecalMaterial, FVector(DecalSize,DecalSize,DecalSize), HitResult.GetComponent(), HitResult.BoneName, HitResult.Location, HitResult.Normal.Rotation() + FRotator(-180,0,FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition));
+				GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageDecal(UGameplayStatics::SpawnDecalAttached(BloodDecalMaterial, FVector(DecalSize,DecalSize,DecalSize), HitResult.GetComponent(), HitResult.BoneName, HitResult.Location, HitResult.Normal.Rotation() + FRotator(-180,0,FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition));
+				//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAttached(BloodDecalMaterial, FVector(DecalSize,DecalSize,DecalSize), HitResult.GetComponent(), HitResult.BoneName, HitResult.Location, HitResult.Normal.Rotation() + FRotator(-180,0,FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition));
 			}
 		}
 	}
@@ -401,8 +407,11 @@ void ACharacterBase::MC_OnHealthDepleted_Implementation(float Damage, FVector Fo
 {
 	if (EquippedWeapon)
 		DropWeapon();
-	if (BloodDecalMaterial) Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(100, 100, 100), GetActorLocation(), FRotator(-90,0,0)));
-	if (DeathSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), DeathSound, GetActorLocation());
+	if (BloodDecalMaterial)
+		GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageDecal(UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(100, 100, 100), GetActorLocation(), FRotator(-90,0,0)));
+		//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(100, 100, 100), GetActorLocation(), FRotator(-90,0,0)));
+	if (DeathSound)
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), DeathSound, GetActorLocation());
 	GetMesh()->GetAnimInstance()->Montage_Play(DeathAnim);
 	GetCapsuleComponent()->DestroyComponent();
 	SetRootComponent(GetMesh());
@@ -411,7 +420,8 @@ void ACharacterBase::MC_OnHealthDepleted_Implementation(float Damage, FVector Fo
 	GetMesh()->AddImpulseAtLocation(Force, HitLocation, HitBoneName);
 	OnKilled.Broadcast(this, EventInstigator, DamageCauser);
 	DropGrenades();
-	Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageRagdoll(this);
+	GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageRagdoll(this);
+	//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageRagdoll(this);
 }
 
 
@@ -591,28 +601,60 @@ void ACharacterBase::NPCMelee_Implementation()
 
 void ACharacterBase::ThrowEquippedGrenade_Implementation()
 {
-	if (GrenadeInventory[CurGrenadeTypeI].GrenadeAmount <= 0) return;
-	OnGrenadeInventoryUpdated.Broadcast(GrenadeInventory);
-	FVector EyesLoc;
-	FRotator EyesRot;
-	GetActorEyesViewPoint(EyesLoc, EyesRot);
-	FActorSpawnParameters ActorSpawnParameters;
-	ActorSpawnParameters.Owner = this;
-	AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActor(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, &EyesLoc, &EyesRot, ActorSpawnParameters));
-	Grenade->SetInstigator(this);
-	Grenade->SetArmed(true);
-	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Grenade->ThrowSFX, Grenade->GetActorLocation());
-	FVector Force = GetBaseAimRotation().Vector() + FVector(0,0,0.1);
-	Grenade->Mesh->AddImpulse(Force*20000);
+	if (IsPlayerControlled())
+	{
+		if (GrenadeInventory.Num() <= 0) return;
+		if (ThrowGrenadeAnimation1P)
+			GetMesh1P()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation1P);
+		GrenadeInventory[CurGrenadeTypeI].GrenadeAmount -= 1;
+		const FTransform SpawnTransform = FTransform(GetFirstPersonCameraComponent()->GetForwardVector().Rotation(), GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*300);
+		FActorSpawnParameters ActorSpawnParameters;
+		ActorSpawnParameters.Instigator = this;
+		ActorSpawnParameters.Owner = this;
+
+		if (AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActorDeferred<AGrenadeBase>(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, SpawnTransform, this, this, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn)))
+		{
+			Grenade->SetInstigator(this);
+			Grenade->SetArmed(true);
+			Grenade->FinishSpawning(SpawnTransform);
+			UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Grenade->ThrowSFX, Grenade->GetActorLocation());
+			FVector Direction = GetFirstPersonCameraComponent()->GetForwardVector() + FVector(0,0,0.15);
+			Direction.Normalize();
+			Grenade->Mesh->AddImpulse(Direction*2000.0f, NAME_None, true);
+			Grenade->Mesh->AddAngularImpulseInDegrees(Grenade->GetActorRightVector().GetSafeNormal()*1000 , NAME_None, true);
+	
+			if (GrenadeInventory[CurGrenadeTypeI].GrenadeAmount <= 0)
+			{
+				GrenadeInventory.RemoveAt(CurGrenadeTypeI);
+				SwitchToGrenadeType(CurGrenadeTypeI);
+			}
+			OnGrenadeInventoryUpdated.Broadcast(GrenadeInventory);
+		}
+	} else
+	{
+		if (GrenadeInventory[CurGrenadeTypeI].GrenadeAmount <= 0) return;
+		OnGrenadeInventoryUpdated.Broadcast(GrenadeInventory);
+		FVector EyesLoc;
+		FRotator EyesRot;
+		GetActorEyesViewPoint(EyesLoc, EyesRot);
+		FActorSpawnParameters ActorSpawnParameters;
+		ActorSpawnParameters.Owner = this;
+		AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActor(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, &EyesLoc, &EyesRot, ActorSpawnParameters));
+		Grenade->SetInstigator(this);
+		Grenade->SetArmed(true);
+		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Grenade->ThrowSFX, Grenade->GetActorLocation());
+		FVector Force = GetBaseAimRotation().Vector() + FVector(0,0,0.1);
+		Grenade->Mesh->AddImpulse(Force*20000);
+	}
 }
 
 
 void ACharacterBase::SwitchGrenadeType()
 {
-	SwitchGrenadeType(CurGrenadeTypeI+1);
+	SwitchToGrenadeType(CurGrenadeTypeI+1);
 }
 
-void ACharacterBase::SwitchGrenadeType(int Index = 0)
+void ACharacterBase::SwitchToGrenadeType_Implementation(int Index = 0)
 {
 	if (GrenadeInventory.Num() <= 0) return;
 	
@@ -732,16 +774,30 @@ void ACharacterBase::EquipWeapon(AGunBase* Gun)
 	if (HolsteredWeapon)
 		HolsteredWeapon->SetActorHiddenInGame(true);
 	//PlayerCharacter
+
 	if (IsPlayerControlled() && IsLocallyControlled())
 	{
-		
-		if (Gun->DrawAnimation1P)
-			GetMesh1P()->GetAnimInstance()->Montage_Play(Gun->DrawAnimation1P, Gun->DrawAnimation1P->GetPlayLength() / Gun->DrawSpeed);
-		Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
-		//Gun->Mesh->PlayAnimation(Gun->DrawAnimation1P, false);
-		//WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
+		if (EquippedWeapon->DrawAnimation1P)
+			GetMesh1P()->GetAnimInstance()->Montage_Play(EquippedWeapon->DrawAnimation1P, EquippedWeapon->DrawAnimation1P->GetPlayLength() / EquippedWeapon->DrawSpeed);
 	}
+	SetupViewmodel(true);
+	
 	WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
+}
+
+void ACharacterBase::SetupViewmodel_Implementation(bool FirstPerson)
+{
+	if (EquippedWeapon)
+	{
+		if (IsPlayerControlled() && IsLocallyControlled() && FirstPerson)
+		{
+			EquippedWeapon->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
+		} else
+		{
+			EquippedWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
+		}
+	}
+	
 }
 
 void ACharacterBase::HolsterWeapon(AGunBase* Gun)
@@ -920,7 +976,6 @@ void ACharacterBase::Multi_Interact_Implementation()
 void ACharacterBase::NotifyRestarted()
 {
 	Super::NotifyRestarted();
-
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
 		PlayerController = PC;
@@ -934,14 +989,17 @@ void ACharacterBase::NotifyRestarted()
 				PlayerHUD = CreateWidget<UUserWidget>(PC, PlayerHUDClass);
 				PlayerHUD->AddToPlayerScreen();
 			}
+			SetupViewmodel(true);
 		}
 	}
+	
 }
 
 void ACharacterBase::UnPossessed()
 {
 	CL_Unpossessed();
 	PlayerController = nullptr;
+	SetupViewmodel(false);
 	Super::UnPossessed();
 }
 

@@ -8,6 +8,7 @@
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "VectorTypes.h"
+#include "WorldCleanupManager.h"
 #include "Camera/CameraComponent.h"
 #include "Components/Image.h"
 #include "Engine/DamageEvents.h"
@@ -51,7 +52,8 @@ void AGunBase::OnPickup(ACharacterBase* Char)
 {
 	SetOwner(Char);
 	CharacterOwner = Char;
-	Cast<AHaloGameState>(GetWorld()->GetGameState())->StopManagingWeapon(this);
+	GetWorld()->GetSubsystem<UWorldCleanupManager>()->StopManagingWeapon(this);
+	//Cast<AHaloGameState>(GetWorld()->GetGameState())->StopManagingWeapon(this);
 }
 
 void AGunBase::OnEquipped()
@@ -72,7 +74,8 @@ void AGunBase::OnDropped()
 		//Disable collision query responses to prevent being picked up.
 		Mesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	}
-	Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageWeapon(this);
+	GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageWeapon(this);
+	//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageWeapon(this);
 }
 
 void AGunBase::StartReload_Implementation()
@@ -204,7 +207,9 @@ void AGunBase::SpawnBullet_Implementation()
 			FHitResult Hit;
 			FVector TraceStart;
 			FRotator EyeRotation;
+			
 			OwningPawn->GetActorEyesViewPoint(TraceStart, EyeRotation);
+			EyeRotation = OwningPawn->GetBaseAimRotation();
 			EyeRotation = EyeRotation + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
 			// if (OwningPawn && OwningPawn->GetController())
 			// {

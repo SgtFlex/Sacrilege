@@ -9,6 +9,7 @@
 #include "MyCustomBlueprintFunctionLibrary.h"
 #include "NiagaraFunctionLibrary.h"
 #include "PickupComponent.h"
+#include "WorldCleanupManager.h"
 #include "Components/DecalComponent.h"
 #include "Engine/DamageEvents.h"
 #include "Engine/DecalActor.h"
@@ -40,7 +41,8 @@ void AGrenadeBase::BeginPlay()
 	Super::BeginPlay();
 	Mesh->OnComponentHit.AddDynamic(this, &AGrenadeBase::OnCollide);
 
-	Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageWeapon(this);
+	GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageWeapon(this);
+	//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageWeapon(this);
 }
 
 // Called every frame
@@ -79,7 +81,8 @@ void AGrenadeBase::MC_Explode_Implementation()
 	if (ExplosionSFX) UGameplayStatics::PlaySoundAtLocation(GetWorld(), ExplosionSFX, GetActorLocation());
 	if (ExplosionPFX) UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ExplosionPFX, GetActorLocation());
 	UGameplayStatics::SpawnForceFeedbackAtLocation(GetWorld(), ExplosionFeedback, GetActorLocation(), FRotator::ZeroRotator, false, 1, 0, ExplosionFeedbackAttenuation);
-	Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAtLocation(GetWorld(), ExplosionDecal, FVector(512, 512, 512), GetActorLocation()));
+	GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageDecal(UGameplayStatics::SpawnDecalAtLocation(GetWorld(), ExplosionDecal, FVector(512, 512, 512), GetActorLocation()));
+	//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAtLocation(GetWorld(), ExplosionDecal, FVector(512, 512, 512), GetActorLocation()));
 	Destroy();
 }
 

@@ -3,9 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/GameMode.h"
+#include "HaloGameMode.h"
 #include "FirefightGamemode.generated.h"
 
+class AHaloGameState;
 class AVehicleBase;
 class AGunBase;
 class ACharacterBase;
@@ -13,7 +14,6 @@ class AAISpawner;
 class APlayerCharacter;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWaveStart, int, CurrentSet, int, CurrentWave);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnScoreUpdated, APlayerController*, PlayerController, int, NewScore, int, NewResource);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerCharDied, ACharacterBase*, PlayerCharacter, APlayerControllerBase*, PlayerController);
 
 USTRUCT(BlueprintType)
@@ -29,7 +29,7 @@ struct FSquadStruct
 };
 
 UCLASS(minimalapi)
-class AFirefightGameMode : public AGameMode
+class AFirefightGameMode : public AHaloGameMode
 {
 	GENERATED_BODY()
 
@@ -42,14 +42,11 @@ public:
 
 	UFUNCTION()
 	void OnEnemyKilled(ACharacterBase* Character = nullptr, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
-	int GetCurrentWave();
-
 	void StartMatch() override;
 	void StartSet();
 	void FinishSet();
 	void StartWave();
 	void FinishWave();
-	int GetCurrentSet();
 	TArray<FSquadStruct> CalculateWave();
 	void SpawnWave(TArray<FSquadStruct> WaveToSpawn);
 	void OnSpawnerAvailable(AAISpawner* Spawner);
@@ -59,15 +56,6 @@ public:
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void RestartPlayerBP(AController* NewPlayer);
-
-	UFUNCTION(BlueprintGetter)
-	int GetPlayerResource(APlayerController* PlayerController);
-
-	UFUNCTION(BlueprintCallable)
-	int SetPlayerResource(APlayerController* PlayerController, int NewPlayerResource);
-
-	UFUNCTION(BlueprintGetter)
-	int GetPlayerScore(APlayerController* PlayerController);
 
 	UFUNCTION(BlueprintNativeEvent)
 	void PlayerDied(ACharacterBase* PlayerCharacter, APlayerControllerBase* PlayerController);
@@ -85,48 +73,30 @@ public:
 	void StartRespawnProcess(APlayerControllerBase* PC, ACharacterBase* PreviousCharacter = nullptr);
 	
 	UFUNCTION()
-	void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
+	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
 
 	UFUNCTION(BlueprintCallable)
 	void EndGame();
-	//
-	// UFUNCTION()
-	// UAudioComponent* GetSoundtrackComponent();
 
-	void HandleMatchHasStarted() override;
-
-	// UFUNCTION(BlueprintImplementableEvent)
-	// void AddLoadoutScreen(APlayerController* PlayerController, float TimeToSpawn, ASpectatorPawn);
-
+	virtual void HandleMatchHasStarted() override;
 	
 	UFUNCTION(BlueprintNativeEvent)
 	AVehicleBase* SpawnRespawnVehicle(APlayerController* PlayerController);
+	
 public:
 	FTimerHandle SetFinishDelayTimer;
-	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, BlueprintAssignable)
-	FOnScoreUpdated OnScoreUpdated;
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnPlayerCharDied OnPlayerCharDied;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintAssignable)
 	FOnWaveStart OnWaveStart;
-
-	UPROPERTY(BlueprintReadOnly)
-	int curWave = 0;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int maxWave = 5;
-	UPROPERTY(BlueprintReadOnly)
-	int curSet = 0;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int maxSet = 3;
-
-	UPROPERTY(BlueprintReadWrite)
-	int PlayerResource = 0;
-
-	UPROPERTY(BlueprintReadWrite)
-	int PlayerScore = 0;
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	float RespawnTime = 3;
@@ -143,24 +113,14 @@ public:
 	int CurPlayerLives;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TArray<TSubclassOf<AGunBase>> PrimaryWeaponClasses;
+	TArray<TSubclassOf<AGunBase>> StartingPrimaryWeaponChoices;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TArray<TSubclassOf<AGunBase>> SecondaryWeaponClasses;
+	TArray<TSubclassOf<AGunBase>> StartingSecondaryWeaponChoices;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TArray<TSubclassOf<ACharacterBase>> CharacterClasses;
-private:
-	
+	TArray<TSubclassOf<ACharacterBase>> StartingCharacterChoices;
 
-	int MaxWavePool = 5;
-	int CurWavePool = 5;
-	int MaxSquadCost = 1;
-	//
-	// UPROPERTY(EditDefaultsOnly)
-	// bool bEnableMusic = true;
-	
-public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FSquadStruct> SquadPool;
 
@@ -177,15 +137,18 @@ public:
 	TArray<AAISpawner*> Spawners;
 
 	TArray<AAISpawner*> AvailableSpawners;
-	//
-	// UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	// TArray<USoundBase*> Soundtracks;
-	//
-	// UPROPERTY()
-	// UAudioComponent* SoundtrackComponent;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUserWidget> LoadoutScreenClass;
+	
+private:
+	int MaxWavePool = 5;
+	int CurWavePool = 5;
+	int MaxSquadCost = 1;
+
+protected:
+	UPROPERTY()
+	AHaloGameState* HaloGameState;
 };
 
 

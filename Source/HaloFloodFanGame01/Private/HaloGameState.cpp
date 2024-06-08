@@ -3,51 +3,43 @@
 
 #include "HaloGameState.h"
 
-#include "Components/DecalComponent.h"
-#include "Core/CharacterBase.h"
+#include "Net/UnrealNetwork.h"
 
-void AHaloGameState::ManageRagdoll_Implementation(AActor* Actor)
+void AHaloGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	Ragdolls.Add(Actor);
-	if (Ragdolls.Num() > MaxRagdolls)
-	{
-		if (Ragdolls[0])
-			Ragdolls[0]->Destroy();
-		Ragdolls.RemoveAt(0);
-	}
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AHaloGameState, curWave);
+	DOREPLIFETIME(AHaloGameState, curSet);
 }
 
-void AHaloGameState::ManageDecal_Implementation(UDecalComponent* Decal)
+int AHaloGameState::GetCurrentWave()
 {
-	Decals.Add(Decal);
-	if (Decals.Num() > MaxDecals)
-	{
-		if (Decals[0])
-			Decals[0]->DestroyComponent();
-		Decals.RemoveAt(0);
-	}
+	return curWave;
 }
 
-void AHaloGameState::ManageActor_Implementation(AActor* Actor)
+int AHaloGameState::SetCurrentWave(int NewWave)
 {
 	
+	curWave = NewWave;
+	OnWaveChanged.Broadcast(curWave);
+	return curWave;
 }
 
-void AHaloGameState::ManageWeapon_Implementation(AActor* Weapon)
+
+int AHaloGameState::GetCurrentSet()
 {
-	Weapons.Add(Weapon);
-	if (Weapons.Num() > MaxWeapons)
-	{
-		if (Weapons[0])
-			Weapons[0]->Destroy();
-		Weapons.RemoveAt(0);
-	}
+	return curSet;
 }
 
-void AHaloGameState::StopManagingWeapon_Implementation(AActor* Weapon)
+int AHaloGameState::SetCurrentSet(int NewSet)
 {
-	if (Weapons.Contains(Weapon))
-	{
-		Weapons.Remove(Weapon);
-	}
+	curSet = NewSet;
+	OnSetChanged.Broadcast(curSet);
+	return curSet;
+}
+
+int AHaloGameState::GetCurrentEnemyCount()
+{
+	return CurrentEnemyCount;
 }

@@ -3,25 +3,22 @@
 #include "FirefightGamemode.h"
 
 #include "AISpawner.h"
-#include "GrenadeWidget.h"
 #include "GunBase.h"
+#include "HaloGameState.h"
 #include "HaloPlayerState.h"
-#include "PlayerCharacter.h"
+#include "NotificationSubsystem.h"
 #include "PlayerControllerBase.h"
 #include "VehicleBase.h"
-#include "Camera/CameraComponent.h"
-#include "Components/AudioComponent.h"
 #include "Core/CharacterBase.h"
 #include "GameFramework/CheatManager.h"
 #include "GameFramework/GameSession.h"
-#include "GameFramework/SpectatorPawn.h"
-#include "Kismet/KismetMathLibrary.h"
 #include "Kismet\GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
 
 AFirefightGameMode::AFirefightGameMode()
 	: Super()
 {
+	
 	// set default pawn class to our Blueprinted character
 	//static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(TEXT("/Game/FirstPerson/Blueprints/BP_FirstPersonCharacter"));
 	//DefaultPawnClass = PlayerPawnClassFinder.Class;
@@ -33,22 +30,24 @@ AFirefightGameMode::AFirefightGameMode()
 void AFirefightGameMode::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	HaloGameState = GetGameState<AHaloGameState>();
 }
 
 void AFirefightGameMode::OnEnemyKilled(ACharacterBase* Character, AController* EventInstigator, AActor* DamageCauser)
 {
 	if (APlayerController* PlayerController = Cast<APlayerController>(EventInstigator))
 	{
+		AHaloPlayerState* HPS = PlayerController->GetPlayerState<AHaloPlayerState>();
+		HPS->AddPlayerScore(1);
+		HPS->AddPlayerResource(1);
 		
-		PlayerScore += 1;
-		PlayerResource += 1;
-		OnScoreUpdated.Broadcast(PlayerController, PlayerScore, PlayerResource);
+		//OnScoreUpdated.Broadcast(PlayerController, HPS->GetPlayerScore(), HPS->GetPlayerResource());
 	}
 	CurrentEnemyCount--;
 	
 
-	if (curWave != maxWave)
+	if (HaloGameState->GetCurrentWave() != maxWave)
 	{
 		if (CurrentEnemyCount<=4)
 			FinishWave();
@@ -67,9 +66,9 @@ void AFirefightGameMode::FinishWave()
 	
 	
 	
-	if (curWave == maxWave)
+	if (HaloGameState->GetCurrentWave() == maxWave)
 	{
-		if (curSet == maxSet)
+		if (HaloGameState->GetCurrentSet() == maxSet)
 		{
 			GameFinished();
 			return;
@@ -82,16 +81,16 @@ void AFirefightGameMode::FinishWave()
 		StartWave();
 	}
 }
-
-int AFirefightGameMode::GetCurrentWave()
-{
-	return curWave;
-}
+//
+// int AFirefightGameMode::GetCurrentWave()
+// {
+// 	return HaloGameState->curWave;
+// }
 
 void AFirefightGameMode::StartMatch()
 {
 	Super::StartMatch();
-
+	GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushNotificationText("Firefight");
 	TArray<AActor*> OutActors;
 	
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AAISpawner::StaticClass(), OutActors);
@@ -104,39 +103,34 @@ void AFirefightGameMode::StartMatch()
 
 
 	OnPlayerCharDied.AddDynamic(this, &AFirefightGameMode::PlayerDied);
-	//ACharacterBase::TestDelegate.BindSP(this, &AHaloFloodFanGame01GameMode::TestFunc);
 }
 
 void AFirefightGameMode::StartSet()
 {
-	curSet++;
-	curWave = 0;
+	GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushNotificationText("Set start");
+	HaloGameState->SetCurrentSet(HaloGameState->GetCurrentWave()+1);
+	HaloGameState->SetCurrentWave(0);
 	StartWave();
-	// if (bEnableMusic)
-	// {
-	// 	SoundtrackComponent->SetSound(Soundtracks[FMath::RandRange(0, Soundtracks.Num()-1)]);
-	// 	SoundtrackComponent->FadeIn(3, 0.3);
-	// }
+
 }
 
 void AFirefightGameMode::FinishSet()
 {
 	MaxSquadCost = (MaxSquadCost + 1) * 2;
-	// if (bEnableMusic) GetSoundtrackComponent()->FadeOut(10, 0);
 	GetWorldTimerManager().SetTimer(SetFinishDelayTimer, this, &AFirefightGameMode::StartSet, 10);
 }
 
 void AFirefightGameMode::StartWave()
 {
-	curWave++;
+	HaloGameState->SetCurrentWave(HaloGameState->GetCurrentWave()+1);
 	SquadsToSpawn.Append(CalculateWave());
 	SpawnWave(SquadsToSpawn);
 }
 
-int AFirefightGameMode::GetCurrentSet()
-{
-	return curSet;
-}
+// int AFirefightGameMode::GetCurrentSet()
+// {
+// 	return HaloGameState->curSet;
+// }
 
 TArray<FSquadStruct> AFirefightGameMode::CalculateWave()
 {
@@ -165,7 +159,8 @@ TArray<FSquadStruct> AFirefightGameMode::CalculateWave()
 
 void AFirefightGameMode::SpawnWave(TArray<FSquadStruct> WaveToSpawn)
 {
-	OnWaveStart.Broadcast(curSet, curWave);
+	OnWaveStart.Broadcast(HaloGameState->GetCurrentSet(), HaloGameState->GetCurrentWave());
+	GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushNotificationText("Reinforcements");
 	SquadsAtWaveStart = SquadsToSpawn;
 	SquadsAtWaveStart.Append(WaveToSpawn);
 	SquadsToSpawn = WaveToSpawn;
@@ -179,7 +174,7 @@ void AFirefightGameMode::SpawnWave(TArray<FSquadStruct> WaveToSpawn)
 	UE_LOG(LogTemp, Warning, TEXT("Spawning wave!"));
 	for (auto AvailableSpawner : AvailableSpawners)
 	{
-		TArray<ACharacterBase*> SpawnedChars = AvailableSpawner->SpawnSquad(SquadsToSpawn[0].SquadUnits);
+		TArray<ACharacterBase*> SpawnedChars = AvailableSpawner->SpawnSquad(SquadsToSpawn[0].SquadUnits, false);
 		{
 			for (auto SpawnedChar : SpawnedChars)
 			{
@@ -198,7 +193,7 @@ void AFirefightGameMode::SpawnWave(TArray<FSquadStruct> WaveToSpawn)
 void AFirefightGameMode::OnSpawnerAvailable(AAISpawner* Spawner)
 {
 	if (SquadsToSpawn.IsEmpty()) return;
-	TArray<ACharacterBase*> SpawnedChars = Spawner->SpawnSquad(SquadsToSpawn[0].SquadUnits);
+	TArray<ACharacterBase*> SpawnedChars = Spawner->SpawnSquad(SquadsToSpawn[0].SquadUnits, false);
 	{
 		for (auto SpawnedChar : SpawnedChars)
 		{
@@ -214,6 +209,7 @@ void AFirefightGameMode::OnSpawnerAvailable(AAISpawner* Spawner)
 
 void AFirefightGameMode::GameFinished()
 {
+	GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushNotificationText("Game over");
 	UGameplayStatics::OpenLevel(GetWorld(), FName(UGameplayStatics::GetCurrentLevelName(GetWorld())));
 }
 
@@ -221,31 +217,10 @@ void AFirefightGameMode::RestartPlayer(AController* NewPlayer)
 {
 	RestartPlayerBP(NewPlayer);
 }
-
-int AFirefightGameMode::GetPlayerResource(APlayerController* PlayerController)
-{
-	return PlayerResource;
-}
-
-int AFirefightGameMode::SetPlayerResource(APlayerController* PlayerController, int NewPlayerResource)
-{
-	return PlayerResource = NewPlayerResource;
-}
-
-int AFirefightGameMode::GetPlayerScore(APlayerController* PlayerController)
-{
-	return PlayerScore;
-	//PlayerCharDied.Broadcast
-}
-
 void AFirefightGameMode::PlayerDied_Implementation(ACharacterBase* PlayerCharacter, APlayerControllerBase* PlayerController)
 {
 	if (!PlayerController) return;
 
-	// if (PlayerCharacter)
-	// {
-	// 	CreateSpectator(PlayerCharacter, PlayerController, RespawnTime);
-	// }
 	if (CurPlayerLives > 0)
 	{
 		CurPlayerLives--;
@@ -261,7 +236,6 @@ bool AFirefightGameMode::FinishSpawning(APlayerControllerBase* PlayerController,
 	AHaloPlayerState* HaloPlayerState = PlayerController->GetPlayerState<AHaloPlayerState>();
 	if (HaloPlayerState)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("Got player state"));
 		HaloPlayerState->Team = Team;
 		if (PrimaryWeaponClass)
 		{
@@ -299,6 +273,7 @@ void AFirefightGameMode::RespawnPlayer(APlayerControllerBase* PlayerController)
 
 void AFirefightGameMode::StartRespawnProcess(APlayerControllerBase* PC, ACharacterBase* PreviousCharacter)
 {
+	if (!PC) return;
 	GetWorld()->GetTimerManager().SetTimer(PC->PlayerRespawnTimerHandle, RespawnTime, false);
 	CreateSpectator(PreviousCharacter, PC, RespawnTime);
 	
@@ -310,24 +285,13 @@ void AFirefightGameMode::HandleStartingNewPlayer_Implementation(APlayerControlle
 	StartRespawnProcess(Cast<APlayerControllerBase>(NewPlayer));
 }
 
-// void AFirefightGameMode::PostLogin(APlayerController* NewPlayer)
-// {
-// 	Super::PostLogin(NewPlayer);
-// 	StartRespawnProcess(Cast<APlayerControllerBase>(NewPlayer));
-// }
-
 void AFirefightGameMode::EndGame()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Game ended"));
 	//GetWorld()->GetPlay
 	RestartGame();
 }
-//
-// UAudioComponent* AFirefightGameMode::GetSoundtrackComponent()
-// {
-// 	return SoundtrackComponent;
-// 	
-// }
+
 
 void AFirefightGameMode::HandleMatchHasStarted()
 {

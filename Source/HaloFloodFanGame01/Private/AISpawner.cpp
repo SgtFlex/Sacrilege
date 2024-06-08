@@ -38,7 +38,6 @@ void AAISpawner::OnUnitKilled(UHealthComponent* HealthComponent)
 	}
 	if (SpawnedChars.IsEmpty())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Spawner available!"));
 		OnAvailable.Broadcast(this);
 	}
 }
@@ -50,9 +49,11 @@ void AAISpawner::Tick(float DeltaTime)
 
 }
 
-TArray<ACharacterBase*> AAISpawner::SpawnSquad(TMap<TSubclassOf<ACharacterBase>, int> SquadToSpawn)
+TArray<ACharacterBase*> AAISpawner::SpawnSquad(TMap<TSubclassOf<ACharacterBase>, int> SquadToSpawn, bool UseDropship)
 {
 	SpawnedChars.Empty();
+	TArray<ACharacterBase*> Spawned;
+	
 	FVector BoxExtents = Box->GetScaledBoxExtent();
 	BoxExtents[2] = 0;
 	
@@ -62,21 +63,38 @@ TArray<ACharacterBase*> AAISpawner::SpawnSquad(TMap<TSubclassOf<ACharacterBase>,
 		{
 			FVector Loc = UKismetMathLibrary::RandomPointInBoundingBox(GetActorLocation(), BoxExtents);
 			FRotator Rot = FRotator(0,0,0);
-			ACharacterBase* Char = GetWorld()->SpawnActor<ACharacterBase>(elem.Key, Loc, Rot);
+			ACharacterBase* Char = SpawnUnit(elem.Key, false, Loc, Rot);
 			if (Char)
 			{
-				Char->GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &AAISpawner::OnUnitKilled);
-				SpawnedChars.Add(Char);
-				if (SmartObj)
+				Spawned.Add(Char);
+				if (UseDropship)
 				{
-					Char->SmartObject = SmartObj;
+					RequestDropship(Spawned);
 				}
 			}
-			
 			
 		}
 	}
 
-	return SpawnedChars;
+	return Spawned;
+}
+
+ACharacterBase* AAISpawner::SpawnUnit(TSubclassOf<ACharacterBase> Unit, bool UseDropPod, FVector SpawnLoc, FRotator SpawnRot)
+{
+	FActorSpawnParameters ActorSpawnParameters;
+	ACharacterBase* Char = GetWorld()->SpawnActor<ACharacterBase>(Unit, SpawnLoc, SpawnRot);
+	if (!Char) return nullptr;
+	Char->GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &AAISpawner::OnUnitKilled);
+	SpawnedChars.Add(Char);
+	if (SmartObj)
+	{
+		Char->SmartObject = SmartObj;
+	}
+	if (UseDropPod)
+	{
+		RequestDropPod(Char, SpawnLoc);
+	}
+
+	return Char;
 }
 

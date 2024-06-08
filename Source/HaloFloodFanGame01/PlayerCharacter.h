@@ -34,8 +34,8 @@ public:
 	APlayerCharacter();
 	
 public:	
-	UFUNCTION()
-	virtual void ThrowEquippedGrenade_Implementation() override;
+	// UFUNCTION()
+	// virtual void ThrowEquippedGrenade_Implementation() override;
 	
 	virtual void EquipWeapon(AGunBase* Gun) override;
 

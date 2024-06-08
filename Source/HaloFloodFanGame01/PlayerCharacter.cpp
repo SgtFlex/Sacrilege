@@ -1,10 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "PlayerCharacter.h"
-#include "GrenadeBase.h"
 #include "GunBase.h"
-#include "Camera/CameraComponent.h"
-#include "Kismet/GameplayStatics.h"
 
 
 APlayerCharacter::APlayerCharacter()
@@ -31,36 +28,36 @@ APlayerCharacter::APlayerCharacter()
 // 	Cast<AFirefightGameMode>(GetWorld()->GetAuthGameMode())->OnPlayerCharDied.Broadcast(this, Cast<APlayerControllerBase>(PlayerController));
 // }
 
-void APlayerCharacter::ThrowEquippedGrenade_Implementation()
-{
-	if (GrenadeInventory.Num() <= 0) return;
-	if (ThrowGrenadeAnimation1P)
-		GetMesh1P()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation1P);
-	GrenadeInventory[CurGrenadeTypeI].GrenadeAmount -= 1;
-	const FTransform SpawnTransform = FTransform(GetFirstPersonCameraComponent()->GetForwardVector().Rotation(), GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*300);
-	FActorSpawnParameters ActorSpawnParameters;
-	ActorSpawnParameters.Instigator = this;
-	ActorSpawnParameters.Owner = this;
-
-	if (AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActorDeferred<AGrenadeBase>(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, SpawnTransform, this, this, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn)))
-	{
-		Grenade->SetInstigator(this);
-		Grenade->SetArmed(true);
-		Grenade->FinishSpawning(SpawnTransform);
-		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Grenade->ThrowSFX, Grenade->GetActorLocation());
-		FVector Direction = GetFirstPersonCameraComponent()->GetForwardVector() + FVector(0,0,0.15);
-		Direction.Normalize();
-		Grenade->Mesh->AddImpulse(Direction*2000.0f, NAME_None, true);
-		Grenade->Mesh->AddAngularImpulseInDegrees(Grenade->GetActorRightVector().GetSafeNormal()*1000 , NAME_None, true);
-		
-		if (GrenadeInventory[CurGrenadeTypeI].GrenadeAmount <= 0)
-		{
-			GrenadeInventory.RemoveAt(CurGrenadeTypeI);
-			SwitchGrenadeType(CurGrenadeTypeI);
-		}
-		OnGrenadeInventoryUpdated.Broadcast(GrenadeInventory);
-	}
-}
+// void APlayerCharacter::ThrowEquippedGrenade_Implementation()
+// {
+// 	if (GrenadeInventory.Num() <= 0) return;
+// 	if (ThrowGrenadeAnimation1P)
+// 		GetMesh1P()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation1P);
+// 	GrenadeInventory[CurGrenadeTypeI].GrenadeAmount -= 1;
+// 	const FTransform SpawnTransform = FTransform(GetFirstPersonCameraComponent()->GetForwardVector().Rotation(), GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*300);
+// 	FActorSpawnParameters ActorSpawnParameters;
+// 	ActorSpawnParameters.Instigator = this;
+// 	ActorSpawnParameters.Owner = this;
+//
+// 	if (AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActorDeferred<AGrenadeBase>(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, SpawnTransform, this, this, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn)))
+// 	{
+// 		Grenade->SetInstigator(this);
+// 		Grenade->SetArmed(true);
+// 		Grenade->FinishSpawning(SpawnTransform);
+// 		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Grenade->ThrowSFX, Grenade->GetActorLocation());
+// 		FVector Direction = GetFirstPersonCameraComponent()->GetForwardVector() + FVector(0,0,0.15);
+// 		Direction.Normalize();
+// 		Grenade->Mesh->AddImpulse(Direction*2000.0f, NAME_None, true);
+// 		Grenade->Mesh->AddAngularImpulseInDegrees(Grenade->GetActorRightVector().GetSafeNormal()*1000 , NAME_None, true);
+// 		
+// 		if (GrenadeInventory[CurGrenadeTypeI].GrenadeAmount <= 0)
+// 		{
+// 			GrenadeInventory.RemoveAt(CurGrenadeTypeI);
+// 			SwitchGrenadeType(CurGrenadeTypeI);
+// 		}
+// 		OnGrenadeInventoryUpdated.Broadcast(GrenadeInventory);
+// 	}
+// }
 
 void APlayerCharacter::EquipWeapon(AGunBase* Gun)
 {

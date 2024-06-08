@@ -7,27 +7,10 @@
 #include "HaloGameState.generated.h"
 
 class ACharacterBase;
-/**
- * 
- */
-USTRUCT()
-struct FManagedActorStruct
-{
-	GENERATED_BODY()
 
-	UPROPERTY()
-	TSubclassOf<AActor> ActorClass;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWaveChanged, int, CurrentWave);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSetChanged, int, CurrentSet);
 
-	uint8 ActorLimit;
-
-	UPROPERTY()
-	TArray<AActor*> ManagedActors;
-
-	bool operator==(const FManagedActorStruct& other) const
-	{
-		return other.ActorClass == ActorClass;
-	}
-};
 
 UCLASS()
 class HALOFLOODFANGAME01_API AHaloGameState : public AGameState
@@ -35,43 +18,39 @@ class HALOFLOODFANGAME01_API AHaloGameState : public AGameState
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void ManageRagdoll(AActor* Actor);
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void ManageDecal(UDecalComponent* Decal);
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void ManageWeapon(AActor* Weapon);
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void StopManagingWeapon(AActor* Weapon);
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void ManageActor(AActor* Actor);
-
-public:
-	//UPROPERTY()
-	//TMap<AActor*, uint8> ManagedActors;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&) const override;
 	
-	UPROPERTY()
-	TArray<AActor*> Ragdolls;
+	UFUNCTION(BlueprintGetter)
+	int GetCurrentWave();
 
-	UPROPERTY()
-	TArray<UDecalComponent*> Decals;
+	UFUNCTION(BlueprintSetter)
+	int SetCurrentWave(int NewWave);
 
-	UPROPERTY()
-	TArray<AActor*> Weapons;
+	UFUNCTION(BlueprintGetter)
+	int GetCurrentSet();
 
-	UPROPERTY()
-	TArray<FManagedActorStruct> ManagedActors;
+	UFUNCTION(BlueprintSetter)
+	int SetCurrentSet(int NewSet);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	uint8 MaxRagdolls = 10;
+	UFUNCTION(BlueprintGetter)
+	int GetCurrentEnemyCount();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	uint8 MaxWeapons = 20;
+	
+	
+public:
+	UPROPERTY(BlueprintAssignable)
+	FOnSetChanged OnSetChanged;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	uint8 MaxDecals = 20;
+	UPROPERTY(BlueprintAssignable)
+	FOnWaveChanged OnWaveChanged;
+
+protected:	
+	UPROPERTY(Replicated)
+	int curWave = 0;
+
+	UPROPERTY(Replicated)
+	int curSet = 0;
+
+	UPROPERTY(BlueprintReadWrite, Replicated)
+	int CurrentEnemyCount = 0;
 };
