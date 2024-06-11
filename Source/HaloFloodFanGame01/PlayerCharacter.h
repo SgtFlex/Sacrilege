@@ -3,8 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "InputActionValue.h"
-#include "Components/TimelineComponent.h"
 #include "Core/CharacterBase.h"
 #include "PlayerCharacter.generated.h"
 
@@ -37,15 +35,15 @@ public:
 	// UFUNCTION()
 	// virtual void ThrowEquippedGrenade_Implementation() override;
 	
-	virtual void EquipWeapon(AGunBase* Gun) override;
-
-	virtual void HolsterWeapon(AGunBase* Gun) override;
-
-	virtual void SwitchWeapon() override;
-
-	virtual void Server_SwitchWeapon_Implementation() override;
-
-	virtual void Multi_SwitchWeapon_Implementation() override;
+	// virtual void EquipWeapon(AGunBase* Gun) override;
+	//
+	// virtual void HolsterWeapon(AGunBase* Gun) override;
+	//
+	// virtual void SwitchWeapon() override;
+	//
+	// virtual void Server_SwitchWeapon_Implementation() override;
+	//
+	// virtual void Multi_SwitchWeapon_Implementation() override;
 protected:
 	// void OnHealthDepleted_Implementation(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 

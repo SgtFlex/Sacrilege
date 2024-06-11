@@ -59,51 +59,51 @@ APlayerCharacter::APlayerCharacter()
 // 	}
 // }
 
-void APlayerCharacter::EquipWeapon(AGunBase* Gun)
-{
-	Super::EquipWeapon(Gun);
-	if (HolsteredWeapon)
-		HolsteredWeapon->SetActorHiddenInGame(true);
-	if (Gun->DrawAnimation1P)
-		GetMesh1P()->GetAnimInstance()->Montage_Play(Gun->DrawAnimation1P, Gun->DrawAnimation1P->GetPlayLength() / Gun->DrawSpeed);
-	Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
-	//Gun->Mesh->PlayAnimation(Gun->DrawAnimation1P, false);
-	WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
-}
+// void APlayerCharacter::EquipWeapon(AGunBase* Gun)
+// {
+// 	Super::EquipWeapon(Gun);
+// 	if (HolsteredWeapon)
+// 		HolsteredWeapon->SetActorHiddenInGame(true);
+// 	if (Gun->DrawAnimation1P)
+// 		GetMesh1P()->GetAnimInstance()->Montage_Play(Gun->DrawAnimation1P, Gun->DrawAnimation1P->GetPlayLength() / Gun->DrawSpeed);
+// 	Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
+// 	//Gun->Mesh->PlayAnimation(Gun->DrawAnimation1P, false);
+// 	WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
+// }
+//
+// void APlayerCharacter::HolsterWeapon(AGunBase* Gun)
+// {
+// 	Gun->ReleaseTrigger();
+// 	GetWorldTimerManager().ClearTimer(Gun->ReloadTimer);
+// 	Gun->ScopeOut();
+// 	Gun->bReloading = false;
+//
+// 	if (Gun->HolsterAnimation1P)
+// 		GetMesh1P()->GetAnimInstance()->Montage_Play(EquippedWeapon->HolsterAnimation1P, EquippedWeapon->HolsterAnimation1P->GetPlayLength() / EquippedWeapon->HolsterSpeed);
+// }
 
-void APlayerCharacter::HolsterWeapon(AGunBase* Gun)
-{
-	Gun->ReleaseTrigger();
-	GetWorldTimerManager().ClearTimer(Gun->ReloadTimer);
-	Gun->ScopeOut();
-	Gun->bReloading = false;
-
-	if (Gun->HolsterAnimation1P)
-		GetMesh1P()->GetAnimInstance()->Montage_Play(EquippedWeapon->HolsterAnimation1P, EquippedWeapon->HolsterAnimation1P->GetPlayLength() / EquippedWeapon->HolsterSpeed);
-}
-
-void APlayerCharacter::SwitchWeapon()
-{
-	Server_SwitchWeapon();
-}
-
-void APlayerCharacter::Server_SwitchWeapon_Implementation()
-{
-	Multi_SwitchWeapon();
-}
-
-void APlayerCharacter::Multi_SwitchWeapon_Implementation()
-{
-	if (!(EquippedWeapon && HolsteredWeapon))
-		return;
-	HolsterWeapon(EquippedWeapon);
-	
-	AGunBase* TempGun = EquippedWeapon;
-	EquippedWeapon = HolsteredWeapon;
-	HolsteredWeapon = TempGun;
-	
-	//EquipWeapon(EquippedWeapon);
-
-	GetWorld()->GetTimerManager().SetTimer(HolsterHandle, FTimerDelegate::CreateUObject(this, &APlayerCharacter::EquipWeapon, EquippedWeapon), HolsteredWeapon->HolsterSpeed, false);
-	
-}
+// void APlayerCharacter::SwitchWeapon()
+// {
+// 	Server_SwitchWeapon();
+// }
+//
+// void APlayerCharacter::Server_SwitchWeapon_Implementation()
+// {
+// 	Multi_SwitchWeapon();
+// }
+//
+// void APlayerCharacter::Multi_SwitchWeapon_Implementation()
+// {
+// 	if (!(EquippedWeapon && HolsteredWeapon))
+// 		return;
+// 	HolsterWeapon(EquippedWeapon);
+// 	
+// 	AGunBase* TempGun = EquippedWeapon;
+// 	EquippedWeapon = HolsteredWeapon;
+// 	HolsteredWeapon = TempGun;
+// 	
+// 	//EquipWeapon(EquippedWeapon);
+//
+// 	GetWorld()->GetTimerManager().SetTimer(HolsterHandle, FTimerDelegate::CreateUObject(this, &APlayerCharacter::EquipWeapon, EquippedWeapon), HolsteredWeapon->HolsterSpeed, false);
+// 	
+// }
