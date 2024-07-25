@@ -76,7 +76,7 @@ public:
 
 	virtual UUserWidget* GetPlayerHUD() const { return PlayerHUD; }
 
-	UFUNCTION(BlueprintGetter)
+	UFUNCTION(BlueprintCallable)
 	void GetPlayerAim(FHitResult& HitResult) const;
 
 	float AimAssist() const;
@@ -300,10 +300,10 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true), Replicated)
 	TArray<FGrenadeStruct> GrenadeInventory;
 
-	UPROPERTY(BlueprintReadOnly, Replicated)
+	UPROPERTY(BlueprintReadOnly, Replicated, ReplicatedUsing=EquipWeapon)
 	AGunBase* EquippedWeapon;
 
-	UPROPERTY(BlueprintReadOnly, Replicated)
+	UPROPERTY(BlueprintReadOnly, Replicated, ReplicatedUsing=HolsterWeapon)
 	AGunBase* HolsteredWeapon;
 
 	FTimerHandle HolsterHandle;

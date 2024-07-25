@@ -110,9 +110,6 @@ public:
 	UFUNCTION()
 	void UpdateSetAndWaveCount(int Set, int Wave);
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void PushTextNotification(const FText& Text);
-	
 	virtual bool Initialize() override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
@@ -138,9 +135,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UWidget* CompassHUD;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	class UVerticalBox* TextNotificationList;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UImage* Crosshair;

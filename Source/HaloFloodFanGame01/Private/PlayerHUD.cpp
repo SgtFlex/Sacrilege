@@ -350,11 +350,6 @@ void UPlayerHUD::UpdateSetAndWaveCount(int Set, int Wave)
 	WaveCount->SetText(FText::AsNumber(Wave));
 }
 
-void UPlayerHUD::PushTextNotification_Implementation(const FText& Text)
-{
-	
-}
-
 
 bool UPlayerHUD::Initialize()
 {

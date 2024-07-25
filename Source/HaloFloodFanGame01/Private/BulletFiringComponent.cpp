@@ -3,6 +3,10 @@
 
 #include "BulletFiringComponent.h"
 
+#include "NiagaraFunctionLibrary.h"
+#include "HaloFloodFanGame01/ProjectileBase.h"
+#include "Kismet/GameplayStatics.h"
+
 // Sets default values for this component's properties
 UBulletFiringComponent::UBulletFiringComponent()
 {
@@ -21,6 +25,22 @@ void UBulletFiringComponent::BeginPlay()
 
 	// ...
 	
+}
+
+AProjectileBase* UBulletFiringComponent::FireProjectile(TSubclassOf<AProjectileBase> ProjectileClass, FVector Direction, AActor* Owner, AController* Instigator)
+{
+	FVector Location = GetComponentLocation();
+	FRotator Rotation = Direction.Rotation();
+	FActorSpawnParameters ActorSpawnParameters;
+	ActorSpawnParameters.Owner = Owner;
+	ActorSpawnParameters.Instigator = Instigator->GetPawn();
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), FiringSound, Location, Rotation);
+	UNiagaraFunctionLibrary::SpawnSystemAttached(FiringVFX, this, NAME_None, FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
+	return GetWorld()->SpawnActor<AProjectileBase>(ProjectileClass, Location, Rotation, ActorSpawnParameters);
+}
+
+void UBulletFiringComponent::FireBullet(FHitResult& HitResult, FVector EndLocation)
+{
 }
 
 

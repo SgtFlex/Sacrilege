@@ -95,39 +95,29 @@ void ACharacterBase::Restart()
 
 void ACharacterBase::SpawnWeapons()
 {
-	if (EquippedWeaponClass)
-	{
-		AGunBase* Gun = Cast<AGunBase>(GetWorld()->SpawnActor(EquippedWeaponClass));
-		Gun->SetOwner(this);
-		PickupWeapon(Gun);
-	}
-	if (HolsteredWeaponClass)
-	{
-		AGunBase* Gun = Cast<AGunBase>(GetWorld()->SpawnActor(HolsteredWeaponClass));
-		Gun->SetOwner(this);
-		PickupWeapon(Gun);
-	}
+	Server_SpawnWeapons();
 }
 
 void ACharacterBase::Server_SpawnWeapons_Implementation()
 {
-	Multi_SpawnWeapons();
+	if (EquippedWeaponClass)
+	{
+		AGunBase* Gun = GetWorld()->SpawnActor<AGunBase>(EquippedWeaponClass);
+		if (Gun) UE_LOG(LogTemp, Warning, TEXT("Sucessfully spawned equipped weapon"));
+		PickupWeapon(Gun);
+		
+	}
+	if (HolsteredWeaponClass)
+	{
+		AGunBase* Gun = GetWorld()->SpawnActor<AGunBase>(HolsteredWeaponClass);
+		if (Gun) UE_LOG(LogTemp, Warning, TEXT("Sucessfully spawned holstered weapon"));
+		PickupWeapon(Gun);
+	}
 }
 
 void ACharacterBase::Multi_SpawnWeapons_Implementation()
 {
-	if (EquippedWeaponClass)
-	{
-		AGunBase* Gun = Cast<AGunBase>(GetWorld()->SpawnActor(EquippedWeaponClass));
-		Gun->SetOwner(this);
-		PickupWeapon(Gun);
-	}
-	if (HolsteredWeaponClass)
-	{
-		AGunBase* Gun = Cast<AGunBase>(GetWorld()->SpawnActor(HolsteredWeaponClass));
-		Gun->SetOwner(this);
-		PickupWeapon(Gun);
-	}
+	
 }
 
 // Called every frame
@@ -224,8 +214,8 @@ float ACharacterBase::AimAssist() const
 void ACharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	// DOREPLIFETIME(ACharacterBase, EquippedWeapon);
-	// DOREPLIFETIME(ACharacterBase, HolsteredWeapon);
+	DOREPLIFETIME(ACharacterBase, EquippedWeapon);
+	DOREPLIFETIME(ACharacterBase, HolsteredWeapon);
 	DOREPLIFETIME(ACharacterBase, Emotion);
 	DOREPLIFETIME(ACharacterBase, AlertState);
 	DOREPLIFETIME(ACharacterBase, TeamId);
@@ -776,10 +766,11 @@ void ACharacterBase::ScopeWeapon()
 void ACharacterBase::EquipWeapon(AGunBase* Gun)
 {
 	//EquippedWeapon = Gun;
-	
-	Gun->SetActorHiddenInGame(false);
-	Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
-	Gun->OnEquipped();
+	UE_LOG(LogTemp, Warning, TEXT("EquipWeapon called"));
+	EquippedWeapon->Mesh->SetSimulatePhysics(false);
+	EquippedWeapon->SetActorHiddenInGame(false);
+	EquippedWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
+	EquippedWeapon->OnEquipped();
 
 	if (HolsteredWeapon)
 		HolsteredWeapon->SetActorHiddenInGame(true);
@@ -813,20 +804,25 @@ void ACharacterBase::SetupViewmodel_Implementation(bool FirstPerson)
 void ACharacterBase::HolsterWeapon(AGunBase* Gun)
 {
 	//EquippedWeapon = nullptr;
-	Gun->ReleaseTrigger();
-	GetWorldTimerManager().ClearTimer(Gun->ReloadTimer);
-	Gun->bReloading = false;
+	HolsteredWeapon->ReleaseTrigger();
+	GetWorldTimerManager().ClearTimer(HolsteredWeapon->ReloadTimer);
+	HolsteredWeapon->bReloading = false;
 	//Gun->SetActorHiddenInGame(true);
 
 	//PlayerCharacter
 	if (IsLocallyControlled())
 	{
-		if (Gun->HolsterAnimation1P)
+		if (HolsteredWeapon->HolsterAnimation1P)
 			GetMesh1P()->GetAnimInstance()->Montage_Play(EquippedWeapon->HolsterAnimation1P, EquippedWeapon->HolsterAnimation1P->GetPlayLength() / EquippedWeapon->HolsterSpeed);
 	}
 }
 
 void ACharacterBase::PickupWeapon(AGunBase* Gun)
+{
+	Server_PickupWeapon(Gun);
+}
+
+void ACharacterBase::Server_PickupWeapon_Implementation(AGunBase* Gun)
 {
 	// Server_PickupWeapon(Gun);
 	Gun->SetOwner(this);
@@ -846,16 +842,13 @@ void ACharacterBase::PickupWeapon(AGunBase* Gun)
 		DropWeapon();
 		EquippedWeapon = Gun;
 	}
-	EquipWeapon(EquippedWeapon);
+	// EquipWeapon(EquippedWeapon);
 	if (EquippedWeapon)
 	{
 		WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
 	}
-}
-
-void ACharacterBase::Server_PickupWeapon_Implementation(AGunBase* Gun)
-{
-	Multi_PickupWeapon(Gun);
+	// EquipWeapon(EquippedWeapon);
+	// Multi_PickupWeapon(Gun);
 }
 
 void ACharacterBase::Multi_PickupWeapon_Implementation(AGunBase* Gun)
@@ -972,15 +965,15 @@ void ACharacterBase::Interact()
 
 void ACharacterBase::Server_Interact_Implementation()
 {
-	Multi_Interact();
-}
-
-void ACharacterBase::Multi_Interact_Implementation()
-{
 	if (InteractableActor && InteractableActor->Implements<UInteractableInterface>())
 	{
 		IInteractableInterface::Execute_OnInteract(InteractableActor, this);
 	}
+}
+
+void ACharacterBase::Multi_Interact_Implementation()
+{
+	
 }
 
 void ACharacterBase::NotifyRestarted()

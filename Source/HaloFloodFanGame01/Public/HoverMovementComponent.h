@@ -41,6 +41,11 @@ public:
 	FRotator TargetRotation;
 	FRotator CurrentRotation;
 
+	UPROPERTY(BlueprintReadWrite, Replicated)
+	FVector TargetForward;
+	FVector CurrentForward;
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MaxSpeed = 500.0f;
 	

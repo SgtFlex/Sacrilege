@@ -82,6 +82,8 @@ public:
 	
 	UFUNCTION(BlueprintNativeEvent)
 	AVehicleBase* SpawnRespawnVehicle(APlayerController* PlayerController);
+
+	virtual void PostLogin(APlayerController* NewPlayer) override;
 	
 public:
 	FTimerHandle SetFinishDelayTimer;

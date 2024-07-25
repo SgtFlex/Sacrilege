@@ -79,18 +79,17 @@ void AProjectileBase::OnProjectileOverlapped_Implementation(UPrimitiveComponent*
 	}
 	
 	AGunBase* Gun = Cast<AGunBase>(GetOwner());
-	if (Gun && HitPFX)
+	if (HitPFX)
 	{
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), HitPFX, SweepResult.Location, SweepResult.Normal.Rotation());
-		
 	}
 
 	if (HitSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, SweepResult.ImpactPoint);
 	if (ImpactDecalMaterial)
 	{
-		// FTransform SpawnTransform = FTransform(SweepResult.Normal.Rotation() + FRotator(-90, FMath::RandRange(-180, 180), 0), SweepResult.ImpactPoint, FVector(1,1,1) * FMath::RandRange(0.1f, 1.0f));
-		// ADecalActor* ImpactDecal = GetWorld()->SpawnActor<ADecalActor>(ImpactDecalClass, SpawnTransform);
-		// ImpactDecal->AttachToComponent(OtherComp, FAttachmentTransformRules::KeepWorldTransform);
+		FTransform SpawnTransform = FTransform(SweepResult.Normal.Rotation() + FRotator(-90, FMath::RandRange(-180, 180), 0), SweepResult.ImpactPoint, FVector(1,1,1) * FMath::RandRange(0.1f, 1.0f));
+		ADecalActor* ImpactDecal = GetWorld()->SpawnActor<ADecalActor>(ImpactDecalClass, SpawnTransform);
+		ImpactDecal->AttachToComponent(OtherComp, FAttachmentTransformRules::KeepWorldTransform);
 		GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageDecal(UGameplayStatics::SpawnDecalAttached(ImpactDecalMaterial, FVector(1,1,1) * FMath::RandRange(0.1f, 1.0f), OtherComp, NAME_None, SweepResult.ImpactPoint, SweepResult.Normal.Rotation() + FRotator(-90, FMath::RandRange(-180, 180), 0), EAttachLocation::KeepWorldPosition));
 		//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAttached(ImpactDecalMaterial, FVector(1,1,1) * FMath::RandRange(0.1f, 1.0f), OtherComp, NAME_None, SweepResult.ImpactPoint, SweepResult.Normal.Rotation() + FRotator(-90, FMath::RandRange(-180, 180), 0), EAttachLocation::KeepWorldPosition));
 	}

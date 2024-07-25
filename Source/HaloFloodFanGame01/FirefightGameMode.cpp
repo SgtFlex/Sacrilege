@@ -339,6 +339,14 @@ void AFirefightGameMode::HandleMatchHasStarted()
 	}
 }
 
+void AFirefightGameMode::PostLogin(APlayerController* NewPlayer)
+{
+	Super::PostLogin(NewPlayer);
+	FString PlayerName = NewPlayer->GetPlayerState<APlayerState>()->GetName();
+	const FString Text = FString::Printf(TEXT("%ls has joined"), *PlayerName);
+	GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushNotificationText(Text);
+}
+
 AVehicleBase* AFirefightGameMode::SpawnRespawnVehicle_Implementation(APlayerController* PlayerController)
 {
 	return nullptr;
