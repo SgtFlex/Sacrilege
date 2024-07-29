@@ -766,9 +766,10 @@ void ACharacterBase::ScopeWeapon()
 void ACharacterBase::EquipWeapon(AGunBase* Gun)
 {
 	//EquippedWeapon = Gun;
-	UE_LOG(LogTemp, Warning, TEXT("EquipWeapon called"));
+	UE_LOG(LogTemp, Warning, TEXT("EquipWeapon called: %s"), *EquippedWeapon->GetActorLabel());
 	EquippedWeapon->Mesh->SetSimulatePhysics(false);
 	EquippedWeapon->SetActorHiddenInGame(false);
+	
 	EquippedWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
 	EquippedWeapon->OnEquipped();
 
@@ -828,6 +829,7 @@ void ACharacterBase::Server_PickupWeapon_Implementation(AGunBase* Gun)
 	Gun->SetOwner(this);
 	Gun->Mesh->SetSimulatePhysics(false);
 	Gun->SetActorEnableCollision(false);
+	Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
 	Gun->OnPickup(this);
 	
 	if (!EquippedWeapon)
