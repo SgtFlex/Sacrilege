@@ -74,6 +74,7 @@ ACharacterBase::ACharacterBase()
 void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
+	UE_LOG(LogTemp, Warning, TEXT("%s BeginPlay called"), *GetActorLabel());
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ACharacterBase::OnHit);
 
 	GetMesh()->OnComponentSleep.AddDynamic(this, &ACharacterBase::RagdollSettled);
@@ -95,11 +96,13 @@ void ACharacterBase::Restart()
 
 void ACharacterBase::SpawnWeapons()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Running spawnweapons()"));
 	Server_SpawnWeapons();
 }
 
 void ACharacterBase::Server_SpawnWeapons_Implementation()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Running server_spawnweapons()"));
 	if (EquippedWeaponClass)
 	{
 		AGunBase* Gun = GetWorld()->SpawnActor<AGunBase>(EquippedWeaponClass);
@@ -766,7 +769,7 @@ void ACharacterBase::ScopeWeapon()
 void ACharacterBase::EquipWeapon(AGunBase* Gun)
 {
 	//EquippedWeapon = Gun;
-	UE_LOG(LogTemp, Warning, TEXT("EquipWeapon called: %s"), *EquippedWeapon->GetActorLabel());
+	//UE_LOG(LogTemp, Warning, TEXT("EquipWeapon called: %s"), *EquippedWeapon->GetActorLabel());
 	EquippedWeapon->Mesh->SetSimulatePhysics(false);
 	EquippedWeapon->SetActorHiddenInGame(false);
 	
@@ -829,6 +832,8 @@ void ACharacterBase::Server_PickupWeapon_Implementation(AGunBase* Gun)
 	Gun->SetOwner(this);
 	Gun->Mesh->SetSimulatePhysics(false);
 	Gun->SetActorEnableCollision(false);
+	UE_LOG(LogTemp, Warning, TEXT("%s picked up %s"), *GetActorLabel(), *Gun->GetActorLabel());
+
 	Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
 	Gun->OnPickup(this);
 	
