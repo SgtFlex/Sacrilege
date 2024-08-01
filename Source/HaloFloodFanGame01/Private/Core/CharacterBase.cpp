@@ -74,7 +74,6 @@ ACharacterBase::ACharacterBase()
 void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
-	UE_LOG(LogTemp, Warning, TEXT("%s BeginPlay called"), *GetActorLabel());
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ACharacterBase::OnHit);
 
 	GetMesh()->OnComponentSleep.AddDynamic(this, &ACharacterBase::RagdollSettled);
@@ -102,6 +101,7 @@ void ACharacterBase::SpawnWeapons()
 
 void ACharacterBase::Server_SpawnWeapons_Implementation()
 {
+	
 	UE_LOG(LogTemp, Warning, TEXT("Running server_spawnweapons()"));
 	if (EquippedWeaponClass)
 	{
@@ -769,7 +769,9 @@ void ACharacterBase::ScopeWeapon()
 void ACharacterBase::EquipWeapon(AGunBase* Gun)
 {
 	//EquippedWeapon = Gun;
-	//UE_LOG(LogTemp, Warning, TEXT("EquipWeapon called: %s"), *EquippedWeapon->GetActorLabel());
+	#if WITH_EDITOR
+		UE_LOG(LogTemp, Warning, TEXT("EquipWeapon called for: %s"), *EquippedWeapon->GetActorLabel());
+	#endif
 	EquippedWeapon->Mesh->SetSimulatePhysics(false);
 	EquippedWeapon->SetActorHiddenInGame(false);
 	
@@ -808,6 +810,10 @@ void ACharacterBase::SetupViewmodel_Implementation(bool FirstPerson)
 void ACharacterBase::HolsterWeapon(AGunBase* Gun)
 {
 	//EquippedWeapon = nullptr;
+	#if WITH_EDITOR
+		UE_LOG(LogTemp, Warning, TEXT("Holstered %s"), *HolsteredWeapon->GetActorLabel());
+	#endif
+	if (HolsteredWeapon->ScopeActive) HolsteredWeapon->ScopeOut();
 	HolsteredWeapon->ReleaseTrigger();
 	GetWorldTimerManager().ClearTimer(HolsteredWeapon->ReloadTimer);
 	HolsteredWeapon->bReloading = false;
@@ -832,7 +838,9 @@ void ACharacterBase::Server_PickupWeapon_Implementation(AGunBase* Gun)
 	Gun->SetOwner(this);
 	Gun->Mesh->SetSimulatePhysics(false);
 	Gun->SetActorEnableCollision(false);
-	UE_LOG(LogTemp, Warning, TEXT("%s picked up %s"), *GetActorLabel(), *Gun->GetActorLabel());
+	#if WITH_EDITOR
+		UE_LOG(LogTemp, Warning, TEXT("%s picked up %s"), *GetActorLabel(), *Gun->GetActorLabel());
+	#endif
 
 	Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
 	Gun->OnPickup(this);
@@ -876,7 +884,7 @@ void ACharacterBase::Multi_PickupWeapon_Implementation(AGunBase* Gun)
 		DropWeapon();
 		EquippedWeapon = Gun;
 	}
-	EquipWeapon(EquippedWeapon);
+	//EquipWeapon(EquippedWeapon);
 }
 
 void ACharacterBase::DropWeapon()
@@ -986,6 +994,7 @@ void ACharacterBase::Multi_Interact_Implementation()
 void ACharacterBase::NotifyRestarted()
 {
 	Super::NotifyRestarted();
+	bUseControllerRotationYaw = IsPlayerControlled();
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
 		PlayerController = PC;
