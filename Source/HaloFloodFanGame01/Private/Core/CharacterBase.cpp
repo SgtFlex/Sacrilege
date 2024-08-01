@@ -96,26 +96,31 @@ void ACharacterBase::Restart()
 void ACharacterBase::SpawnWeapons()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Running spawnweapons()"));
-	Server_SpawnWeapons();
+	if (!HasAuthority())
+		return;
+	else
+	{
+		if (EquippedWeaponClass)
+		{
+			AGunBase* Gun = GetWorld()->SpawnActor<AGunBase>(EquippedWeaponClass);
+			if (Gun) UE_LOG(LogTemp, Warning, TEXT("Sucessfully spawned equipped weapon"));
+			PickupWeapon(Gun);
+		
+		}
+		if (HolsteredWeaponClass)
+		{
+			AGunBase* Gun = GetWorld()->SpawnActor<AGunBase>(HolsteredWeaponClass);
+			if (Gun) UE_LOG(LogTemp, Warning, TEXT("Sucessfully spawned holstered weapon"));
+			PickupWeapon(Gun);
+		}
+	}
 }
 
 void ACharacterBase::Server_SpawnWeapons_Implementation()
 {
 	
 	UE_LOG(LogTemp, Warning, TEXT("Running server_spawnweapons()"));
-	if (EquippedWeaponClass)
-	{
-		AGunBase* Gun = GetWorld()->SpawnActor<AGunBase>(EquippedWeaponClass);
-		if (Gun) UE_LOG(LogTemp, Warning, TEXT("Sucessfully spawned equipped weapon"));
-		PickupWeapon(Gun);
-		
-	}
-	if (HolsteredWeaponClass)
-	{
-		AGunBase* Gun = GetWorld()->SpawnActor<AGunBase>(HolsteredWeaponClass);
-		if (Gun) UE_LOG(LogTemp, Warning, TEXT("Sucessfully spawned holstered weapon"));
-		PickupWeapon(Gun);
-	}
+	SpawnWeapons();
 }
 
 void ACharacterBase::Multi_SpawnWeapons_Implementation()
@@ -226,6 +231,7 @@ void ACharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	DOREPLIFETIME(ACharacterBase, HolsteredWeaponClass);
 	DOREPLIFETIME(ACharacterBase, CurGrenadeTypeI);
 	DOREPLIFETIME(ACharacterBase, GrenadeInventory);
+	DOREPLIFETIME(ACharacterBase, InteractableActor);
 	//DOREPLIFETIME(ACharacterBase, HealthComponent);
 }
 
@@ -271,8 +277,37 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 }
 
+void ACharacterBase::SpawnBloodFX_Implementation(FPointDamageEvent PointDamageEvent)
+{
+	if (BloodPFX)
+	{
+		UNiagaraComponent* BloodNiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(BloodPFX, GetMesh(), PointDamageEvent.HitInfo.BoneName, PointDamageEvent.HitInfo.ImpactPoint, PointDamageEvent.HitInfo.Normal.Rotation(), EAttachLocation::KeepWorldPosition, true);
+		//BloodNiagaraComponent->SetNiagaraVariableActor("Character", this);
+		BloodNiagaraComponent->SetVariableActor("Character", this);
+	}
+	if (BloodSplatterMat)
+	{
+		UGameplayStatics::SpawnDecalAttached(BloodSplatterMat, FVector(10,10,10), GetMesh(),
+		PointDamageEvent.HitInfo.BoneName, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Normal.Rotation() + FRotator(-90, 0, FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition, 0);
+	}
+	if (BloodDecalMaterial)
+	{
+		float DecalSize = FMath::RandRange(10, 130);
+
+		FHitResult HitResult;
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(this);
+		GetWorld()->LineTraceSingleByChannel(HitResult, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Location + (PointDamageEvent.ShotDirection * 4000),ECollisionChannel::ECC_Visibility, QueryParams);
+		if (HitResult.bBlockingHit)
+		{
+			GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageDecal(UGameplayStatics::SpawnDecalAttached(BloodDecalMaterial, FVector(DecalSize,DecalSize,DecalSize), HitResult.GetComponent(), HitResult.BoneName, HitResult.Location, HitResult.Normal.Rotation() + FRotator(-180,0,FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition));
+			//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAttached(BloodDecalMaterial, FVector(DecalSize,DecalSize,DecalSize), HitResult.GetComponent(), HitResult.BoneName, HitResult.Location, HitResult.Normal.Rotation() + FRotator(-180,0,FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition));
+		}
+	}
+}
+
 float ACharacterBase::CustomTakeRadialDamage_Implementation(float Force, FRadialDamageEvent const& RadialDamageEvent,
-	AController* EventInstigator, AActor* DamageCauser)
+                                                            AController* EventInstigator, AActor* DamageCauser)
 {
 	return ChangeHealth(this, RadialDamageEvent.Params.BaseDamage, (Cast<AActor>(this)->GetActorLocation() - RadialDamageEvent.Origin).GetSafeNormal() * Force, FVector(0,0,0), FName(""), EventInstigator, DamageCauser);
 }
@@ -309,31 +344,7 @@ float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent con
 				Stun();
 			}
 		}
-		if (BloodPFX)
-		{
-			UNiagaraComponent* BloodNiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(BloodPFX, GetMesh(), PointDamageEvent.HitInfo.BoneName, PointDamageEvent.HitInfo.ImpactPoint, PointDamageEvent.HitInfo.Normal.Rotation(), EAttachLocation::KeepWorldPosition, true);
-			//BloodNiagaraComponent->SetNiagaraVariableActor("Character", this);
-			BloodNiagaraComponent->SetVariableActor("Character", this);
-		}
-		if (BloodSplatterMat)
-		{
-			UGameplayStatics::SpawnDecalAttached(BloodSplatterMat, FVector(10,10,10), GetMesh(),
-			PointDamageEvent.HitInfo.BoneName, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Normal.Rotation() + FRotator(-90, 0, FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition, 0);
-		}
-		if (BloodDecalMaterial)
-		{
-			float DecalSize = FMath::RandRange(10, 130);
-
-			FHitResult HitResult;
-			FCollisionQueryParams QueryParams;
-			QueryParams.AddIgnoredActor(this);
-			GetWorld()->LineTraceSingleByChannel(HitResult, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Location + (PointDamageEvent.ShotDirection * 4000),ECollisionChannel::ECC_Visibility, QueryParams);
-			if (HitResult.bBlockingHit)
-			{
-				GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageDecal(UGameplayStatics::SpawnDecalAttached(BloodDecalMaterial, FVector(DecalSize,DecalSize,DecalSize), HitResult.GetComponent(), HitResult.BoneName, HitResult.Location, HitResult.Normal.Rotation() + FRotator(-180,0,FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition));
-				//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAttached(BloodDecalMaterial, FVector(DecalSize,DecalSize,DecalSize), HitResult.GetComponent(), HitResult.BoneName, HitResult.Location, HitResult.Normal.Rotation() + FRotator(-180,0,FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition));
-			}
-		}
+		SpawnBloodFX(PointDamageEvent);
 	}
 	return x;
 }
@@ -607,8 +618,8 @@ void ACharacterBase::ThrowEquippedGrenade_Implementation()
 	if (IsPlayerControlled())
 	{
 		if (GrenadeInventory.Num() <= 0) return;
-		if (ThrowGrenadeAnimation1P)
-			GetMesh1P()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation1P);
+		// if (ThrowGrenadeAnimation1P)
+		// 	GetMesh1P()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation1P);
 		GrenadeInventory[CurGrenadeTypeI].GrenadeAmount -= 1;
 		const FTransform SpawnTransform = FTransform(GetFirstPersonCameraComponent()->GetForwardVector().Rotation(), GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*300);
 		FActorSpawnParameters ActorSpawnParameters;
@@ -620,7 +631,8 @@ void ACharacterBase::ThrowEquippedGrenade_Implementation()
 			Grenade->SetInstigator(this);
 			Grenade->SetArmed(true);
 			Grenade->FinishSpawning(SpawnTransform);
-			UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Grenade->ThrowSFX, Grenade->GetActorLocation());
+			PlayThrowGrenadeFX(Grenade);
+			//UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Grenade->ThrowSFX, Grenade->GetActorLocation());
 			FVector Direction = GetFirstPersonCameraComponent()->GetForwardVector() + FVector(0,0,0.15);
 			Direction.Normalize();
 			Grenade->Mesh->AddImpulse(Direction*2000.0f, NAME_None, true);
@@ -645,12 +657,20 @@ void ACharacterBase::ThrowEquippedGrenade_Implementation()
 		AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActor(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, &EyesLoc, &EyesRot, ActorSpawnParameters));
 		Grenade->SetInstigator(this);
 		Grenade->SetArmed(true);
-		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Grenade->ThrowSFX, Grenade->GetActorLocation());
+		//PlayThrowGrenadeFX(Grenade);
+		//UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Grenade->ThrowSFX, Grenade->GetActorLocation());
 		FVector Force = GetBaseAimRotation().Vector() + FVector(0,0,0.1);
 		Grenade->Mesh->AddImpulse(Force*20000);
 	}
 }
 
+
+void ACharacterBase::PlayThrowGrenadeFX_Implementation(AGrenadeBase* Grenade)
+{
+	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Grenade->ThrowSFX, Grenade->GetActorLocation());
+	if (ThrowGrenadeAnimation1P)
+		GetMesh1P()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation1P);
+}
 
 void ACharacterBase::SwitchGrenadeType()
 {
@@ -673,16 +693,19 @@ void ACharacterBase::UseEquipment()
 
 void ACharacterBase::PrimaryAttack_Pull()
 {
-
+	
 	Server_PrimaryAttack_Pull();
 	
 }
 
 void ACharacterBase::Server_PrimaryAttack_Pull_Implementation()
 {
-	Multi_PrimaryAttack_Pull();
+	if (EquippedWeapon)
+		EquippedWeapon->PullTrigger();
+	//Multi_PrimaryAttack_Pull();
 }
 
+//DEPRECATED
 void ACharacterBase::Multi_PrimaryAttack_Pull_Implementation()
 {
 
@@ -698,9 +721,12 @@ void ACharacterBase::PrimaryAttack_Release()
 
 void ACharacterBase::Server_PrimaryAttack_Release_Implementation()
 {
-	Multi_PrimaryAttack_Release();
+	if (EquippedWeapon)
+		EquippedWeapon->ReleaseTrigger();
+	//Multi_PrimaryAttack_Release();
 }
 
+//DEPRECATED
 void ACharacterBase::Multi_PrimaryAttack_Release_Implementation()
 {
 	if (EquippedWeapon)
@@ -714,9 +740,12 @@ void ACharacterBase::ReloadWeapon()
 
 void ACharacterBase::Server_ReloadWeapon_Implementation()
 {
-	Multi_ReloadWeapon();
+	if (EquippedWeapon)
+		EquippedWeapon->StartReload();
+	//Multi_ReloadWeapon();
 }
 
+//DEPRECATED
 void ACharacterBase::Multi_ReloadWeapon_Implementation()
 {
 	if (EquippedWeapon)
@@ -911,7 +940,7 @@ void ACharacterBase::Stun(float StunTime)
 {
 	StunAmount = 0;
 	float StunDuration = HurtAnim->CalculateSequenceLength();
-	GetMesh()->GetAnimInstance()->Montage_Play(HurtAnim);
+	PlayStunAnimation(StunTime);
 	if (AAIControllerBase* AIC = Cast<AAIControllerBase>(GetController()))
 	{
 		AIC->BehaviorTreeComp->PauseLogic(FString("Stunned"));
@@ -920,6 +949,11 @@ void ACharacterBase::Stun(float StunTime)
 		AIC->ClearFocus(EAIFocusPriority::Gameplay);
 		GetWorld()->GetTimerManager().SetTimer(StunTimer, this, &ACharacterBase::Unstun, StunDuration, false);
 	}
+}
+
+void ACharacterBase::PlayStunAnimation_Implementation(float StunTime)
+{
+	GetMesh()->GetAnimInstance()->Montage_Play(HurtAnim);
 }
 
 void ACharacterBase::Unstun()

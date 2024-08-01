@@ -85,24 +85,17 @@ void AGunBase::StartReload_Implementation()
 	bReloading = true;
 	if (BurstAmount > 0) GetWorldTimerManager().ClearTimer(FireHandle);
 	GetWorld()->GetTimerManager().SetTimer(ReloadTimer, this, &AGunBase::FinishReload, ReloadSpeed, false);
-	if (ACharacterBase* PlayerChar = Cast<ACharacterBase>(CharacterOwner))
-		PlayerChar->GetMesh1P()->GetAnimInstance()->Montage_Play(ReloadAnimation1P,   ReloadAnimation1P->GetPlayLength() / ReloadSpeed);
-	if (ReloadSound) UGameplayStatics::SpawnSoundAttached(ReloadSound, GetRootComponent());
+	Multi_StartReload();
 }
 
 void AGunBase::Server_StartReload_Implementation()
 {
-	Multi_StartReload();
+	//Multi_StartReload();
 }
 
 void AGunBase::Multi_StartReload_Implementation()
 {
-	if (bReloading || CurReserve <= 0 || CurMagazine == MaxMagazine) return;
-	ScopeOut();
-	bReloading = true;
-	if (BurstAmount > 0) GetWorldTimerManager().ClearTimer(FireHandle);
-	GetWorld()->GetTimerManager().SetTimer(ReloadTimer, this, &AGunBase::FinishReload, ReloadSpeed, false);
-	if (ACharacterBase* PlayerChar = Cast<ACharacterBase>(CharacterOwner))
+	if (ACharacterBase* PlayerChar = Cast<ACharacterBase>(GetOwner()))
 		PlayerChar->GetMesh1P()->GetAnimInstance()->Montage_Play(ReloadAnimation1P,   ReloadAnimation1P->GetPlayLength() / ReloadSpeed);
 	if (ReloadSound) UGameplayStatics::SpawnSoundAttached(ReloadSound, GetRootComponent());
 }
@@ -170,20 +163,52 @@ bool AGunBase::CanFire()
 	return !(bReloading || CurMagazine <= 0);
 }
 
+void AGunBase::PlayFireFX_Implementation()
+{
+	if (ACharacterBase* PlayerChar = Cast<ACharacterBase>(GetOwner()))
+	{
+		PlayerChar->GetMesh()->GetAnimInstance()->Montage_Play(PlayerChar->FiringAnim);
+		if (FireAnimation1P) PlayerChar->GetMesh1P()->GetAnimInstance()->Montage_Play(FireAnimation1P);
+		if (APlayerController* PC = Cast<APlayerController>(PlayerChar->GetController())) PC->ClientPlayForceFeedback(FireFeedback);
+	}
+}
+
+void AGunBase::SpawnTrailFX_Implementation(FHitResult Hit)
+{
+	if (Mesh->DoesSocketExist("Muzzle") && TrailPFX)
+	{
+		FVector TrailEnd = (Hit.bBlockingHit) ? Hit.ImpactPoint : Hit.TraceEnd;
+		UNiagaraComponent* TrailPFXComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(TrailPFX, Mesh, "Muzzle", FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
+		TrailPFXComponent->SetVectorParameter("BeamEnd", TrailEnd);
+	}
+	if (Hit.bBlockingHit)
+	{
+		if (HitSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, Hit.Location);
+		if (ImpactDecal && !Cast<IDamageableInterface>(Hit.GetActor()))
+		{
+			FVector Location = Hit.ImpactPoint;
+			FRotator Rotation = Hit.Normal.Rotation() + FRotator(-90, 0, 0);
+			AActor* Decal = GetWorld()->SpawnActor(ImpactDecal, &Location, &Rotation);
+			Decal->AttachToComponent(Hit.GetComponent(), FAttachmentTransformRules::KeepWorldTransform);
+			//UGameplayStatics::SpawnDecalAttached(GetWorld(), FVector(10,10,10), ) //Perhaps optimize this in the future
+		}
+	}
+}
+
 void AGunBase::SpawnBullet_Implementation()
 {
 	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, GetOwner(), 0.0f);
 	APawn* OwningPawn = Cast<APawn>(GetOwner());
-	if (ACharacterBase* OwningChar = Cast<ACharacterBase>(GetOwner()))
-	{
-		OwningChar->GetMesh()->GetAnimInstance()->Montage_Play(OwningChar->FiringAnim);
-	}
-	
-	if (ACharacterBase* PlayerChar = Cast<ACharacterBase>(GetOwner()))
-	{
-		if (FireAnimation1P) PlayerChar->GetMesh1P()->GetAnimInstance()->Montage_Play(FireAnimation1P);
-		if (APlayerController* PC = Cast<APlayerController>(PlayerChar->GetController())) PC->ClientPlayForceFeedback(FireFeedback);
-	}
+	PlayFireFX();
+	// if (ACharacterBase* OwningChar = Cast<ACharacterBase>(GetOwner()))
+	// {
+	// 	OwningChar->GetMesh()->GetAnimInstance()->Montage_Play(OwningChar->FiringAnim);
+	// }
+	// if (ACharacterBase* PlayerChar = Cast<ACharacterBase>(GetOwner()))
+	// {
+	// 	if (FireAnimation1P) PlayerChar->GetMesh1P()->GetAnimInstance()->Montage_Play(FireAnimation1P);
+	// 	if (APlayerController* PC = Cast<APlayerController>(PlayerChar->GetController())) PC->ClientPlayForceFeedback(FireFeedback);
+	// }
 	
 	for (int i = 0; i < MultiShot; ++i)
 	{
@@ -233,24 +258,8 @@ void AGunBase::SpawnBullet_Implementation()
 				EventInstigator = OwningPawn->GetController();
 			}
 			UMyCustomBlueprintFunctionLibrary::FireHitScanBullet(Hit, GetWorld(), ActorsToIgnore, TraceStart, EyeRotation.Vector(), Range, FalloffCurve, Damage, Force, this, EventInstigator);
-			if (Mesh->DoesSocketExist("Muzzle") && TrailPFX)
-			{
-				FVector TrailEnd = (Hit.bBlockingHit) ? Hit.ImpactPoint : Hit.TraceEnd;
-				UNiagaraComponent* TrailPFXComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(TrailPFX, Mesh, "Muzzle", FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
-				TrailPFXComponent->SetVectorParameter("BeamEnd", TrailEnd);
-			}
-			if (Hit.bBlockingHit)
-			{
-				if (HitSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, Hit.Location);
-				if (ImpactDecal && !Cast<IDamageableInterface>(Hit.GetActor()))
-				{
-					FVector Location = Hit.ImpactPoint;
-					FRotator Rotation = Hit.Normal.Rotation() + FRotator(-90, 0, 0);
-					AActor* Decal = GetWorld()->SpawnActor(ImpactDecal, &Location, &Rotation);
-					Decal->AttachToComponent(Hit.GetComponent(), FAttachmentTransformRules::KeepWorldTransform);
-					//UGameplayStatics::SpawnDecalAttached(GetWorld(), FVector(10,10,10), ) //Perhaps optimize this in the future
-				}
-			}
+			SpawnTrailFX(Hit);
+
 		}
 	}
 	BulletsFired++;

@@ -66,6 +66,13 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void SpawnBullet();
 
+	UFUNCTION(NetMulticast, Unreliable)
+	void PlayFireFX();
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void SpawnTrailFX(FHitResult Hit);
+	
+
 	// UFUNCTION(BlueprintCallable, Server, Reliable)
 	// void Server_SpawnBullet();
 	//
@@ -93,7 +100,7 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_StartReload();
 
-	UFUNCTION(NetMulticast, Reliable)
+	UFUNCTION(NetMulticast, Unreliable)
 	void Multi_StartReload();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)

@@ -108,6 +108,9 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	float CustomTakeRadialDamage(float Force, FRadialDamageEvent const& RadialDamageEvent, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
+	UFUNCTION(NetMulticast, Unreliable)
+	void SpawnBloodFX(FPointDamageEvent PointDamageEvent);
+	
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	UHealthComponent* GetHealthComponent();
 	
@@ -155,6 +158,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void ThrowEquippedGrenade();
+
+	UFUNCTION(BlueprintCallable, NetMulticast, Unreliable)
+	void PlayThrowGrenadeFX(AGrenadeBase* Grenade);
 
 	UFUNCTION(BlueprintCallable)
 	void SwitchGrenadeType();
@@ -229,6 +235,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	virtual void Stun(float StunTime = 1);
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void PlayStunAnimation(float StunTime);
 
 	void Unstun();
 
@@ -400,7 +409,7 @@ public:
 	UCurveFloat* MeleeCurve;
 
 private:
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	AActor* InteractableActor;
 	
 	FTimerHandle ShieldDelayTimerHandle;
