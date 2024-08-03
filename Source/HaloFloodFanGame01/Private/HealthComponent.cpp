@@ -108,6 +108,10 @@ void UHealthComponent::Multi_TakeDamage_Implementation(float Damage, FVector For
 		UE_LOG(LogTemp, Warning, TEXT("Health reached 0 on: %s"), *UEnum::GetValueAsString(GetOwnerRole()));
 		//HealthDepleted(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
 	}
+	if (ShieldMat) {
+		UMeshComponent* MeshComp = Cast<UMeshComponent>(GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
+		MeshComp->SetOverlayMaterial(ShieldMat);
+	}
 	OnHealthUpdate.Broadcast(this);
 }
 
@@ -238,7 +242,14 @@ void UHealthComponent::RegenShields()
 {
 	float ShieldRegenAmount = ShieldRegenRatePerSecond*ShieldRegenTickRate;
 	SetShields(FMath::Min(MaxShields, Shields + ShieldRegenAmount));
-	if (Shields >= MaxShields) StopShieldRegen();
+	if (Shields >= MaxShields)
+	{
+		if (ShieldMat) {
+			UMeshComponent* MeshComp = Cast<UMeshComponent>(GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
+			MeshComp->SetOverlayMaterial(nullptr);
+		}
+		StopShieldRegen()
+	};
 	OnHealthUpdate.Broadcast(this);
 }
 

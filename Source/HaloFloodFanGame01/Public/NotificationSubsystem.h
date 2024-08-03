@@ -19,8 +19,11 @@ class HALOFLOODFANGAME01_API UNotificationSubsystem : public UWorldSubsystem
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable)
-	void PushNotificationText(FString Text);
+	UFUNCTION(BlueprintCallable, Server, Unreliable)
+	void PushGlobalNotification(const FString& Text);
+	
+	UFUNCTION(BlueprintCallable, NetMulticast, Unreliable)
+	void PushNotificationText(const FString& Text);
 
 public:
 	UPROPERTY(BlueprintAssignable)

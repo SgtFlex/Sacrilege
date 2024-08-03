@@ -76,10 +76,7 @@ public:
 
 	UFUNCTION()
 	void UpdateHUDMagazineElements(); //Maybe clean this up later
-
-	UFUNCTION()
-	void OnScoreUpdated(int NewScore);
-
+	
 	UFUNCTION(BlueprintNativeEvent)
 	void SetMagazineReserveCounter(int32 MagazineCount);
 
@@ -107,17 +104,9 @@ public:
 	UFUNCTION()
 	void UpdateInteractable(AActor* Actor);
 
-	UFUNCTION()
-	void UpdateSetAndWaveCount(int Set, int Wave);
 
 	virtual bool Initialize() override;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* WaveCount;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* SetCount;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UWidget* WeaponHUD;
 
@@ -176,10 +165,7 @@ public:
 	//
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	// class UTextBlock* IncenCounter;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	class UTextBlock* ScoreCounter;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UTextBlock* AmmoReserveCounter;
 

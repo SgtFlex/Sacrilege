@@ -65,9 +65,10 @@ void APDA::CL_BeginPlay_Implementation()
 
 void APDA::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	Super::EndPlay(EndPlayReason);
+	
 	StopBuildPreview();
 	CL_EndPlay();
+	Super::EndPlay(EndPlayReason);
 }
 
 void APDA::CL_EndPlay_Implementation()
@@ -165,7 +166,7 @@ AActor* APDA::BuildItem_Implementation(FBuyable Buyable)
 
 void APDA::ClosePDA(const FInputActionValue& InputActionValue)
 {
-	Destroy();
+	//Destroy();
 }
 
 void APDA::Navigate_Implementation(const FInputActionValue& InputActionValue)

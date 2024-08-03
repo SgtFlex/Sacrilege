@@ -90,7 +90,7 @@ void AFirefightGameMode::FinishWave()
 void AFirefightGameMode::StartMatch()
 {
 	Super::StartMatch();
-	GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushNotificationText("Firefight");
+	//GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushGlobalNotification("Firefight");
 	TArray<AActor*> OutActors;
 	
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AAISpawner::StaticClass(), OutActors);
@@ -107,7 +107,7 @@ void AFirefightGameMode::StartMatch()
 
 void AFirefightGameMode::StartSet()
 {
-	GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushNotificationText("Set start");
+	//GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushGlobalNotification("Set start");
 	HaloGameState->SetCurrentSet(HaloGameState->GetCurrentWave()+1);
 	HaloGameState->SetCurrentWave(0);
 	StartWave();
@@ -160,7 +160,7 @@ TArray<FSquadStruct> AFirefightGameMode::CalculateWave()
 void AFirefightGameMode::SpawnWave(TArray<FSquadStruct> WaveToSpawn)
 {
 	OnWaveStart.Broadcast(HaloGameState->GetCurrentSet(), HaloGameState->GetCurrentWave());
-	GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushNotificationText("Reinforcements");
+	//GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushGlobalNotification("Reinforcements");
 	SquadsAtWaveStart = SquadsToSpawn;
 	SquadsAtWaveStart.Append(WaveToSpawn);
 	SquadsToSpawn = WaveToSpawn;
@@ -209,7 +209,7 @@ void AFirefightGameMode::OnSpawnerAvailable(AAISpawner* Spawner)
 
 void AFirefightGameMode::GameFinished()
 {
-	GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushNotificationText("Game over");
+	//GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushGlobalNotification("Game over");
 	UGameplayStatics::OpenLevel(GetWorld(), FName(UGameplayStatics::GetCurrentLevelName(GetWorld())));
 }
 
@@ -344,7 +344,7 @@ void AFirefightGameMode::PostLogin(APlayerController* NewPlayer)
 	Super::PostLogin(NewPlayer);
 	FString PlayerName = NewPlayer->GetPlayerState<APlayerState>()->GetName();
 	const FString Text = FString::Printf(TEXT("%ls has joined"), *PlayerName);
-	GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushNotificationText(Text);
+	//GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushGlobalNotification(Text);
 }
 
 AVehicleBase* AFirefightGameMode::SpawnRespawnVehicle_Implementation(APlayerController* PlayerController)

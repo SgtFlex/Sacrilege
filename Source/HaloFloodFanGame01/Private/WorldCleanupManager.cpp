@@ -10,7 +10,7 @@ void UWorldCleanupManager::ManageRagdoll_Implementation(AActor* Actor)
 	Ragdolls.Add(Actor);
 	if (Ragdolls.Num() > MaxRagdolls)
 	{
-		if (Ragdolls[0])
+		if (IsValid(Ragdolls[0]))
 			Ragdolls[0]->Destroy();
 		Ragdolls.RemoveAt(0);
 	}
@@ -21,7 +21,7 @@ void UWorldCleanupManager::ManageDecal_Implementation(UDecalComponent* Decal)
 	Decals.Add(Decal);
 	if (Decals.Num() > MaxDecals)
 	{
-		if (Decals[0])
+		if (IsValid(Decals[0]))
 			Decals[0]->DestroyComponent();
 		Decals.RemoveAt(0);
 	}
@@ -37,7 +37,7 @@ void UWorldCleanupManager::ManageWeapon_Implementation(AActor* Weapon)
 	Weapons.Add(Weapon);
 	if (Weapons.Num() > MaxWeapons)
 	{
-		if (Weapons[0])
+		if (IsValid(Weapons[0]))
 			Weapons[0]->Destroy();
 		Weapons.RemoveAt(0);
 	}

@@ -20,19 +20,19 @@ class HALOFLOODFANGAME01_API AHaloGameState : public AGameState
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&) const override;
 	
-	UFUNCTION(BlueprintGetter)
+	UFUNCTION(BlueprintCallable, BlueprintPure)
 	int GetCurrentWave();
 
-	UFUNCTION(BlueprintSetter)
-	int SetCurrentWave(int NewWave);
+	UFUNCTION(NetMulticast, Reliable)
+	void SetCurrentWave(int NewWave);
 
-	UFUNCTION(BlueprintGetter)
+	UFUNCTION(BlueprintCallable, BlueprintPure)
 	int GetCurrentSet();
 
-	UFUNCTION(BlueprintSetter)
-	int SetCurrentSet(int NewSet);
+	UFUNCTION(NetMulticast, Reliable)
+	void SetCurrentSet(int NewSet);
 
-	UFUNCTION(BlueprintGetter)
+	UFUNCTION(BlueprintCallable, BlueprintPure)
 	int GetCurrentEnemyCount();
 
 	

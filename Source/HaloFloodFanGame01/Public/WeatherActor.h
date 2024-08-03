@@ -24,26 +24,35 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	USceneComponent* SceneComponent;
+	
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 	UDirectionalLightComponent* DirectionalLight;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 	USkyLightComponent* SkyLight;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	UCurveLinearColor* DirectionalLightColorCurve;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	UCurveLinearColor* SkyLightColorCurve;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float TimeScale = 1;
 	
-	UPROPERTY()
-	float Time;
-
-	float StartTime;
-	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool RandomStartTime = false;
 
-	float DirectLightIntensity;
+	UPROPERTY(BlueprintReadOnly, Replicated)
+	float CurrentPitch;
 
-	float SkyLightIntensity;
+	
+private:
+protected:
+	UPROPERTY()
+	float StartTime;
 };

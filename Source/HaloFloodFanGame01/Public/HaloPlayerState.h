@@ -30,7 +30,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SubtractPlayerScore(int SubtractScore);
 
-	UFUNCTION(BlueprintSetter)
+	UFUNCTION(BlueprintSetter, Server, Reliable)
 	void SetPlayerScore(int NewScore);
 
 	UFUNCTION(BlueprintGetter)
@@ -42,7 +42,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SubtractPlayerResource(int SubtractResource);
 
-	UFUNCTION(BlueprintSetter)
+	UFUNCTION(BlueprintSetter, Server, Reliable)
 	void SetPlayerResource(int NewResource);
 
 	UFUNCTION(BlueprintGetter)

@@ -3,6 +3,7 @@
 
 #include "HaloGameState.h"
 
+#include "NotificationSubsystem.h"
 #include "Net/UnrealNetwork.h"
 
 void AHaloGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -18,12 +19,14 @@ int AHaloGameState::GetCurrentWave()
 	return curWave;
 }
 
-int AHaloGameState::SetCurrentWave(int NewWave)
+void AHaloGameState::SetCurrentWave_Implementation(int NewWave)
 {
-	
-	curWave = NewWave;
+	if (HasAuthority())
+	{
+		curWave = NewWave;
+	}
+	GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushGlobalNotification("Reinforcements");
 	OnWaveChanged.Broadcast(curWave);
-	return curWave;
 }
 
 
@@ -32,11 +35,14 @@ int AHaloGameState::GetCurrentSet()
 	return curSet;
 }
 
-int AHaloGameState::SetCurrentSet(int NewSet)
+void AHaloGameState::SetCurrentSet_Implementation(int NewSet)
 {
-	curSet = NewSet;
+	if (HasAuthority())
+	{
+		curSet = NewSet;
+	}
+	GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushGlobalNotification("Set start");
 	OnSetChanged.Broadcast(curSet);
-	return curSet;
 }
 
 int AHaloGameState::GetCurrentEnemyCount()

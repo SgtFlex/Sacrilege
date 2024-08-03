@@ -40,6 +40,7 @@ protected:
 	UFUNCTION(Client, Reliable)
 	void CL_BeginPlay();
 
+	UFUNCTION()
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	UFUNCTION(Client, Reliable)

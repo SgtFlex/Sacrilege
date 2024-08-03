@@ -156,8 +156,11 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void EquipGrenadeType(TSubclassOf<AGrenadeBase> Grenade);
 
-	UFUNCTION(BlueprintCallable, Server, Reliable)
+	UFUNCTION(BlueprintCallable)
 	void ThrowEquippedGrenade();
+
+	UFUNCTION(BlueprintCallable, Server, Reliable)
+	void ThrowGrenade(int GrenadeIndex);
 
 	UFUNCTION(BlueprintCallable, NetMulticast, Unreliable)
 	void PlayThrowGrenadeFX(AGrenadeBase* Grenade);
@@ -207,6 +210,9 @@ public:
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
 	virtual void Multi_SwitchWeapon();
 
+	UFUNCTION(Server, Reliable)
+	void FinishSwitchingWeapons();
+
 	virtual void ScopeWeapon();
 
 	UFUNCTION()
@@ -215,7 +221,7 @@ public:
 	UFUNCTION(BlueprintCallable, Client, Unreliable)
 	virtual void SetupViewmodel(bool FirstPerson);
 
-	UFUNCTION()
+	UFUNCTION(NetMulticast, Unreliable)
 	virtual void HolsterWeapon(AGunBase* Gun);
 
 	UFUNCTION(BlueprintCallable)
@@ -241,8 +247,11 @@ public:
 
 	void Unstun();
 
-	UFUNCTION()
+	UFUNCTION(Server, Reliable)
 	void SetCurrentInteractable();
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void UpdateInteractInfo();
 
 	UFUNCTION(BlueprintCallable)
 	void Interact();
@@ -312,7 +321,7 @@ public:
 	UPROPERTY(BlueprintReadOnly, Replicated, ReplicatedUsing=EquipWeapon)
 	AGunBase* EquippedWeapon;
 
-	UPROPERTY(BlueprintReadOnly, Replicated, ReplicatedUsing=HolsterWeapon)
+	UPROPERTY(BlueprintReadOnly, Replicated)
 	AGunBase* HolsteredWeapon;
 
 	FTimerHandle HolsterHandle;
@@ -372,7 +381,7 @@ public:
 	UPROPERTY()
 	float StunAmount = 100;
 
-	UPROPERTY(Replicated)
+	UPROPERTY()
 	int CurGrenadeTypeI = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"), Replicated)

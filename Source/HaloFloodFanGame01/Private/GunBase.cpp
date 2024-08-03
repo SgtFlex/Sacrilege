@@ -14,6 +14,7 @@
 #include "Engine/DamageEvents.h"
 #include "HaloFloodFanGame01/PlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 #include "Perception/AISense_Hearing.h"
 #include "Perception/AISense_Sight.h"
 
@@ -158,9 +159,21 @@ void AGunBase::GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon)
 	
 }
 
+void AGunBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AGunBase, CurMagazine);
+	DOREPLIFETIME(AGunBase, CurReserve);
+}
+
 bool AGunBase::CanFire()
 {
 	return !(bReloading || CurMagazine <= 0);
+}
+
+void AGunBase::UpdateMagazineElements()
+{
+	OnAmmoUpdated.Broadcast();
 }
 
 void AGunBase::PlayFireFX_Implementation()
@@ -375,9 +388,9 @@ void AGunBase::SpawnMuzzleFX_Implementation()
 		UNiagaraFunctionLibrary::SpawnSystemAttached(MuzzlePFX, Mesh, "Muzzle", FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
 }
 
-void AGunBase::ScopeIn_Implementation()
+bool AGunBase::ScopeIn_Implementation()
 {
-	if (ScopeActive) return;
+	if (ScopeActive || ZoomFOV == 0) return false;
 	if (ACharacterBase* PlayerChar = Cast<ACharacterBase>(GetOwner()))
 	{
 		ScopeActive = true;
@@ -386,6 +399,7 @@ void AGunBase::ScopeIn_Implementation()
 		//PlayerChar->GetFirstPersonCameraComponent()->SetFieldOfView(10);
 		if (ScopeInSFX) UGameplayStatics::PlaySound2D(GetWorld(), ScopeInSFX);
 	}
+	return true;
 }
 
 void AGunBase::ScopeOut_Implementation()
@@ -411,7 +425,7 @@ void AGunBase::Fire_Implementation()
 	
 	
 	SpawnBullet();
-	
+	OnAmmoUpdated.Broadcast();
 	OnFire.Broadcast();
 }
 
@@ -422,5 +436,6 @@ void AGunBase::FinishReload_Implementation()
 	int32 AmountGrabbed = FMath::Min(AmountNeed, CurReserve);
 	CurMagazine = CurMagazine + AmountGrabbed;
 	CurReserve = CurReserve - AmountGrabbed;
+	OnAmmoUpdated.Broadcast();
 	OnReload.Broadcast();
 }

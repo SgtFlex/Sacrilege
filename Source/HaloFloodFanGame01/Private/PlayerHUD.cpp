@@ -37,11 +37,6 @@ void UPlayerHUD::NativeConstruct()
 	UpdateHUDWeaponData(PlayerCharacter->EquippedWeapon, PlayerCharacter->HolsteredWeapon);
 	SetHealth(PlayerCharacter->GetHealthComponent()->GetHealth(), PlayerCharacter->GetHealthComponent()->GetMaxHealth());
 	SetShields(PlayerCharacter->GetHealthComponent()->GetShields(), PlayerCharacter->GetHealthComponent()->GetMaxShields());
-	
-
-	
-	//Cast<AHaloFloodFanGame01GameMode>(UGameplayStatics::GetGameMode(GetWorld()))->OnScoreUpdated.AddDynamic(this, &UHaloHUDWidget::OnScoreUpdated);
-	if (AFirefightGameMode* FirefightGamemode = Cast<AFirefightGameMode>(UGameplayStatics::GetGameMode(GetWorld()))) FirefightGamemode->OnWaveStart.AddDynamic(this, &UPlayerHUD::UpdateSetAndWaveCount);
 }
 
 void UPlayerHUD::PostLoad()
@@ -211,12 +206,6 @@ void UPlayerHUD::UpdateHUDMagazineElements()
 	SetAmmoGridBullets(PlayerCharacter->EquippedWeapon->CurMagazine, PlayerCharacter->EquippedWeapon->MaxMagazine);
 }
 
-void UPlayerHUD::OnScoreUpdated(int NewScore)
-{
-	UE_LOG(LogTemp, Warning, TEXT("Updated"));
-	ScoreCounter->SetText(FText::AsNumber(NewScore));
-}
-
 void UPlayerHUD::SetCrosshairType(int type)
 {
 	switch (type)
@@ -297,6 +286,7 @@ void UPlayerHUD::OnHealthUpdated_Implementation(UHealthComponent* HealthComp)
 
 void UPlayerHUD::UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredGun)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Updated HUD Weapon data"));
 	if (EquippedGun)
 	{
 		SetCrosshairTexture(EquippedGun->CrosshairTexture);
@@ -308,8 +298,9 @@ void UPlayerHUD::UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredG
 		ConstructAmmoGrid(EquippedGun);
 		UpdateHUDMagazineElements();
 		MagazineTotal->SetText(FText::AsNumber(EquippedGun->MaxMagazine));
-		EquippedGun->OnFire.AddUniqueDynamic(this, &UPlayerHUD::UpdateHUDMagazineElements);
-		EquippedGun->OnReload.AddUniqueDynamic(this, &UPlayerHUD::UpdateHUDMagazineElements);
+		// EquippedGun->OnFire.AddUniqueDynamic(this, &UPlayerHUD::UpdateHUDMagazineElements);
+		// EquippedGun->OnReload.AddUniqueDynamic(this, &UPlayerHUD::UpdateHUDMagazineElements);
+		EquippedGun->OnAmmoUpdated.AddUniqueDynamic(this, &UPlayerHUD::UpdateHUDMagazineElements);
 	} else
 	{
 		MagazineCounter->SetVisibility(ESlateVisibility::Hidden);
@@ -336,19 +327,12 @@ void UPlayerHUD::UpdateInteractable(AActor* Actor)
 		
 		IInteractableInterface::Execute_GetInteractInfo(Actor, IntText, IntIcon);
 		SetInteractInfo(IntText, IntIcon);
-		//InteractName->SetText(FText::FromString(Actor->GetActorLabel()));
+		//InteractName->SetText(Actor->GetClass()->GetDisplayNameText());
 	} else
 	{
 		SetCanInteract(false);
 	}
 	
-}
-
-
-void UPlayerHUD::UpdateSetAndWaveCount(int Set, int Wave)
-{
-	SetCount->SetText(FText::AsNumber(Set));
-	WaveCount->SetText(FText::AsNumber(Wave));
 }
 
 

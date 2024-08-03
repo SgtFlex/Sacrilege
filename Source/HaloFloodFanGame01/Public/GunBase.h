@@ -24,6 +24,7 @@ class UPlayerHUD;
 class ACharacterBase;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFire);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReload);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAmmoUpdated);
 
 UCLASS()
 class HALOFLOODFANGAME01_API AGunBase : public AActor, public IInteractableInterface
@@ -38,6 +39,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnReload OnReload;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnAmmoUpdated OnAmmoUpdated;
 	
 public:	
 	// Sets default values for this actor's properties
@@ -71,6 +75,9 @@ public:
 
 	UFUNCTION(NetMulticast, Unreliable)
 	void SpawnTrailFX(FHitResult Hit);
+
+	UFUNCTION()
+	void UpdateMagazineElements();
 	
 
 	// UFUNCTION(BlueprintCallable, Server, Reliable)
@@ -89,7 +96,7 @@ public:
 	// void Multi_Fire();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void ScopeIn();
+	bool ScopeIn();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void ScopeOut();
@@ -127,6 +134,8 @@ public:
 	virtual void OnInteract_Implementation(ACharacterBase* Character) override;
 
 	virtual void GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon) override;
+
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:
 	UPROPERTY(EditAnywhere)
@@ -198,7 +207,7 @@ public:
 	int32 MaxMagazine = 32;
 
 	//The amount of bullets the weapon spawns with in a magazine
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"), ReplicatedUsing=UpdateMagazineElements)
 	int32 CurMagazine = MaxMagazine;
 
 	//The maximum amount of bullets the weapon can have in reserve.
@@ -206,7 +215,7 @@ public:
 	int32 MaxReserve = 160;
 
 	//The amount of bullets this weapon spawns with in reserve
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"), ReplicatedUsing=UpdateMagazineElements)
 	int32 CurReserve = MaxReserve;
 	
 	UPROPERTY(EditAnywhere, meta = (Category="SFX"))
@@ -237,7 +246,7 @@ public:
 	USoundBase* ScopeOutSFX;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	float ZoomFOV = 20;
+	float ZoomFOV = 0;
 	
 	UPROPERTY(EditAnywhere, meta = (Category="HUD"))
 	UTexture2D* WeaponIcon;
