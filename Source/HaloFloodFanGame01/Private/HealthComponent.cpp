@@ -108,7 +108,7 @@ void UHealthComponent::Multi_TakeDamage_Implementation(float Damage, FVector For
 		UE_LOG(LogTemp, Warning, TEXT("Health reached 0 on: %s"), *UEnum::GetValueAsString(GetOwnerRole()));
 		//HealthDepleted(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
 	}
-	if (ShieldMat) {
+	if (ShieldMat && Shields > 0) {
 		UMeshComponent* MeshComp = Cast<UMeshComponent>(GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
 		MeshComp->SetOverlayMaterial(ShieldMat);
 	}
@@ -248,7 +248,7 @@ void UHealthComponent::RegenShields()
 			UMeshComponent* MeshComp = Cast<UMeshComponent>(GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
 			MeshComp->SetOverlayMaterial(nullptr);
 		}
-		StopShieldRegen()
+		StopShieldRegen();
 	};
 	OnHealthUpdate.Broadcast(this);
 }

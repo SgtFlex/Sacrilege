@@ -61,7 +61,7 @@ void AProjectileBase::OnProjectileOverlapped_Implementation(UPrimitiveComponent*
 	const FHitResult& SweepResult)
 {
 	UAISense_Hearing::ReportNoiseEvent(GetWorld(), SweepResult.Location, 300.0f, GetInstigator(), 300.0f);
-	IDamageableInterface* DamageableActor = Cast<IDamageableInterface>(OtherActor);
+	// IDamageableInterface* DamageableActor = Cast<IDamageableInterface>(OtherActor);
 	FVector Direction = GetVelocity();
 	Direction.Normalize();
 	if (UPrimitiveComponent* PrimComponent = Cast<UPrimitiveComponent>(OtherActor->GetRootComponent()))
@@ -71,7 +71,7 @@ void AProjectileBase::OnProjectileOverlapped_Implementation(UPrimitiveComponent*
 			PrimComponent->AddImpulse(Direction*Force);
 		}
 	}
-	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && (DamageableActor))
+	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && (OtherActor->Implements<UDamageableInterface>()))
 	{
 		FPointDamageEvent PointDamageEvent = FPointDamageEvent(Damage, SweepResult, Direction, UDamageType::StaticClass());
 		IDamageableInterface::Execute_CustomTakePointDamage(OtherActor, PointDamageEvent, Force, GetInstigatorController(), this);

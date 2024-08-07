@@ -19,33 +19,38 @@ public:
 	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	UFUNCTION(BlueprintCallable)
-	virtual void ThrustToTargetSpeed();
+	void Accelerate();
+	
+	void Decelerate();
+
 
 	UFUNCTION(BlueprintCallable)
-	virtual void TorqueToTargetRotation();
+	virtual void TurnToTargetRotation();
+
+	void RequestDirectMove(const FVector& MoveVelocity, bool bForceMaxSpeed);
+
+	void RequestPathMove(const FVector& MoveInput) override;
+
+	virtual void StopActiveMovement() override;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 public:
 	UPROPERTY()
 	UPrimitiveComponent* PrimitiveComponent;
 
 	UPROPERTY(BlueprintReadWrite, Replicated)
-	FVector TargetForceLocal;
+	FVector TargetDirection;
+	
 	FVector CurrentVelocity;
-
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 	UPROPERTY(EditAnywhere)
 	float ThrustForce = 1000000.0;
 
 	UPROPERTY(BlueprintReadWrite, Replicated)
 	FRotator TargetRotation;
+	
 	FRotator CurrentRotation;
-
-	UPROPERTY(BlueprintReadWrite, Replicated)
-	FVector TargetForward;
-	FVector CurrentForward;
-
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MaxSpeed = 500.0f;
 	
@@ -54,5 +59,4 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float TorqueDamping = 0.5f;
-	
 };

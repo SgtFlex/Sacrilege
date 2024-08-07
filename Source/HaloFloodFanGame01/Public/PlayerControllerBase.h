@@ -38,6 +38,6 @@ public:
 	FTimerHandle PlayerRespawnTimerHandle;
 
 public:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	uint8 TeamNumber = 2;
 };

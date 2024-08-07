@@ -285,6 +285,7 @@ protected:
 	UFUNCTION(Client, Reliable)
 	virtual void CL_Unpossessed();
 
+	void SpawnDefaultController() override;
 public:
 	//Delegates
 	UPROPERTY(BlueprintAssignable)

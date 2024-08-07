@@ -136,8 +136,10 @@ ETeamAttitude::Type AAIControllerBase::GetTeamAttitudeTowards(const AActor& Othe
 	return ETeamAttitude::Neutral;
 }
 
-void AAIControllerBase::SetSmartObject(ASmartObject* SmartObject)
+void AAIControllerBase::SetSmartObject(ASmartObject* NewSmartObject)
 {
+	SmartObject = NewSmartObject;
+	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, TEXT("Adding smart object"));
 	FGameplayTag SubTag;
 	BehaviorTreeComp->SetDynamicSubtree(SubTag, SmartObject->DynamicTree);
 	BlackboardComp->SetValueAsBool(FName("HasSmartObject"), true);

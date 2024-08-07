@@ -26,12 +26,13 @@ void UMyCustomBlueprintFunctionLibrary::FireHitScanBullet(FHitResult& Hit, const
 	{
 		UKismetSystemLibrary::SphereTraceSingle(World, StartLocation, StartLocation + (Direction * Range), 20, UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_EngineTraceChannel1), false, ActorsToIgnore, EDrawDebugTrace::None, Hit, true, FLinearColor::Red, FLinearColor::Green, 5);
 		//DrawDebugLine(World, StartLocation, StartLocation + (Direction * Range), FColor(0, 255, 0, 255), false, 5, 0, 5);
-		if (Hit.bBlockingHit)
+		if (Hit.bBlockingHit && Hit.GetActor())
 		{
 			FVector HitDir = (Hit.Location - StartLocation).GetSafeNormal();
 			UAISense_Hearing::ReportNoiseEvent(World, Hit.Location, 1.0f, EventInstigator);
-			if (IDamageableInterface* DamageableActor = Cast<IDamageableInterface>(Hit.GetActor()))
+			if (Hit.GetActor()->Implements<UDamageableInterface>())
 			{
+				//IDamageableInterface* DamageableActor = Cast<IDamageableInterface>(Hit.GetActor());
 				Damage = FalloffCurve!=nullptr ? Damage * FalloffCurve->GetFloatValue(Hit.Distance/Range) : Damage;
 				FPointDamageEvent PointDamageEvent = FPointDamageEvent(Damage, Hit, HitDir, UDamageType::StaticClass());
 				IDamageableInterface::Execute_CustomTakePointDamage(Hit.GetActor(), PointDamageEvent, Force, EventInstigator, DamageCauser);

@@ -1083,6 +1083,15 @@ void ACharacterBase::UnPossessed()
 	Super::UnPossessed();
 }
 
+void ACharacterBase::SpawnDefaultController()
+{
+	Super::SpawnDefaultController();
+	// if (AAIControllerBase* AICBase = Cast<AAIControllerBase>(GetController()))
+	// {
+	// 	AICBase->SetGenericTeamId(TeamId);
+	// }
+}
+
 void ACharacterBase::CL_Unpossessed_Implementation()
 {
 	if (const APlayerController* PC = Cast<APlayerController>(Controller))

@@ -32,7 +32,7 @@ public:
 	virtual ETeamAttitude::Type GetTeamAttitudeTowards(const AActor& Other) const override;
 
 	UFUNCTION(BlueprintCallable)
-	void SetSmartObject(ASmartObject* SmartObject);
+	void SetSmartObject(ASmartObject* NewSmartObject);
 	
 	UFUNCTION(BlueprintNativeEvent)
 	void OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
@@ -97,9 +97,12 @@ public:
 	UPROPERTY()
 	class UAISenseConfig_Touch* Touch;
 
-	UPROPERTY(EditAnywhere, meta = (DeprecatedProperty))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (DeprecatedProperty))
 	uint8 TeamNumber = 2;
 
 	UPROPERTY(EditAnywhere)
 	TArray<AActor*> KnownEnemies;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ASmartObject* SmartObject;
 };
