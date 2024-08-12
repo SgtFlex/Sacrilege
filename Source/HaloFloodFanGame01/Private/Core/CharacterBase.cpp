@@ -91,6 +91,8 @@ void ACharacterBase::Restart()
 
 	// SpawnWeapons();
 	Cast<IGenericTeamAgentInterface>(GetController())->SetGenericTeamId(FGenericTeamId(TeamId));
+	if (AAIControllerBase* AIC = Cast<AAIControllerBase>(GetController()))
+		AIC->TeamNumber = TeamId;
 }
 
 void ACharacterBase::SpawnWeapons()
@@ -818,13 +820,13 @@ void ACharacterBase::ScopeWeapon()
 
 void ACharacterBase::EquipWeapon(AGunBase* Gun)
 {
+	EquippedWeapon->Mesh->SetSimulatePhysics(false);
+	EquippedWeapon->SetActorEnableCollision(false);
 	//EquippedWeapon = Gun;
 	#if WITH_EDITOR
 		UE_LOG(LogTemp, Warning, TEXT("EquipWeapon called for: %s"), *EquippedWeapon->GetActorLabel());
 	#endif
-	EquippedWeapon->Mesh->SetSimulatePhysics(false);
 	EquippedWeapon->SetActorHiddenInGame(false);
-	
 	EquippedWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
 	EquippedWeapon->OnEquipped();
 
@@ -846,8 +848,10 @@ void ACharacterBase::SetupViewmodel_Implementation(bool FirstPerson)
 {
 	if (EquippedWeapon)
 	{
+		
 		if (FirstPerson && IsPlayerControlled() && IsLocallyControlled())
 		{
+			if (EquippedWeapon->DrawSFX) UGameplayStatics::PlaySoundAtLocation(GetWorld(), EquippedWeapon->DrawSFX, GetActorLocation());
 			EquippedWeapon->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
 		} else
 		{

@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/NavMovementComponent.h"
+#include "GameFramework/PawnMovementComponent.h"
 #include "HoverMovementComponent.generated.h"
 
 /**
  * 
  */
 UCLASS(ClassGroup = Movement, meta = (BlueprintSpawnableComponent))
-class HALOFLOODFANGAME01_API UHoverMovementComponent : public UNavMovementComponent
+class HALOFLOODFANGAME01_API UHoverMovementComponent : public UPawnMovementComponent
 {
 	GENERATED_BODY()
 
@@ -29,7 +29,6 @@ public:
 
 	void RequestDirectMove(const FVector& MoveVelocity, bool bForceMaxSpeed);
 
-	void RequestPathMove(const FVector& MoveInput) override;
 
 	virtual void StopActiveMovement() override;
 

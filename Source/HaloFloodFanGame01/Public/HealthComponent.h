@@ -40,6 +40,9 @@ public:
 	
 	void HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multi_HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
+
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	bool IsAlive();
 public:
@@ -140,7 +143,7 @@ public:
 	float GetShieldRegenRatePerSecond() const;
 	UFUNCTION(BlueprintCallable)
 	void SetShieldRegenRatePerSecond(float NewShieldRegenRatePerSecond);
-	UFUNCTION()
+	UFUNCTION(NetMulticast, Unreliable)
 	void BreakShields();
 	UFUNCTION()
 	void StartShieldRegen();

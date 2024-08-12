@@ -136,6 +136,7 @@ void AGrenadeBase::Pickup(APlayerCharacter* Character)
 			if (Character->GrenadeInventory[i].GrenadeAmount < 4)
 			{
 				Character->GrenadeInventory[i].GrenadeAmount++;
+				Character->OnGrenadeInventoryUpdated.Broadcast(Character->GrenadeInventory);
 				Destroy();
 			}
 		}

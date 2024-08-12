@@ -37,8 +37,6 @@ void UHealthComponent::BeginPlay()
 
 	
 	ShieldAudioComponent->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
-	// ...
-
 	if (ShieldAttenuationSettings)
 	{
 		ShieldAudioComponent->AttenuationSettings = ShieldAttenuationSettings;
@@ -56,57 +54,47 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 void UHealthComponent::TakeDamage_Implementation(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser, bool bIgnoreShields, bool bIgnoreHealthArmor, bool bIgnoreShieldArmor)
 {
-	if (GetHealth() <= 0) return;
-		float DamageLeft = Damage;
-		if (Shields > 0)
-		{
-			DamageLeft = Damage - Shields;
-			SetShields(Shields - Damage);
-			
-		}
-		if (MaxShields > 0)
-		{
-			if (ShieldWarningSFX && Shields <= 0 && ShieldAudioComponent->GetSound() != ShieldWarningSFX)
-			{
-				ShieldAudioComponent->SetSound(ShieldWarningSFX);
-				ShieldAudioComponent->Play();
-			}
-			else if (ShieldLowSFX && Shields <= MaxShields * 0.25 && ShieldAudioComponent->GetSound() != ShieldLowSFX)
-			{
-				ShieldAudioComponent->SetSound(ShieldLowSFX);
-				ShieldAudioComponent->Play();
-			}
-		}
-		
-		if (Health > 0 && Shields <= 0)
-		{
-			if (SetHealth(Health - DamageLeft) <= 0) //New health value set.
-			{
-				HealthDepleted(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
-			}
-		}
-		
-		OnHealthUpdate.Broadcast(this);
-		UE_LOG(LogTemp, Warning, TEXT("-------------------------------"));
-		Multi_TakeDamage(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
+	if (!IsAlive()) return;
+	
+	float DamageLeft = Damage;
+	
+	if (Shields > 0)
+	{
+		DamageLeft = Damage - Shields;
+		SetShields(Shields - Damage);
+	}
+	if (DamageLeft > 0 && Shields <= 0)
+	{
+		if (SetHealth(Health - DamageLeft) <= 0)
+			HealthDepleted(DamageLeft, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
+	}		
+	
+	Multi_TakeDamage(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
+	OnHealthUpdate.Broadcast(this);
 }
 
 void UHealthComponent::Multi_TakeDamage_Implementation(float Damage, FVector Force, FVector HitLocation,
 	FName HitBoneName, AController* EventInstigator, AActor* DamageCauser, bool bIgnoreShields, bool bIgnoreHealthArmor,
 	bool bIgnoreShieldArmor)
 {
-	//if (GetHealth() <= 0) return;
-	UE_LOG(LogTemp, Warning, TEXT("Called TakeDamage on: %s. Health: %f"), *UEnum::GetValueAsString(GetOwnerRole()), GetHealth());
-	if (MaxShields > 0 && IsAlive())
+	if (!IsAlive()) return;
+	
+	if (MaxShields > 0)
 	{
+		if (Shields <= 0)
+			BreakShields();
 		GetOwner()->GetWorldTimerManager().ClearTimer(ShieldRegenTimer);
 		GetOwner()->GetWorldTimerManager().SetTimer(ShieldDelayTimerHandle, this, &UHealthComponent::StartShieldRegen, ShieldRegenDelay);
 	}
-
-	if (GetHealth() <= 0)
+	if (ShieldWarningSFX && MaxShields > 0 && (Shields <= 0) && (ShieldAudioComponent->GetSound() != ShieldWarningSFX))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Health reached 0 on: %s"), *UEnum::GetValueAsString(GetOwnerRole()));
-		//HealthDepleted(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
+		ShieldAudioComponent->SetSound(ShieldWarningSFX);
+		ShieldAudioComponent->Play();
+	}
+	else if (ShieldLowSFX && Shields <= (MaxShields * 0.25) && (Shields > 0) && (ShieldAudioComponent->GetSound() != ShieldLowSFX))
+	{
+		ShieldAudioComponent->SetSound(ShieldLowSFX);
+		ShieldAudioComponent->Play();
 	}
 	if (ShieldMat && Shields > 0) {
 		UMeshComponent* MeshComp = Cast<UMeshComponent>(GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
@@ -117,13 +105,20 @@ void UHealthComponent::Multi_TakeDamage_Implementation(float Damage, FVector For
 
 void UHealthComponent::HealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Called HealthDepleted on: %s"), *UEnum::GetValueAsString(GetOwnerRole()));
-	ShieldAudioComponent->Deactivate();
 	Deactivate();
 	ShieldRegenTimer.Invalidate();
 	ShieldDelayTimerHandle.Invalidate();
 	GetWorld()->GetTimerManager().ClearTimer(ShieldDelayTimerHandle);
+	Multi_HealthDepleted(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
 	OnHealthDepleted.Broadcast(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
+}
+
+void UHealthComponent::Multi_HealthDepleted_Implementation(float Damage, FVector Force, FVector HitLocation,
+	FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
+{
+	ShieldAudioComponent->Deactivate();
+	UMeshComponent* MeshComp = Cast<UMeshComponent>(GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
+	MeshComp->SetOverlayMaterial(nullptr);
 }
 
 bool UHealthComponent::IsAlive()
@@ -212,7 +207,7 @@ void UHealthComponent::SetShieldRegenRatePerSecond(float NewShieldRegenRatePerSe
 }
 
 //Perhaps move this stuff to delegates called inside characters?
-void UHealthComponent::BreakShields()
+void UHealthComponent::BreakShields_Implementation()
 {
 	if (ShieldMat) {
 		UMeshComponent* MeshComp = Cast<UMeshComponent>(GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));

@@ -200,7 +200,7 @@ void UPlayerHUD::SetMagazineReserveCounter_Implementation(int32 MagazineCount)
 
 void UPlayerHUD::UpdateHUDMagazineElements()
 {
-	if (!PlayerCharacter) return;
+	if (!PlayerCharacter || !PlayerCharacter->EquippedWeapon) return;
 	SetMagazineReserveCounter(PlayerCharacter->EquippedWeapon->CurMagazine);
 	SetAmmoReserveCounter(PlayerCharacter->EquippedWeapon->CurReserve);
 	SetAmmoGridBullets(PlayerCharacter->EquippedWeapon->CurMagazine, PlayerCharacter->EquippedWeapon->MaxMagazine);

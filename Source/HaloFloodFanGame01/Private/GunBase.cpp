@@ -59,7 +59,7 @@ void AGunBase::OnPickup(ACharacterBase* Char)
 
 void AGunBase::OnEquipped()
 {
-	if (DrawSFX) UGameplayStatics::PlaySoundAtLocation(GetWorld(), DrawSFX, GetActorLocation());
+	// if (DrawSFX) UGameplayStatics::PlaySoundAtLocation(GetWorld(), DrawSFX, GetActorLocation());
 }
 
 void AGunBase::OnDropped()
@@ -212,6 +212,7 @@ void AGunBase::SpawnBullet_Implementation()
 {
 	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, GetOwner(), 0.0f);
 	APawn* OwningPawn = Cast<APawn>(GetOwner());
+	AController* EventInstigator = nullptr;
 	PlayFireFX();
 	// if (ACharacterBase* OwningChar = Cast<ACharacterBase>(GetOwner()))
 	// {
@@ -245,10 +246,18 @@ void AGunBase::SpawnBullet_Implementation()
 			FHitResult Hit;
 			FVector TraceStart;
 			FRotator EyeRotation;
+			if (OwningPawn)
+			{
+				OwningPawn->GetActorEyesViewPoint(TraceStart, EyeRotation);
+				EyeRotation = OwningPawn->GetBaseAimRotation();
+				EyeRotation = EyeRotation + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
+				EventInstigator = OwningPawn->GetController();
+			} else
+			{
+				TraceStart = GetActorLocation();
+				EyeRotation = GetActorRotation();
+			}
 			
-			OwningPawn->GetActorEyesViewPoint(TraceStart, EyeRotation);
-			EyeRotation = OwningPawn->GetBaseAimRotation();
-			EyeRotation = EyeRotation + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
 			// if (OwningPawn && OwningPawn->GetController())
 			// {
 			// 	//OwningPawn->GetController()->GetPlayerViewPoint(TraceStart, EyeRotation);
@@ -265,11 +274,7 @@ void AGunBase::SpawnBullet_Implementation()
 			ActorsToIgnore.Add(GetOwner());
 			// The actual bullet trace, with a width for accuracy forgiveness
 			//UKismetSystemLibrary::SphereTraceSingle(GetWorld(), TraceStart, TraceEnd, 20, UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Camera), false, ActorsToIgnore, EDrawDebugTrace::None, Hit, true, FLinearColor::Red, FLinearColor::Green, 5);
-			AController* EventInstigator = nullptr;
-			if (OwningPawn)
-			{
-				EventInstigator = OwningPawn->GetController();
-			}
+
 			UMyCustomBlueprintFunctionLibrary::FireHitScanBullet(Hit, GetWorld(), ActorsToIgnore, TraceStart, EyeRotation.Vector(), Range, FalloffCurve, Damage, Force, this, EventInstigator);
 			SpawnTrailFX(Hit);
 

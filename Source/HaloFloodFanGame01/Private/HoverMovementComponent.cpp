@@ -2,14 +2,12 @@
 
 
 #include "HoverMovementComponent.h"
-
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 
 void UHoverMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
 	PrimitiveComponent = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
 }
 
@@ -74,18 +72,6 @@ void UHoverMovementComponent::RequestDirectMove(const FVector& MoveVelocity, boo
 	//DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), Destination, FColor::Red, false, 1.f, 0, 3.f);
 	//DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), VehicleLocation + (MoveVelocity - (PrimitiveComponent->GetPhysicsLinearVelocity()*20)).GetSafeNormal() * 500, FColor::Green, false, 1.f, 0, 3.f);
 	TargetDirection = (MoveVelocity - PrimitiveComponent->GetPhysicsLinearVelocity()*30).GetSafeNormal();
-}
-
-void UHoverMovementComponent::RequestPathMove(const FVector& MoveInput)
-{
-	Super::RequestPathMove(MoveInput);
-
-	//FVector VehicleLocation = GetOwner()->GetActorLocation();
-	//FVector Destination = VehicleLocation + MoveVelocity * GetWorld()->GetDeltaSeconds();
-	
-	//DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), Destination, FColor::Red, false, 1.f, 0, 3.f);
-	//DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), VehicleLocation + (MoveVelocity - (PrimitiveComponent->GetPhysicsLinearVelocity()*20)).GetSafeNormal() * 500, FColor::Green, false, 1.f, 0, 3.f);
-	TargetDirection = (MoveInput - PrimitiveComponent->GetPhysicsLinearVelocity()*30).GetSafeNormal();
 }
 
 void UHoverMovementComponent::StopActiveMovement()

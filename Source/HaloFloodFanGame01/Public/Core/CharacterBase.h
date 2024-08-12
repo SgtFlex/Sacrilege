@@ -355,14 +355,17 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	UAnimMontage* MeleeAnim;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="AI")
 	ASmartObject* SmartObject;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category="AI")
 	TEnumAsByte<EAlertState> AlertState;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category="AI")
 	TEnumAsByte<EEmotion> Emotion;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"), Replicated, Category="AI")
+	uint8 TeamId = 0;
 
 	UPROPERTY(EditDefaultsOnly)
 	bool CanInteract = true;
@@ -385,8 +388,7 @@ public:
 	UPROPERTY()
 	int CurGrenadeTypeI = 0;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"), Replicated)
-	uint8 TeamId = 0;
+	
 	
 	UPROPERTY(BlueprintReadOnly)
 	APlayerController* PlayerController;

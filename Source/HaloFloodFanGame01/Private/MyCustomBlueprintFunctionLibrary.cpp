@@ -75,20 +75,24 @@ void UMyCustomBlueprintFunctionLibrary::FireExplosion(const UObject* WorldContex
 		UKismetSystemLibrary::SphereOverlapActors(World, Location, OuterRadius, Objects, AActor::StaticClass(), ActorsToIgnore, HitActors);
 		for (auto HitActor : HitActors)
 		{
-			if (IDamageableInterface* HitDamageable = Cast<IDamageableInterface>(HitActor))
+			if (!ActorsToIgnore.Contains(HitActor))
 			{
-				IDamageableInterface::Execute_CustomTakeRadialDamage(HitActor, Force, RadialDamageEvent, EventInstigator, DamageCauser);
-				//HitDamageable->CustomTakeRadialDamage(Force, RadialDamageEvent, EventInstigator, DamageCauser);
-			}
-			if (UPrimitiveComponent* PrimComponent = Cast<UPrimitiveComponent>(HitActor->GetRootComponent()))
-			{
-				if (PrimComponent->IsSimulatingPhysics() && PrimComponent->GetCollisionEnabled() == ECollisionEnabled::QueryAndPhysics)
+				if (HitActor->Implements<UDamageableInterface>())
 				{
-					PrimComponent->AddImpulse((HitActor->GetActorLocation() - Location).GetSafeNormal() * Force);
-					//PrimComponent->AddImpulse((HitActor->GetActorLocation() - Location).GetSafeNormal() * FMath::Lerp(0, Force, (FVector::Distance(HitActor->GetActorLocation(), Location)) + InnerRadius));
+					IDamageableInterface::Execute_CustomTakeRadialDamage(HitActor, Force, RadialDamageEvent, EventInstigator, DamageCauser);
+					//HitDamageable->CustomTakeRadialDamage(Force, RadialDamageEvent, EventInstigator, DamageCauser);
+				}
+				if (UPrimitiveComponent* PrimComponent = Cast<UPrimitiveComponent>(HitActor->GetRootComponent()))
+				{
+					if (PrimComponent->IsSimulatingPhysics() && PrimComponent->GetCollisionEnabled() == ECollisionEnabled::QueryAndPhysics)
+					{
+						PrimComponent->AddImpulse((HitActor->GetActorLocation() - Location).GetSafeNormal() * Force);
+						//PrimComponent->AddImpulse((HitActor->GetActorLocation() - Location).GetSafeNormal() * FMath::Lerp(0, Force, (FVector::Distance(HitActor->GetActorLocation(), Location)) + InnerRadius));
 
+					}
 				}
 			}
+			
 		}
 	}
 }

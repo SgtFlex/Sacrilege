@@ -56,6 +56,8 @@ public:
 
 	void SetAlertState(TEnumAsByte<EAlertState> AlertState);
 
+	void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ACharacterBase* PawnChar;

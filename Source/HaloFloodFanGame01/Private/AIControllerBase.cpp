@@ -139,7 +139,7 @@ ETeamAttitude::Type AAIControllerBase::GetTeamAttitudeTowards(const AActor& Othe
 void AAIControllerBase::SetSmartObject(ASmartObject* NewSmartObject)
 {
 	SmartObject = NewSmartObject;
-	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, TEXT("Adding smart object"));
+	//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, TEXT("Adding smart object"));
 	FGameplayTag SubTag;
 	BehaviorTreeComp->SetDynamicSubtree(SubTag, SmartObject->DynamicTree);
 	BlackboardComp->SetValueAsBool(FName("HasSmartObject"), true);
@@ -238,11 +238,11 @@ void AAIControllerBase::AlertAllies(float AlertRadius, AActor* Actor, FAIStimulu
 	TArray<TEnumAsByte<EObjectTypeQuery>> Objects;
 	TArray<AActor*> ActorsToIgnore;
 	ActorsToIgnore.Add(GetPawn());
-	UKismetSystemLibrary::SphereOverlapActors(GetWorld(), GetPawn()->GetActorLocation(), AlertRadius, Objects, ACharacterBase::StaticClass(), ActorsToIgnore, Actors);
+	UKismetSystemLibrary::SphereOverlapActors(GetWorld(), GetPawn()->GetActorLocation(), AlertRadius, Objects, APawn::StaticClass(), ActorsToIgnore, Actors);
 	for (auto FoundActor : Actors)
 	{
 		
-		if (ACharacterBase* BaseCharacter = Cast<ACharacterBase>(FoundActor))
+		if (APawn* BaseCharacter = Cast<APawn>(FoundActor))
 		{
 			if (AAIControllerBase* AIController = Cast<AAIControllerBase>(BaseCharacter->GetController()))
 			{
@@ -263,6 +263,12 @@ void AAIControllerBase::SetAlertState(TEnumAsByte<EAlertState> NewAlertState)
 		//GEngine->AddOnScreenDebugMessage(-1, 2, FColor(255,255,255,255), "Setting alert state");
 		PawnChar->AlertState = NewAlertState;
 	}
+}
+
+void AAIControllerBase::SetGenericTeamId(const FGenericTeamId& NewTeamID)
+{
+	Super::SetGenericTeamId(NewTeamID);
+	TeamNumber = NewTeamID.GetId();
 }
 
 
