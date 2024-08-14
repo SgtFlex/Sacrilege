@@ -30,13 +30,11 @@ void UPlayerHUD::NativeConstruct()
 	check(PlayerCharacter);
 	PlayerCharacter->WeaponsUpdated.AddDynamic(this, &UPlayerHUD::UpdateHUDWeaponData);
 	PlayerCharacter->OnInteractableChanged.AddDynamic(this, &UPlayerHUD::UpdateInteractable);
-	PlayerCharacter->GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &UPlayerHUD::OnHealthUpdated);
+	//PlayerCharacter->GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &UPlayerHUD::OnHealthUpdated);
 	PlayerCharacter->OnGrenadeInventoryUpdated.AddDynamic(this, &UPlayerHUD::UpdateGrenadeInventory);
 	PlayerCharacter->OnGrenadeTypeSwitched.AddDynamic(this, &UPlayerHUD::UPlayerHUD::UpdateSelectedGrenadeType);
 	UpdateGrenadeInventory();
 	UpdateHUDWeaponData(PlayerCharacter->EquippedWeapon, PlayerCharacter->HolsteredWeapon);
-	SetHealth(PlayerCharacter->GetHealthComponent()->GetHealth(), PlayerCharacter->GetHealthComponent()->GetMaxHealth());
-	SetShields(PlayerCharacter->GetHealthComponent()->GetShields(), PlayerCharacter->GetHealthComponent()->GetMaxShields());
 }
 
 void UPlayerHUD::PostLoad()
@@ -280,11 +278,11 @@ void UPlayerHUD::SetWeaponHUDEnabled(bool bDisplay)
 	}
 }
 
-void UPlayerHUD::OnHealthUpdated_Implementation(UHealthComponent* HealthComp)
-{
-	SetHealth(HealthComp->GetHealth(), HealthComp->GetMaxHealth());
-	SetShields(HealthComp->GetShields(), HealthComp->GetMaxShields());
-}
+// void UPlayerHUD::OnHealthUpdated_Implementation(UHealthComponent* HealthComp)
+// {
+// 	SetHealth(HealthComp->GetHealth(), HealthComp->GetMaxHealth());
+// 	SetShields(HealthComp->GetShields(), HealthComp->GetMaxShields());
+// }
 
 void UPlayerHUD::UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredGun)
 {
@@ -346,25 +344,25 @@ bool UPlayerHUD::Initialize()
 	return true;
 }
 
-void UPlayerHUD::SetHealth_Implementation(float CurrentHealth, float MaxHealth)
-{
-	if (HealthBar) {
-		FNumberFormattingOptions NumberFormattingOptions;
-		NumberFormattingOptions.RoundingMode = ERoundingMode::FromZero;
-		HealthBar->SetPercent(CurrentHealth / MaxHealth);
-		HealthNum->SetText(FText::AsNumber(CurrentHealth, &NumberFormattingOptions));
-	}
-}
-
-void UPlayerHUD::SetShields_Implementation(float CurrentShields, float MaxShields)
-{
-	if (ShieldBar) {
-		FNumberFormattingOptions NumberFormattingOptions;
-		NumberFormattingOptions.RoundingMode = ERoundingMode::FromZero;
-		ShieldBar->SetPercent(CurrentShields / MaxShields);
-		ShieldNum->SetText(FText::AsNumber(CurrentShields, &NumberFormattingOptions));
-	}
-}
+// void UPlayerHUD::SetHealth_Implementation(float CurrentHealth, float MaxHealth)
+// {
+// 	if (HealthBar) {
+// 		FNumberFormattingOptions NumberFormattingOptions;
+// 		NumberFormattingOptions.RoundingMode = ERoundingMode::FromZero;
+// 		HealthBar->SetPercent(CurrentHealth / MaxHealth);
+// 		HealthNum->SetText(FText::AsNumber(CurrentHealth, &NumberFormattingOptions));
+// 	}
+// }
+//
+// void UPlayerHUD::SetShields_Implementation(float CurrentShields, float MaxShields)
+// {
+// 	if (ShieldBar) {
+// 		FNumberFormattingOptions NumberFormattingOptions;
+// 		NumberFormattingOptions.RoundingMode = ERoundingMode::FromZero;
+// 		ShieldBar->SetPercent(CurrentShields / MaxShields);
+// 		ShieldNum->SetText(FText::AsNumber(CurrentShields, &NumberFormattingOptions));
+// 	}
+// }
 
 void UPlayerHUD::SetCanInteract_Implementation(bool CanInteract)
 {

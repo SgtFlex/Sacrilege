@@ -14,7 +14,7 @@ class UGrenadeWidget;
 struct FGrenadeStruct;
 class UListView;
 class UTextBlock;
-class UHealthComponent;
+//class UHealthComponent;
 class APlayerCharacter;
 /**
  * 
@@ -31,11 +31,11 @@ class HALOFLOODFANGAME01_API UPlayerHUD : public UUserWidget
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 public:
-	UFUNCTION(BlueprintNativeEvent)
-	void SetHealth(float CurrentHealth, float MaxHealth);
-
-	UFUNCTION(BlueprintNativeEvent)
-	void SetShields(float CurrentShields, float MaxShields);
+	// UFUNCTION(BlueprintNativeEvent)
+	// void SetHealth(float CurrentHealth, float MaxHealth);
+	//
+	// UFUNCTION(BlueprintNativeEvent)
+	// void SetShields(float CurrentShields, float MaxShields);
 
 	UFUNCTION(BlueprintNativeEvent)
 	void SetCanInteract(bool CanInteract);
@@ -94,9 +94,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetWeaponHUDEnabled(bool bDisplay);
-
-	UFUNCTION(BlueprintNativeEvent)
-	void OnHealthUpdated(UHealthComponent* HealthComp);
+	//
+	// UFUNCTION(BlueprintNativeEvent)
+	// void OnHealthUpdated(UHealthComponent* HealthComp);
 
 	UFUNCTION()
 	void UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredGun);
@@ -118,9 +118,9 @@ public:
 
 	UPROPERTY()
 	TMap<TSubclassOf<AGrenadeBase>, UGrenadeWidget*> GrenadeWidgetMap;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	UWidget* HealthHUD;
+	
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	// UWidget* HealthHUD;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UWidget* CompassHUD;
@@ -128,17 +128,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UImage* Crosshair;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	class UProgressBar* HealthBar;
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	// class UProgressBar* HealthBar;
+	//
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	// class UTextBlock* HealthNum;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	class UTextBlock* HealthNum;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	class UProgressBar* ShieldBar;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	class UTextBlock* ShieldNum;
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	// class UProgressBar* ShieldBar;
+	//
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	// class UTextBlock* ShieldNum;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UVerticalBox* InteractBoxWidget;
