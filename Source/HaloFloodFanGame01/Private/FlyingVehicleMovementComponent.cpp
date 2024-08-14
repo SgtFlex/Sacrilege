@@ -17,10 +17,10 @@ void UFlyingVehicleMovementComponent::TickComponent(float DeltaTime, ELevelTick 
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	if (!IsValid(PrimitiveComponent)) return;
 	CurrentVelocity = PrimitiveComponent->GetPhysicsLinearVelocity();
-	CurrentRotation = PrimitiveComponent->GetComponentRotation();
+	CurrentRotation = GetOwner()->GetActorRotation();
 	if (PrimitiveComponent->IsSimulatingPhysics())
 	{
-		if (TargetDirection.Length() > 0)
+		if (TargetDirection.Length() > 0 && CurrentVelocity.Length() < MaxSpeed)
 			Accelerate();
 		else
 			Decelerate();
@@ -30,17 +30,7 @@ void UFlyingVehicleMovementComponent::TickComponent(float DeltaTime, ELevelTick 
 
 void UFlyingVehicleMovementComponent::Accelerate()
 {
-	//if (PrimitiveComponent->GetComponentVelocity().Length() < MaxSpeed)
-	FVector LocalThrustDirection = TargetDirection;
-	// if (PrimitiveComponent->GetPhysicsLinearVelocity().Length() > MaxSpeed)
-	// {
-	// 	LocalThrustDirection.X = 0;
-	// 	//LocalThrustDirection.Y = 0;
-	// }
-	//GEngine->AddOnScreenDebugMessage(-1, 0.5, FColor::Green, TEXT("Accelerating!"));
-	//const FVector Direction = PrimitiveComponent->GetComponentRotation().RotateVector(LocalThrustDirection);
-	const FVector Force = LocalThrustDirection * ThrustForce;
-	
+	const FVector Force = TargetDirection * ThrustForce;
 	PrimitiveComponent->AddForce(Force, NAME_None, true);
 }
 
@@ -58,12 +48,15 @@ void UFlyingVehicleMovementComponent::TurnToTargetRotation()
 	UE_LOG(LogTemp, Warning, TEXT("Current: \t %s"), *CurrentRotation.ToString());
 	UE_LOG(LogTemp, Warning, TEXT("Target: \t %s"), *TargetRotation.ToString());
 	
-	FRotator DeltaRotation = TargetRotation - CurrentRotation;
-	DeltaRotation.Normalize();
+	const FRotator DeltaRotation = UKismetMathLibrary::NormalizedDeltaRotator(TargetRotation, CurrentRotation);
+	//DeltaRotation.Normalize();
 	UE_LOG(LogTemp, Warning, TEXT("Delta: \t\t %s"), *DeltaRotation.ToString());
 	const FVector CurrentAngularVelocity = PrimitiveComponent->GetPhysicsAngularVelocityInDegrees();
-	const FVector TorqueToAdd = (FVector(0, 0, DeltaRotation.Yaw) - (CurrentAngularVelocity * TorqueDamping)) * TorqueForce;
-	//const FVector TorqueToAdd = (FVector(DeltaRotation.Roll, DeltaRotation.Pitch, DeltaRotation.Yaw) - (CurrentAngularVelocity * TorqueDamping)) * TorqueForce;
+	//const FVector TorqueToAdd = (FVector(0, 0, DeltaRotation.Yaw) - (CurrentAngularVelocity * TorqueDamping)) * TorqueForce;
+	const FVector TorqueToAdd = (FVector(DeltaRotation.Roll, DeltaRotation.Pitch, DeltaRotation.Yaw) - (CurrentAngularVelocity * TorqueDamping)) * TorqueForce;
+	DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation() + CurrentRotation.Vector() * 500, FColor::Red, false, 1.0f, 0, 3.f);
+	DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation() + TargetRotation.Vector() * 500, FColor::Green, false, 1.0f, 0, 3.f);
+	
 	UE_LOG(LogTemp, Warning, TEXT("Torque: \t %s"), *TorqueToAdd.ToString());
 	
 	PrimitiveComponent->AddTorqueInDegrees(TorqueToAdd, NAME_None, true);
@@ -75,8 +68,8 @@ void UFlyingVehicleMovementComponent::RequestDirectMove(const FVector& MoveVeloc
 	const FVector VehicleLocation = GetOwner()->GetActorLocation();
 	const FVector Destination = VehicleLocation + MoveVelocity * GetWorld()->GetDeltaSeconds();
 	
-	DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), Destination, FColor::Red, false, 1.f, 0, 3.f);
-	DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), VehicleLocation + (MoveVelocity - (PrimitiveComponent->GetPhysicsLinearVelocity()*20)).GetSafeNormal() * 500, FColor::Green, false, 1.f, 0, 3.f);
+	DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), Destination, FColor::Red, false, 0.1f, 0, 3.f);
+	DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), VehicleLocation + (MoveVelocity - (PrimitiveComponent->GetPhysicsLinearVelocity()*20)).GetSafeNormal() * 500, FColor::Green, false, 0.1f, 0, 3.f);
 	TargetDirection = (MoveVelocity - PrimitiveComponent->GetPhysicsLinearVelocity()*30).GetSafeNormal();
 }
 

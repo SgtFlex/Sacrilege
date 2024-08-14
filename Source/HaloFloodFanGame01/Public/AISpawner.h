@@ -12,6 +12,7 @@ class ASmartObject;
 class UBoxComponent;
 class ACharacterBase;
 
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSpawned);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAvailable, AAISpawner*, Spawner);
 
@@ -36,16 +37,16 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable)
-	TArray<ACharacterBase*> SpawnSquad(TMap<TSubclassOf<ACharacterBase>, int> SquadToSpawn, bool UseDropship);
+	void SpawnSquad(TMap<TSubclassOf<ACharacterBase>, int> SquadToSpawn);
 
 	UFUNCTION(BlueprintCallable)
-	ACharacterBase* SpawnUnit(TSubclassOf<ACharacterBase> Unit, bool UseDropPod, FVector SpawnLoc, FRotator SpawnRot);
+	ACharacterBase* SpawnUnit(TSubclassOf<ACharacterBase> Unit, FVector SpawnLoc, FRotator SpawnRot);
 
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
-	AVehicleBase* RequestDropPod(ACharacterBase* Character, FVector DropLocation);
+	AVehicleBase* SpawnDropPods(const TMap<TSubclassOf<ACharacterBase>, int>& SquadToSpawn, FVector DropLocation);
 
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
-	AVehicleBase* RequestDropship(TArray<ACharacterBase*>& Chars);
+	AVehicleBase* SpawnDropship(const TMap<TSubclassOf<ACharacterBase>, int>& SquadToSpawn);
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TMap<TSubclassOf<ACharacterBase>, int> Squad;
@@ -61,5 +62,11 @@ public:
 
 	UPROPERTY()
 	FOnAvailable OnAvailable;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool bUseDropship = false;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool bUseDropPod = false;
 
 };

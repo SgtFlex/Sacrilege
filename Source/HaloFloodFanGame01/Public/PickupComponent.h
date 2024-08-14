@@ -9,6 +9,7 @@
 
 
 class USphereComponent;
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class HALOFLOODFANGAME01_API UPickupComponent : public USphereComponent
 {

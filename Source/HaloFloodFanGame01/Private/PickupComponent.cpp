@@ -42,8 +42,8 @@ void UPickupComponent::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AA
 {
 	if (!bEnabled) return;
 	IPickupInterface* Owner = Cast<IPickupInterface>(GetOwner());
-	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(OtherActor))
-		Owner->Pickup(PlayerChar);
+	if (ACharacterBase* Char = Cast<ACharacterBase>(OtherActor))
+		Owner->Pickup(Char);
 }
 
 void UPickupComponent::SetEnabled(bool bNewEnabled)

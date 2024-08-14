@@ -625,7 +625,7 @@ void ACharacterBase::NPCMelee_Implementation()
 void ACharacterBase::ThrowEquippedGrenade()
 {
 	ThrowGrenade(CurGrenadeTypeI);
-	OnGrenadeInventoryUpdated.Broadcast(GrenadeInventory);
+	OnGrenadeInventoryUpdated.Broadcast();
 }
 
 void ACharacterBase::ThrowGrenade_Implementation(int GrenadeIndex)
@@ -658,12 +658,12 @@ void ACharacterBase::ThrowGrenade_Implementation(int GrenadeIndex)
 				GrenadeInventory.RemoveAt(GrenadeIndex);
 				SwitchToGrenadeType(GrenadeIndex);
 			}
-			OnGrenadeInventoryUpdated.Broadcast(GrenadeInventory);
+			OnGrenadeInventoryUpdated.Broadcast();
 		}
 	} else
 	{
 		if (GrenadeInventory[GrenadeIndex].GrenadeAmount <= 0) return;
-		OnGrenadeInventoryUpdated.Broadcast(GrenadeInventory);
+		OnGrenadeInventoryUpdated.Broadcast();
 		FVector EyesLoc;
 		FRotator EyesRot;
 		GetActorEyesViewPoint(EyesLoc, EyesRot);

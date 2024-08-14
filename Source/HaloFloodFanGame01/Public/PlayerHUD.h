@@ -47,7 +47,7 @@ public:
 	void UpdateSelectedGrenadeType(TSubclassOf<AGrenadeBase> GrenadeClass);
 
 	UFUNCTION()
-	void UpdateGrenadeInventory(TArray<FGrenadeStruct> GrenadeInventory);
+	void UpdateGrenadeInventory();
 
 	
 
@@ -216,4 +216,5 @@ public:
 
 	UPROPERTY()
 	class ACharacterBase* PlayerCharacter;
+	 TArray<FGrenadeStruct> OldGrenadeInventory;
 };

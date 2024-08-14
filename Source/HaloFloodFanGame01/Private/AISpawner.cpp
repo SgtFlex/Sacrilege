@@ -8,6 +8,7 @@
 
 #include "Components/BoxComponent.h"
 #include "Core/CharacterBase.h"
+#include "HaloFloodFanGame01/FirefightGamemode.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -25,9 +26,6 @@ AAISpawner::AAISpawner()
 void AAISpawner::BeginPlay()
 {
 	Super::BeginPlay();
-
-	
-	
 }
 
 void AAISpawner::OnUnitKilled(UHealthComponent* HealthComponent)
@@ -49,51 +47,58 @@ void AAISpawner::Tick(float DeltaTime)
 
 }
 
-TArray<ACharacterBase*> AAISpawner::SpawnSquad(TMap<TSubclassOf<ACharacterBase>, int> SquadToSpawn, bool UseDropship)
+void AAISpawner::SpawnSquad(TMap<TSubclassOf<ACharacterBase>, int> SquadToSpawn)
 {
 	SpawnedChars.Empty();
 	TArray<ACharacterBase*> Spawned;
 	
 	FVector BoxExtents = Box->GetScaledBoxExtent();
 	BoxExtents[2] = 0;
-	
-	for (auto elem : SquadToSpawn)
+	if (bUseDropship)
 	{
-		for (int i = 0; i < elem.Value; ++i)
+		SpawnDropship(SquadToSpawn);
+		//return nullptr;
+	} else
+	{
+		for (auto elem : SquadToSpawn)
 		{
-			FVector Loc = UKismetMathLibrary::RandomPointInBoundingBox(GetActorLocation(), BoxExtents);
-			FRotator Rot = FRotator(0,0,0);
-			ACharacterBase* Char = SpawnUnit(elem.Key, false, Loc, Rot);
-			if (Char)
+			for (int i = 0; i < elem.Value; ++i)
 			{
-				Spawned.Add(Char);
-				if (UseDropship)
+				FVector Loc = UKismetMathLibrary::RandomPointInBoundingBox(GetActorLocation(), BoxExtents);
+				FRotator Rot = FRotator(0,0,0);
+				ACharacterBase* Char = SpawnUnit(elem.Key, Loc, Rot);
+				if (Char)
 				{
-					RequestDropship(Spawned);
+					Spawned.Add(Char);
 				}
-			}
 			
+			}
 		}
+		//return Spawned;
 	}
-
-	return Spawned;
+	OnAvailable.Broadcast(this);
 }
 
-ACharacterBase* AAISpawner::SpawnUnit(TSubclassOf<ACharacterBase> Unit, bool UseDropPod, FVector SpawnLoc, FRotator SpawnRot)
+ACharacterBase* AAISpawner::SpawnUnit(TSubclassOf<ACharacterBase> Unit, FVector SpawnLoc, FRotator SpawnRot)
 {
 	FActorSpawnParameters ActorSpawnParameters;
 	ACharacterBase* Char = GetWorld()->SpawnActor<ACharacterBase>(Unit, SpawnLoc, SpawnRot);
 	if (!Char) return nullptr;
 	Char->GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &AAISpawner::OnUnitKilled);
+	if (AFirefightGameMode* FirefightGameMode = Cast<AFirefightGameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		FirefightGameMode->ManageCharacter(Char);
+	}
+	
 	SpawnedChars.Add(Char);
 	if (SmartObj)
 	{
 		Char->SmartObject = SmartObj;
 	}
-	if (UseDropPod)
-	{
-		RequestDropPod(Char, SpawnLoc);
-	}
+	// if (UseDropPod)
+	// {
+	// 	RequestDropPod(Char, SpawnLoc);
+	// }
 
 	return Char;
 }

@@ -49,6 +49,10 @@ public:
 	void FinishWave();
 	TArray<FSquadStruct> CalculateWave();
 	void SpawnWave(TArray<FSquadStruct> WaveToSpawn);
+
+	UFUNCTION(BlueprintCallable)
+	void ManageCharacter(ACharacterBase* Character);
+	
 	void OnSpawnerAvailable(AAISpawner* Spawner);
 	void GameFinished();
 

@@ -3,7 +3,9 @@
 
 #include "PickupInterface.h"
 
+#include "Core/CharacterBase.h"
+
 // Add default functionality here for any IPickupInterface functions that are not pure virtual.
-void IPickupInterface::Pickup(APlayerCharacter* Character)
+void IPickupInterface::Pickup(ACharacterBase* Character)
 {
 }

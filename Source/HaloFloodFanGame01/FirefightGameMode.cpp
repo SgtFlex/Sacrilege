@@ -174,36 +174,41 @@ void AFirefightGameMode::SpawnWave(TArray<FSquadStruct> WaveToSpawn)
 	UE_LOG(LogTemp, Warning, TEXT("Spawning wave!"));
 	for (auto AvailableSpawner : AvailableSpawners)
 	{
-		TArray<ACharacterBase*> SpawnedChars = AvailableSpawner->SpawnSquad(SquadsToSpawn[0].SquadUnits, false);
-		{
-			for (auto SpawnedChar : SpawnedChars)
-			{
-				if (SpawnedChar)
-				{
-					SpawnedChar->OnKilled.AddDynamic(this, &AFirefightGameMode::OnEnemyKilled);
-					CurrentEnemyCount++;
-				}
-			}
-		}
+		AvailableSpawner->SpawnSquad(SquadsToSpawn[0].SquadUnits);
+		// TArray<ACharacterBase*> SpawnedChars = AvailableSpawner->SpawnSquad(SquadsToSpawn[0].SquadUnits, false);
+		// for (auto SpawnedChar : SpawnedChars)
+		// {
+		// 	if (SpawnedChar)
+		// 	{
+		// 		SpawnedChar->OnKilled.AddDynamic(this, &AFirefightGameMode::OnEnemyKilled);
+		// 		CurrentEnemyCount++;
+		// 	}
+		// }
 		SquadsToSpawn.RemoveAt(0);
 		if (SquadsToSpawn.IsEmpty()) break;
 	}
 }
 
+void AFirefightGameMode::ManageCharacter(ACharacterBase* Character)
+{
+	Character->OnKilled.AddDynamic(this, &AFirefightGameMode::OnEnemyKilled);
+	CurrentEnemyCount++;
+}
+
 void AFirefightGameMode::OnSpawnerAvailable(AAISpawner* Spawner)
 {
 	if (SquadsToSpawn.IsEmpty()) return;
-	TArray<ACharacterBase*> SpawnedChars = Spawner->SpawnSquad(SquadsToSpawn[0].SquadUnits, false);
-	{
-		for (auto SpawnedChar : SpawnedChars)
-		{
-			if (SpawnedChar)
-			{
-				SpawnedChar->OnKilled.AddDynamic(this, &AFirefightGameMode::OnEnemyKilled);
-				CurrentEnemyCount++;
-			}
-		}
-	}
+	// TArray<ACharacterBase*> SpawnedChars = Spawner->SpawnSquad(SquadsToSpawn[0].SquadUnits);
+	// {
+	// 	for (auto SpawnedChar : SpawnedChars)
+	// 	{
+	// 		if (SpawnedChar)
+	// 		{
+	// 			SpawnedChar->OnKilled.AddDynamic(this, &AFirefightGameMode::OnEnemyKilled);
+	// 			CurrentEnemyCount++;
+	// 		}
+	// 	}
+	// }
 	
 }
 
@@ -217,6 +222,7 @@ void AFirefightGameMode::RestartPlayer(AController* NewPlayer)
 {
 	RestartPlayerBP(NewPlayer);
 }
+
 void AFirefightGameMode::PlayerDied_Implementation(ACharacterBase* PlayerCharacter, APlayerControllerBase* PlayerController)
 {
 	if (!PlayerController) return;

@@ -123,7 +123,7 @@ void AGrenadeBase::OnCollide_Implementation(UPrimitiveComponent* HitComponent, A
 	UE_LOG(LogTemp, Warning, TEXT("Called oncollide"));
 }
 
-void AGrenadeBase::Pickup(APlayerCharacter* Character)
+void AGrenadeBase::Pickup(ACharacterBase* Character)
 {
 	IPickupInterface::Pickup(Character);
 	bool FoundGrenade = false;
@@ -136,7 +136,7 @@ void AGrenadeBase::Pickup(APlayerCharacter* Character)
 			if (Character->GrenadeInventory[i].GrenadeAmount < 4)
 			{
 				Character->GrenadeInventory[i].GrenadeAmount++;
-				Character->OnGrenadeInventoryUpdated.Broadcast(Character->GrenadeInventory);
+				Character->OnGrenadeInventoryUpdated.Broadcast();
 				Destroy();
 			}
 		}
@@ -150,7 +150,7 @@ void AGrenadeBase::Pickup(APlayerCharacter* Character)
 		Character->GrenadeInventory.Add(GrenadeType);
 		Destroy();
 	}
-	Character->OnGrenadeInventoryUpdated.Broadcast(Character->GrenadeInventory);
+	Character->OnGrenadeInventoryUpdated.Broadcast();
 }
 
 float AGrenadeBase::CustomOnTakeAnyDamage(float DamageAmount, FVector Force,

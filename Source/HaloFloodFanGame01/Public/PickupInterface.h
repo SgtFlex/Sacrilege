@@ -6,7 +6,7 @@
 #include "UObject/Interface.h"
 #include "PickupInterface.generated.h"
 
-class APlayerCharacter;
+class ACharacterBase;
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI, meta = (CannotImplementInterfaceInBlueprint))
 class UPickupInterface : public UInterface
@@ -25,5 +25,5 @@ class HALOFLOODFANGAME01_API IPickupInterface
 public:
 
 	UFUNCTION(BlueprintCallable)
-	virtual void Pickup(APlayerCharacter* Character);
+	virtual void Pickup(ACharacterBase* Character);
 };

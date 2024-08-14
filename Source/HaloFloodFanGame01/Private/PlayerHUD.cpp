@@ -33,7 +33,7 @@ void UPlayerHUD::NativeConstruct()
 	PlayerCharacter->GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &UPlayerHUD::OnHealthUpdated);
 	PlayerCharacter->OnGrenadeInventoryUpdated.AddDynamic(this, &UPlayerHUD::UpdateGrenadeInventory);
 	PlayerCharacter->OnGrenadeTypeSwitched.AddDynamic(this, &UPlayerHUD::UPlayerHUD::UpdateSelectedGrenadeType);
-	UpdateGrenadeInventory(PlayerCharacter->GrenadeInventory);
+	UpdateGrenadeInventory();
 	UpdateHUDWeaponData(PlayerCharacter->EquippedWeapon, PlayerCharacter->HolsteredWeapon);
 	SetHealth(PlayerCharacter->GetHealthComponent()->GetHealth(), PlayerCharacter->GetHealthComponent()->GetMaxHealth());
 	SetShields(PlayerCharacter->GetHealthComponent()->GetShields(), PlayerCharacter->GetHealthComponent()->GetMaxShields());
@@ -98,8 +98,10 @@ void UPlayerHUD::UpdateSelectedGrenadeType(TSubclassOf<AGrenadeBase> GrenadeClas
 	GrenadeWidgetMap[GrenadeClass]->SelectionBorder->SetVisibility(ESlateVisibility::Visible);
 }
 
-void UPlayerHUD::UpdateGrenadeInventory(TArray<FGrenadeStruct> GrenadeInventory)
+void UPlayerHUD::UpdateGrenadeInventory()
 {
+	const TArray<FGrenadeStruct> GrenadeInventory = PlayerCharacter->GrenadeInventory;
+	OldGrenadeInventory = GrenadeInventory;
 	for (auto GrenadeStruct : GrenadeInventory)
 	{
 		if (!GrenadeWidgetMap.Contains(GrenadeStruct.GrenadeClass))

@@ -54,7 +54,7 @@ struct FGrenadeStruct
 	
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrenadeInvetoryUpdated, TArray<FGrenadeStruct>, GrenadeInventory);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGrenadeInvetoryUpdated);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrenadeTypeSwitched, TSubclassOf<AGrenadeBase>, GrenadeClass);
 
 UCLASS()
@@ -355,7 +355,7 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	UAnimMontage* MeleeAnim;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="AI")
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="AI", meta = (ExposeOnSpawn = "true"))
 	ASmartObject* SmartObject;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category="AI")

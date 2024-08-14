@@ -110,7 +110,7 @@ public:
 	void OnCollide(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit );
 	
 	UFUNCTION()
-	virtual void Pickup(APlayerCharacter* Character) override;
+	virtual void Pickup(ACharacterBase* Character) override;
 
 	UFUNCTION()
 	virtual float CustomOnTakeAnyDamage(float DamageAmount, FVector Force, AController* EventInstigator, AActor* DamageCauser) override;
