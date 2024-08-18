@@ -164,6 +164,7 @@ void AGunBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetime
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AGunBase, CurMagazine);
 	DOREPLIFETIME(AGunBase, CurReserve);
+	DOREPLIFETIME(AGunBase, bFiring);
 }
 
 bool AGunBase::CanFire()

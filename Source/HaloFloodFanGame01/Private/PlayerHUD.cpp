@@ -29,7 +29,7 @@ void UPlayerHUD::NativeConstruct()
 	PlayerCharacter = Cast<ACharacterBase>(GetOwningPlayerPawn());
 	check(PlayerCharacter);
 	PlayerCharacter->WeaponsUpdated.AddDynamic(this, &UPlayerHUD::UpdateHUDWeaponData);
-	PlayerCharacter->OnInteractableChanged.AddDynamic(this, &UPlayerHUD::UpdateInteractable);
+	//PlayerCharacter->OnInteractableChanged.AddDynamic(this, &UPlayerHUD::UpdateInteractable);
 	//PlayerCharacter->GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &UPlayerHUD::OnHealthUpdated);
 	PlayerCharacter->OnGrenadeInventoryUpdated.AddDynamic(this, &UPlayerHUD::UpdateGrenadeInventory);
 	PlayerCharacter->OnGrenadeTypeSwitched.AddDynamic(this, &UPlayerHUD::UPlayerHUD::UpdateSelectedGrenadeType);
@@ -48,10 +48,10 @@ void UPlayerHUD::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	DetermineCrosshairColor();
+	//DetermineCrosshairColor();
 	
 
-	SetCompassDirection(PlayerCharacter->GetFirstPersonCameraComponent()->GetComponentRotation().Yaw);
+	// SetCompassDirection(PlayerCharacter->GetFirstPersonCameraComponent()->GetComponentRotation().Yaw);
 
 	//if (PlayerCharacter && PlayerCharacter->EquippedWep && PlayerCharacter->EquippedWep->CrosshairTexture) Crosshair->SetBrushFromTexture(PlayerCharacter->EquippedWep->CrosshairTexture);
 	//SetFragCounter(PlayerCharacter->FragCount);
@@ -68,26 +68,26 @@ void UPlayerHUD::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		SetCanInteract(false);*/
 }
 
-void UPlayerHUD::SetInteractInfo(FText InfoText, UTexture2D* Icon)
-{
-	if (Icon)
-	{
-		//InteractIcon->SetVisibility(ESlateVisibility::Visible);
-		InteractIcon->SetBrushFromTexture(Icon);
-	}
-	else
-	{
-		//InteractIcon->SetVisibility(ESlateVisibility::Hidden);
-	}
-
-	if (!InfoText.IsEmpty())
-	{
-		InteractActionWidget->SetText(InfoText);
-	} else
-	{
-		InteractActionWidget->SetText(FText::FromString("Interact"));
-	}
-}
+// void UPlayerHUD::SetInteractInfo(FText InfoText, UTexture2D* Icon)
+// {
+// 	if (Icon)
+// 	{
+// 		//InteractIcon->SetVisibility(ESlateVisibility::Visible);
+// 		InteractIcon->SetBrushFromTexture(Icon);
+// 	}
+// 	else
+// 	{
+// 		//InteractIcon->SetVisibility(ESlateVisibility::Hidden);
+// 	}
+//
+// 	if (!InfoText.IsEmpty())
+// 	{
+// 		InteractActionWidget->SetText(InfoText);
+// 	} else
+// 	{
+// 		InteractActionWidget->SetText(FText::FromString("Interact"));
+// 	}
+// }
 
 void UPlayerHUD::UpdateSelectedGrenadeType(TSubclassOf<AGrenadeBase> GrenadeClass)
 {
@@ -129,18 +129,15 @@ void UPlayerHUD::UpdateGrenadeInventory()
 }
 
 
-void UPlayerHUD::SetCompassDirection_Implementation(float PlayerYaw)
-{
-	
-	CompassDirection = (PlayerYaw+180);
-	float Offset = 45;
-	float x = ((PlayerYaw+Offset)*-10);
-	UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Compass->Slot);
-	CanvasSlot->SetPosition(FVector2d(x, 0));
-	CompassText->SetText(FText::AsNumber(CompassDirection));
-	//UE_LOG(LogTemp, Warning, TEXT("%f"), Yaw);
-	
-}
+// void UPlayerHUD::SetCompassDirection_Implementation(float PlayerYaw)
+// {
+// 	CompassDirection = (PlayerYaw+180);
+// 	float Offset = 45;
+// 	float x = ((PlayerYaw+Offset)*-10);
+// 	UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Compass->Slot);
+// 	CanvasSlot->SetPosition(FVector2d(x, 0));
+// 	CompassText->SetText(FText::AsNumber(CompassDirection));
+// }
 
 
 void UPlayerHUD::ConstructAmmoGrid_Implementation(AGunBase* Gun)
@@ -206,55 +203,55 @@ void UPlayerHUD::UpdateHUDMagazineElements()
 	SetAmmoGridBullets(PlayerCharacter->EquippedWeapon->CurMagazine, PlayerCharacter->EquippedWeapon->MaxMagazine);
 }
 
-void UPlayerHUD::SetCrosshairType(int type)
-{
-	switch (type)
-	{
-	default:
-	case 1:
-		Crosshair->SetColorAndOpacity(HUDColor);
-		break;
-	case 2:
-		Crosshair->SetColorAndOpacity(InteractableColor);
-		break;
-	case 3:
-		Crosshair->SetColorAndOpacity(AllyColor);
-		break;
-	case 4:
-		Crosshair->SetColorAndOpacity(EnemyColor);
-		break;
-	}
-}
+// void UPlayerHUD::SetCrosshairType(int type)
+// {
+// 	switch (type)
+// 	{
+// 	default:
+// 	case 1:
+// 		Crosshair->SetColorAndOpacity(HUDColor);
+// 		break;
+// 	case 2:
+// 		Crosshair->SetColorAndOpacity(InteractableColor);
+// 		break;
+// 	case 3:
+// 		Crosshair->SetColorAndOpacity(AllyColor);
+// 		break;
+// 	case 4:
+// 		Crosshair->SetColorAndOpacity(EnemyColor);
+// 		break;
+// 	}
+// }
 
-void UPlayerHUD::DetermineCrosshairColor()
-{
-	FHitResult PlayerAim;
-	PlayerCharacter->GetPlayerAim(PlayerAim);
-	if (PlayerAim.GetActor())
-	{
-		if (ACharacterBase* Char = Cast<ACharacterBase>(PlayerAim.GetActor()))
-		{
-			if (Char->GetHealthComponent()->IsAlive())
-			{
-				if (Char->TeamId == PlayerCharacter->TeamId)
-				{
-					SetCrosshairType(3);
-					return;
-				} else
-				{
-					SetCrosshairType(4);
-					return;
-				}
-			}
-		}
-	}
-	SetCrosshairType(1);
-}
+// void UPlayerHUD::DetermineCrosshairColor()
+// {
+// 	FHitResult PlayerAim;
+// 	PlayerCharacter->GetPlayerAim(PlayerAim);
+// 	if (PlayerAim.GetActor())
+// 	{
+// 		if (ACharacterBase* Char = Cast<ACharacterBase>(PlayerAim.GetActor()))
+// 		{
+// 			if (Char->GetHealthComponent()->IsAlive())
+// 			{
+// 				if (Char->TeamId == PlayerCharacter->TeamId)
+// 				{
+// 					SetCrosshairType(3);
+// 					return;
+// 				} else
+// 				{
+// 					SetCrosshairType(4);
+// 					return;
+// 				}
+// 			}
+// 		}
+// 	}
+// 	SetCrosshairType(1);
+// }
 
-void UPlayerHUD::SetCrosshairTexture(UTexture2D* NewTexture)
-{
-	Crosshair->SetBrushFromTexture(NewTexture);
-}
+// void UPlayerHUD::SetCrosshairTexture(UTexture2D* NewTexture)
+// {
+// 	Crosshair->SetBrushFromTexture(NewTexture);
+// }
 
 void UPlayerHUD::SetFragHUDEnabled(bool bDisplay)
 {
@@ -289,7 +286,7 @@ void UPlayerHUD::UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredG
 	UE_LOG(LogTemp, Warning, TEXT("Updated HUD Weapon data"));
 	if (EquippedGun)
 	{
-		SetCrosshairTexture(EquippedGun->CrosshairTexture);
+		//SetCrosshairTexture(EquippedGun->CrosshairTexture);
 		MagazineCounter->SetVisibility(ESlateVisibility::Visible);
 		AmmoReserveCounter->SetVisibility(ESlateVisibility::Visible);
 		AmmoGrid->SetVisibility(ESlateVisibility::Visible);
@@ -317,23 +314,22 @@ void UPlayerHUD::UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredG
 	}
 }
 
-void UPlayerHUD::UpdateInteractable(AActor* Actor)
-{
-	if (Actor && Actor->Implements<UInteractableInterface>())
-	{
-		FText IntText;
-		UTexture2D* IntIcon;
-		SetCanInteract(true);
-		
-		IInteractableInterface::Execute_GetInteractInfo(Actor, IntText, IntIcon);
-		SetInteractInfo(IntText, IntIcon);
-		//InteractName->SetText(Actor->GetClass()->GetDisplayNameText());
-	} else
-	{
-		SetCanInteract(false);
-	}
-	
-}
+// void UPlayerHUD::UpdateInteractable(AActor* Actor)
+// {
+// 	if (Actor && Actor->Implements<UInteractableInterface>())
+// 	{
+// 		FText IntText;
+// 		UTexture2D* IntIcon;
+// 		SetCanInteract(true);
+// 		
+// 		IInteractableInterface::Execute_GetInteractInfo(Actor, IntText, IntIcon);
+// 		SetInteractInfo(IntText, IntIcon);
+// 		//InteractName->SetText(Actor->GetClass()->GetDisplayNameText());
+// 	} else
+// 	{
+// 		SetCanInteract(false);
+// 	}
+// }
 
 
 bool UPlayerHUD::Initialize()
@@ -364,11 +360,11 @@ bool UPlayerHUD::Initialize()
 // 	}
 // }
 
-void UPlayerHUD::SetCanInteract_Implementation(bool CanInteract)
-{
-	if (CanInteract)
-		InteractBoxWidget->SetVisibility(ESlateVisibility::Visible);
-	else
-		InteractBoxWidget->SetVisibility(ESlateVisibility::Hidden);
-}
+// void UPlayerHUD::SetCanInteract_Implementation(bool CanInteract)
+// {
+// 	if (CanInteract)
+// 		InteractBoxWidget->SetVisibility(ESlateVisibility::Visible);
+// 	else
+// 		InteractBoxWidget->SetVisibility(ESlateVisibility::Hidden);
+// }
 

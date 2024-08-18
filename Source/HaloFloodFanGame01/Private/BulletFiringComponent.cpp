@@ -36,9 +36,15 @@ AProjectileBase* UBulletFiringComponent::FireProjectile(TSubclassOf<AProjectileB
 	if (Instigator)
 		if (APawn* Pawn = Instigator->GetPawn())
 			ActorSpawnParameters.Instigator = Pawn;
+	PlayFX(Location, Rotation);
+	return GetWorld()->SpawnActor<AProjectileBase>(ProjectileClass, Location, Rotation, ActorSpawnParameters);
+}
+
+void UBulletFiringComponent::PlayFX_Implementation(FVector Location, FRotator Rotation)
+{
+	
 	UGameplayStatics::PlaySoundAtLocation(GetWorld(), FiringSound, Location, Rotation);
 	UNiagaraFunctionLibrary::SpawnSystemAttached(FiringVFX, this, NAME_None, FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
-	return GetWorld()->SpawnActor<AProjectileBase>(ProjectileClass, Location, Rotation, ActorSpawnParameters);
 }
 
 void UBulletFiringComponent::FireBullet(FHitResult& HitResult, FVector EndLocation)

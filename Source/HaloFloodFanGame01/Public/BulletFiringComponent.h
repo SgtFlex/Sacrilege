@@ -25,6 +25,9 @@ protected:
 	UFUNCTION(BlueprintCallable)
     virtual AProjectileBase* FireProjectile(TSubclassOf<AProjectileBase> ProjectileClass, FVector Direction, AActor* Owner, AController* Instigator);
 
+	UFUNCTION(NetMulticast, Unreliable)
+	void PlayFX(FVector Location, FRotator Rotation);
+
 	UFUNCTION(BlueprintCallable)
 	virtual void FireBullet(FHitResult& HitResult, FVector EndLocation);
 

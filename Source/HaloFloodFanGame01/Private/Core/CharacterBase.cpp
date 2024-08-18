@@ -139,7 +139,8 @@ void ACharacterBase::Tick(float DeltaTime)
 	if (GetController())
 		GetMesh1P()->SetWorldRotation(FRotator(0, GetViewRotation().Yaw + 90, GetViewRotation().Pitch));
 
-	SetCurrentInteractable();
+	if (HasAuthority())
+		SetCurrentInteractable();
 }
 
 void ACharacterBase::Move(const FInputActionValue& Value)
@@ -229,8 +230,8 @@ void ACharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	DOREPLIFETIME(ACharacterBase, Emotion);
 	DOREPLIFETIME(ACharacterBase, AlertState);
 	DOREPLIFETIME(ACharacterBase, TeamId);
-	DOREPLIFETIME(ACharacterBase, EquippedWeaponClass);
-	DOREPLIFETIME(ACharacterBase, HolsteredWeaponClass);
+	//DOREPLIFETIME(ACharacterBase, EquippedWeaponClass);
+	//DOREPLIFETIME(ACharacterBase, HolsteredWeaponClass);
 	//DOREPLIFETIME(ACharacterBase, CurGrenadeTypeI);
 	DOREPLIFETIME(ACharacterBase, GrenadeInventory);
 	DOREPLIFETIME(ACharacterBase, InteractableActor);
@@ -820,6 +821,7 @@ void ACharacterBase::ScopeWeapon()
 
 void ACharacterBase::EquipWeapon(AGunBase* Gun)
 {
+	if (!EquippedWeapon) return;
 	EquippedWeapon->Mesh->SetSimulatePhysics(false);
 	EquippedWeapon->SetActorEnableCollision(false);
 	//EquippedWeapon = Gun;

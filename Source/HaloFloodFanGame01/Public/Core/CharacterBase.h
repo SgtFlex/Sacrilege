@@ -310,10 +310,10 @@ public:
 	UHealthComponent* HealthComponent;
 
 	//Loadout
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true), Replicated)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true))
 	TSubclassOf<AGunBase> EquippedWeaponClass;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true), Replicated)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true))
 	TSubclassOf<AGunBase> HolsteredWeaponClass;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true), Replicated)
@@ -393,7 +393,7 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	APlayerController* PlayerController;
 	
-	UPROPERTY()
+	UPROPERTY(BlueprintAssignable)
 	FOnInteractableChanged OnInteractableChanged;
 
 	UPROPERTY(EditAnywhere)

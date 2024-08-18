@@ -196,7 +196,7 @@ public:
 	float VerticalSpread = 0;
 
 	//Range of the hitscan trace
-	UPROPERTY(EditAnywhere, meta = (Category="Attributes|Hitscan", EditCondition="!ProjectileClass"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes|Hitscan", EditCondition="!ProjectileClass"))
 	float Range = 5000;
 
 	UPROPERTY(EditAnywhere, meta = (Category="Attributes|Hitscan", EditCondition="!ProjectileClass"))
@@ -227,7 +227,7 @@ public:
 	UPROPERTY(EditAnywhere, meta = (Category="SFX"))
 	USoundBase* HitSound;
 
-	UPROPERTY(EditAnywhere, meta = (Category="HUD"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="HUD"))
 	UTexture2D* CrosshairTexture;
 
 	UPROPERTY(EditAnywhere, meta = (Category="HUD"))
@@ -267,6 +267,9 @@ public:
 	FTimerHandle HolsterHandle;
 
 	bool bReloading = false;
+
+	UPROPERTY(Replicated)
+	bool bFiring = false;
 
 	UPROPERTY(EditAnywhere)
 	class UNiagaraSystem* MuzzlePFX;

@@ -44,20 +44,20 @@ void UFlyingVehicleMovementComponent::Decelerate()
 void UFlyingVehicleMovementComponent::TurnToTargetRotation()
 {
 	
-	UE_LOG(LogTemp, Warning, TEXT("\n----------------------------------------------------------"));
-	UE_LOG(LogTemp, Warning, TEXT("Current: \t %s"), *CurrentRotation.ToString());
-	UE_LOG(LogTemp, Warning, TEXT("Target: \t %s"), *TargetRotation.ToString());
+	// UE_LOG(LogTemp, Warning, TEXT("\n----------------------------------------------------------"));
+	// UE_LOG(LogTemp, Warning, TEXT("Current: \t %s"), *CurrentRotation.ToString());
+	// UE_LOG(LogTemp, Warning, TEXT("Target: \t %s"), *TargetRotation.ToString());
 	
 	const FRotator DeltaRotation = UKismetMathLibrary::NormalizedDeltaRotator(TargetRotation, CurrentRotation);
 	//DeltaRotation.Normalize();
-	UE_LOG(LogTemp, Warning, TEXT("Delta: \t\t %s"), *DeltaRotation.ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("Delta: \t\t %s"), *DeltaRotation.ToString());
 	const FVector CurrentAngularVelocity = PrimitiveComponent->GetPhysicsAngularVelocityInDegrees();
 	//const FVector TorqueToAdd = (FVector(0, 0, DeltaRotation.Yaw) - (CurrentAngularVelocity * TorqueDamping)) * TorqueForce;
-	const FVector TorqueToAdd = (FVector(DeltaRotation.Roll, DeltaRotation.Pitch, DeltaRotation.Yaw) - (CurrentAngularVelocity * TorqueDamping)) * TorqueForce;
-	DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation() + CurrentRotation.Vector() * 500, FColor::Red, false, 1.0f, 0, 3.f);
-	DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation() + TargetRotation.Vector() * 500, FColor::Green, false, 1.0f, 0, 3.f);
+	const FVector TorqueToAdd = (FVector(0, 0, DeltaRotation.Yaw) - (CurrentAngularVelocity * TorqueDamping)) * TorqueForce;
+	// DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation() + CurrentRotation.Vector() * 500, FColor::Red, false, 1.0f, 0, 3.f);
+	// DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation() + TargetRotation.Vector() * 500, FColor::Green, false, 1.0f, 0, 3.f);
 	
-	UE_LOG(LogTemp, Warning, TEXT("Torque: \t %s"), *TorqueToAdd.ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("Torque: \t %s"), *TorqueToAdd.ToString());
 	
 	PrimitiveComponent->AddTorqueInDegrees(TorqueToAdd, NAME_None, true);
 }

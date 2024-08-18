@@ -37,11 +37,11 @@ public:
 	// UFUNCTION(BlueprintNativeEvent)
 	// void SetShields(float CurrentShields, float MaxShields);
 
-	UFUNCTION(BlueprintNativeEvent)
-	void SetCanInteract(bool CanInteract);
-
-	UFUNCTION()
-	void SetInteractInfo(FText InfoText, UTexture2D* Icon = nullptr);
+	// UFUNCTION(BlueprintNativeEvent)
+	// void SetCanInteract(bool CanInteract);
+	//
+	// UFUNCTION()
+	// void SetInteractInfo(FText InfoText, UTexture2D* Icon = nullptr);
 
 	UFUNCTION() 
 	void UpdateSelectedGrenadeType(TSubclassOf<AGrenadeBase> GrenadeClass);
@@ -63,8 +63,8 @@ public:
 	// UFUNCTION(BlueprintNativeEvent)
 	// void SetIncenCounter(int32 NewIncenCount);
 
-	UFUNCTION(BlueprintNativeEvent)
-	void SetCompassDirection(float PlayerYaw);
+	// UFUNCTION(BlueprintNativeEvent)
+	// void SetCompassDirection(float PlayerYaw);
 
 	
 
@@ -83,11 +83,11 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	void SetAmmoGridBullets(int32 CurMagazine, int32 MaxMagazine);
 	
-	void SetCrosshairType(int type);
+	//void SetCrosshairType(int type);
 
-	void DetermineCrosshairColor();
+	//void DetermineCrosshairColor();
 
-	void SetCrosshairTexture(UTexture2D* NewTexture);
+	//void SetCrosshairTexture(UTexture2D* NewTexture);
 
 	UFUNCTION(BlueprintCallable)
 	void SetFragHUDEnabled(bool bDisplay);
@@ -100,9 +100,9 @@ public:
 
 	UFUNCTION()
 	void UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredGun);
-
-	UFUNCTION()
-	void UpdateInteractable(AActor* Actor);
+	
+	// UFUNCTION()
+	// void UpdateInteractable(AActor* Actor);
 
 
 	virtual bool Initialize() override;
@@ -122,11 +122,11 @@ public:
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	// UWidget* HealthHUD;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	UWidget* CompassHUD;
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	// UWidget* CompassHUD;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	class UImage* Crosshair;
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	// class UImage* Crosshair;
 	
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	// class UProgressBar* HealthBar;
@@ -139,12 +139,12 @@ public:
 	//
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	// class UTextBlock* ShieldNum;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	class UVerticalBox* InteractBoxWidget;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	class UTextBlock* InteractActionWidget;
+	//
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	// class UVerticalBox* InteractBoxWidget;
+	//
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	// class UTextBlock* InteractActionWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UUniformGridPanel* AmmoGrid;
@@ -184,21 +184,21 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UImage* HolsteredGunWidget;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	class UImage* Compass;
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	// class UImage* Compass;
+	//
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	// class UTextBlock* CompassText;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	class UTextBlock* CompassText;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	class UImage* InteractIcon;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	class UTextBlock* InteractName;
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	// class UImage* InteractIcon;
+	//
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	// class UTextBlock* InteractName;
 
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float CompassDirection;
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	// float CompassDirection;
 
 	TArray<UUserWidget*> BulletIcons;
 
@@ -207,9 +207,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Colors")
 	FLinearColor AllyColor = FColor(25, 255, 25, 255);
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Colors")
-	FLinearColor InteractableColor = FColor(25, 25, 255, 255);
+	//
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Colors")
+	// FLinearColor InteractableColor = FColor(25, 25, 255, 255);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Colors")
 	FLinearColor HUDColor = FColor(255, 150, 50, 255);
