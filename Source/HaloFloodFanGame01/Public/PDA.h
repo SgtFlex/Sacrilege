@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "InputActionValue.h"
 #include "InputMappingQuery.h"
+#include "Components/Image.h"
 #include "GameFramework/Actor.h"
 #include "PDA.generated.h"
 struct FInputActionValue;
@@ -15,12 +16,21 @@ USTRUCT(BlueprintType)
 struct FBuyable
 {
 	GENERATED_BODY()
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	FText DisplayName;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TSubclassOf<AActor> SpawnableActor;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	int Cost;
+	int Cost = 0;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	FText Description;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UTexture2D* Image;
 	
 };
 class UWidgetComponent;

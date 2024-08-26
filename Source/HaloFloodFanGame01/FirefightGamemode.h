@@ -130,8 +130,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FSquadStruct> SquadPool;
 
+	UPROPERTY()
 	TArray<FSquadStruct> SquadsToSpawn;
 
+	UPROPERTY()
 	TArray<FSquadStruct> SquadsAtWaveStart;
 
 	UPROPERTY(BlueprintReadWrite)
@@ -139,9 +141,11 @@ public:
 
 	UPROPERTY()
 	int WaveEnemyCount;
-	
+
+	UPROPERTY()
 	TArray<AAISpawner*> Spawners;
 
+	UPROPERTY()
 	TArray<AAISpawner*> AvailableSpawners;
 
 	UPROPERTY(EditDefaultsOnly)

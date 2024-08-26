@@ -56,6 +56,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetIsDestroyed(bool bNewIsDestroyed);
 
+	UFUNCTION(BlueprintCallable)
+	void SpawnHUD();
 
 	//IDamageableInterface
 	

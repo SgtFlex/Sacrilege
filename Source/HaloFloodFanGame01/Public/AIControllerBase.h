@@ -83,6 +83,7 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	FVector StimulusLocation;
 
+	UPROPERTY()
 	FTimerHandle Delay;
 
 	UPROPERTY()

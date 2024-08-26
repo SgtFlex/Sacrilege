@@ -256,14 +256,19 @@ public:
 
 	int32 BulletsFired;
 
+	UPROPERTY()
 	FText InteractText = FText::FromString("Pickup");
 
+	UPROPERTY()
 	FTimerHandle FireHandle;
 
+	UPROPERTY()
 	FTimerHandle BurstRetriggerHandle;
 
+	UPROPERTY()
 	FTimerHandle DrawHandle;
 
+	UPROPERTY()
 	FTimerHandle HolsterHandle;
 
 	bool bReloading = false;

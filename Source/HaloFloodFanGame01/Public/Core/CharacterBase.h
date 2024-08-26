@@ -8,6 +8,7 @@
 #include "GameFramework/Character.h"
 #include "CharacterBase.generated.h"
 
+class AAIControllerBase;
 struct FInputActionValue;
 enum EAlertState : uint8;
 enum EEmotion : uint8;
@@ -245,7 +246,7 @@ public:
 	UFUNCTION(NetMulticast, Unreliable)
 	void PlayStunAnimation(float StunTime);
 
-	void Unstun();
+	void Unstun(AAIControllerBase* AIC);
 
 	UFUNCTION(Server, Reliable)
 	void SetCurrentInteractable();
@@ -325,8 +326,10 @@ public:
 	UPROPERTY(BlueprintReadOnly, Replicated)
 	AGunBase* HolsteredWeapon;
 
+	UPROPERTY()
 	FTimerHandle HolsterHandle;
 
+	UPROPERTY()
 	FTimerHandle DrawHandle;
 
 	//Blood
@@ -423,11 +426,14 @@ public:
 private:
 	UPROPERTY(Replicated)
 	AActor* InteractableActor;
-	
+
+	UPROPERTY()
 	FTimerHandle ShieldDelayTimerHandle;
 
+	UPROPERTY()
 	FTimeline MeleeTimeline;
-	
+
+	UPROPERTY()
 	FHitResult PlayerAim;
 
 	UPROPERTY()
@@ -446,6 +452,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MeleeCooldown = 1;
 
+	UPROPERTY()
 	FTimerHandle RagdollTimer;
 	
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
@@ -514,7 +521,8 @@ protected:
 	FVector StartMeleeLoc;
 	
 	FVector EndMeleeLoc;
-	
+
+	UPROPERTY()
 	FHitResult MeleeHit;
 
 };

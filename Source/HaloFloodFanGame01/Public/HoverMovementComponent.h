@@ -42,15 +42,21 @@ public:
 	
 	FVector CurrentVelocity;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
 	float ThrustForce = 1000000.0;
 
 	UPROPERTY(BlueprintReadWrite, Replicated)
 	FRotator TargetRotation;
 	
 	FRotator CurrentRotation;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bThrust = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bTorque = true;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
 	float MaxSpeed = 500.0f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

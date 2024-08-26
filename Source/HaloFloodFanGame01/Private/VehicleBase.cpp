@@ -85,6 +85,11 @@ void AVehicleBase::SetIsDestroyed(bool bNewIsDestroyed)
 	bIsDestroyed = bNewIsDestroyed;
 }
 
+void AVehicleBase::SpawnHUD()
+{
+	
+}
+
 float AVehicleBase::CustomTakePointDamage_Implementation(FPointDamageEvent const& PointDamageEvent, float Force,
                                                          AController* EventInstigator, AActor* DamageCauser)
 {

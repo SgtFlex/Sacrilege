@@ -104,13 +104,13 @@ void AAIControllerBase::OnPossess(APawn* InPawn)
 void AAIControllerBase::BeginPlayDelayed()
 {
 	AIPerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(this, &AAIControllerBase::OnPerceptionUpdated);
-	ACharacterBase* Char = Cast<ACharacterBase>(GetPawn());
 	
-	if (Char)
+	
+	if (ACharacterBase* Char = Cast<ACharacterBase>(GetPawn()))
 	{
+		SetGenericTeamId(Char->TeamId);
 		if (ASmartObject* SmartObj = Char->SmartObject) {
 			SetSmartObject(SmartObj);
-			SetGenericTeamId(Char->TeamId);
 		}
 	}
 }
@@ -138,8 +138,10 @@ ETeamAttitude::Type AAIControllerBase::GetTeamAttitudeTowards(const AActor& Othe
 
 void AAIControllerBase::SetSmartObject(ASmartObject* NewSmartObject)
 {
+	
 	SmartObject = NewSmartObject;
 	//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, TEXT("Adding smart object"));
+	if (!SmartObject) return;
 	FGameplayTag SubTag;
 	BehaviorTreeComp->SetDynamicSubtree(SubTag, SmartObject->DynamicTree);
 	BlackboardComp->SetValueAsBool(FName("HasSmartObject"), true);

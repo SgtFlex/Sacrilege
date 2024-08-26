@@ -69,4 +69,7 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	bool bUseDropPod = false;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	uint8 DefaultTeam = 2;
+
 };

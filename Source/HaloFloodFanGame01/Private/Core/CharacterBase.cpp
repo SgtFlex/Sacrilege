@@ -344,17 +344,15 @@ float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent con
 		UAISense_Damage::ReportDamageEvent(GetWorld(), this, EventInstigator->GetPawn(), PointDamageEvent.Damage, Cast<AActor>(EventInstigator)->GetActorLocation(), PointDamageEvent.HitInfo.Location);
 	}
 	
-	if (IDamageableInterface::Execute_GetHealthComponent(this)->GetShields() <= 0)
+	if (const UHealthComponent* HealthComp = GetHealthComponent())
 	{
-		if (HurtAnim)
+		if (HealthComp->GetShields() <= 0)
 		{
 			StunAmount = StunAmount + (Force/50);
-			if (StunAmount >= 100  && !GetMesh()->GetAnimInstance()->Montage_IsPlaying(HurtAnim))
-			{
+			if (StunAmount >= 100)
 				Stun();
-			}
+			SpawnBloodFX(PointDamageEvent);
 		}
-		SpawnBloodFX(PointDamageEvent);
 	}
 	return x;
 }
@@ -479,7 +477,8 @@ void ACharacterBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 		if (DamageCalculation > 5)
 		{
 			FDamageEvent DamageEvent = FDamageEvent(UDamageType::StaticClass());
-			CustomTakeDamage(DamageCalculation, NormalImpulse, DamageEvent, nullptr, nullptr);
+			//@TODO Review collision damage
+			//CustomTakeDamage(DamageCalculation, NormalImpulse, DamageEvent, nullptr, nullptr);
 			//float DecalSize = 100;
 			//UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(DecalSize, DecalSize, DecalSize), GetMesh()->GetComponentLocation() + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), 0), FRotator(-90,0,FMath::RandRange(-180, 180)));
 		}
@@ -966,27 +965,34 @@ void ACharacterBase::RagdollSettled(UPrimitiveComponent* Component, FName Name)
 void ACharacterBase::Stun(float StunTime)
 {
 	StunAmount = 0;
-	float StunDuration = HurtAnim->CalculateSequenceLength();
-	PlayStunAnimation(StunTime);
+	const float StunDuration = 1.5f;
+	
 	if (AAIControllerBase* AIC = Cast<AAIControllerBase>(GetController()))
 	{
 		AIC->BehaviorTreeComp->PauseLogic(FString("Stunned"));
 		AIC->StopMovement();
 		AIC->BlackboardComp->SetValueAsBool("IsStunned", true);
 		AIC->ClearFocus(EAIFocusPriority::Gameplay);
-		GetWorld()->GetTimerManager().SetTimer(StunTimer, this, &ACharacterBase::Unstun, StunDuration, false);
+		PlayStunAnimation(StunDuration);
+		UE_LOG(LogTemp, Warning, TEXT("Stunned"));
+		FTimerDelegate UnstunDelegate = FTimerDelegate::CreateUObject(this, &ACharacterBase::Unstun, AIC);
+		GetWorldTimerManager().SetTimer(StunTimer, UnstunDelegate, StunDuration, false);
+		//GetWorld()->GetTimerManager().SetTimer(StunTimer, this, &ACharacterBase::Unstun, StunDuration, false);
 	}
 }
 
 void ACharacterBase::PlayStunAnimation_Implementation(float StunTime)
 {
-	GetMesh()->GetAnimInstance()->Montage_Play(HurtAnim);
+	if (HurtAnim)
+		GetMesh()->GetAnimInstance()->Montage_Play(HurtAnim);
 }
 
-void ACharacterBase::Unstun()
+void ACharacterBase::Unstun(AAIControllerBase* AIC)
 {
-	if (AAIControllerBase* AIC = Cast<AAIControllerBase>(GetController()))
+	
+	if (IsValid(AIC))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Unstunned"));
 		AIC->BehaviorTreeComp->ResumeLogic(FString("Unstunned"));
 		AIC->BlackboardComp->SetValueAsBool("IsStunned", false);
 	}
@@ -1075,6 +1081,9 @@ void ACharacterBase::NotifyRestarted()
 				PlayerHUD = CreateWidget<UUserWidget>(PC, PlayerHUDClass);
 				PlayerHUD->AddToPlayerScreen();
 			}
+			PC->SetShowMouseCursor(false);
+			FInputModeGameOnly InputModeGameOnly;
+			PC->SetInputMode(InputModeGameOnly);
 			SetupViewmodel(true);
 		}
 	}

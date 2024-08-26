@@ -107,6 +107,7 @@ public:
 
 	virtual bool Initialize() override;
 	
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UWidget* WeaponHUD;
 
@@ -152,6 +153,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<UUserWidget> GrenadeWidgetClass;
 
+	UPROPERTY()
 	TSubclassOf<AGrenadeBase> SelectedGrenadeType;
 
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
@@ -200,6 +202,7 @@ public:
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	// float CompassDirection;
 
+	UPROPERTY()
 	TArray<UUserWidget*> BulletIcons;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Colors")

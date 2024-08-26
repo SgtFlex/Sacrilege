@@ -56,5 +56,6 @@ protected:
 
 private:
 	/** The Character holding this weapon*/
+	UPROPERTY()
 	APlayerCharacter* Character;
 };

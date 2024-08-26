@@ -93,6 +93,7 @@ ACharacterBase* AAISpawner::SpawnUnit(TSubclassOf<ACharacterBase> Unit, FVector 
 	SpawnedChars.Add(Char);
 	if (SmartObj)
 	{
+		Char->TeamId = DefaultTeam;
 		Char->SmartObject = SmartObj;
 	}
 	// if (UseDropPod)

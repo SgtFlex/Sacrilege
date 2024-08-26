@@ -53,6 +53,7 @@ public:
 	
 private:
 protected:
+	
 	UPROPERTY()
 	float StartTime;
 };
