@@ -4,9 +4,13 @@
 #include "VehicleBase.h"
 
 #include "AIControllerBase.h"
+#include "GrenadeWidget.h"
 #include "HealthComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Core/CharacterBase.h"
 #include "Engine/DamageEvents.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 AVehicleBase::AVehicleBase()
@@ -85,9 +89,148 @@ void AVehicleBase::SetIsDestroyed(bool bNewIsDestroyed)
 	bIsDestroyed = bNewIsDestroyed;
 }
 
-void AVehicleBase::SpawnHUD()
+void AVehicleBase::NotifyRestarted()
+{
+	Super::NotifyRestarted();
+	// if (IsLocallyControlled())
+	// {
+	// 	SpawnHUD();
+	// 	SpawnControls();
+	// }
+}
+
+void AVehicleBase::UnPossessed()
 {
 	
+	// if (IsLocallyControlled())
+	// {
+	// 	RemoveHUD();
+	// 	RemoveControls();
+	// }
+	Super::UnPossessed();
+}
+
+
+
+void AVehicleBase::Enter_Implementation(ACharacterBase* NewPilot)
+{
+	if (bIsDestroyed || Pilot) return;
+	SetPilotToPossess(NewPilot);
+	if (IsPlayerControlled())
+	{
+		CL_Enter(NewPilot);
+	}
+	
+	
+}
+
+void AVehicleBase::CL_Enter_Implementation(ACharacterBase* NewPilot)
+{
+	if (IsLocallyControlled())
+	{
+		SpawnHUD();
+		SpawnControls();
+	}
+}
+
+void AVehicleBase::Exit_Implementation()
+{
+	if (IsPlayerControlled())
+		CL_Exit();
+	ResetPilot();
+}
+
+void AVehicleBase::CL_Exit_Implementation()
+{
+	if (IsLocallyControlled())
+	{
+		RemoveControls();
+		RemoveHUD();
+	}
+}
+
+void AVehicleBase::ResetPilot_Implementation()
+{
+	if (!Pilot) return;
+	GetController()->UnPossess();
+	PilotController->Possess(Pilot);
+	Pilot->OnKilled.RemoveDynamic(this, &AVehicleBase::OnPilotKilled);
+	DetachPilot();
+	Pilot = nullptr;
+	PilotController = nullptr;
+}
+
+
+
+
+void AVehicleBase::SetPilotToPossess_Implementation(ACharacterBase* NewPilot)
+{
+	Pilot = NewPilot;
+	PilotController = Pilot->GetController();
+	SetOwner(PilotController);
+	AttachPilot();
+	Pilot->OnKilled.AddUniqueDynamic(this, &AVehicleBase::OnPilotKilled);
+	PilotController->UnPossess();
+	if (Cast<APlayerController>(PilotController))
+	{
+		PilotController->Possess(this);
+	} else
+	{
+		SpawnDefaultControllerWithTeam(Pilot->TeamId);
+	}
+	
+}
+
+void AVehicleBase::AttachPilot_Implementation()
+{
+	if (IsValid(Pilot))
+	{
+		Pilot->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+		Pilot->AttachToComponent(VehicleMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("Seat"));
+		Pilot->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	}
+}
+
+void AVehicleBase::DetachPilot_Implementation()
+{
+	if (IsValid(Pilot))
+	{
+		Pilot->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_NavWalking);
+		Pilot->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		Pilot->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	}
+}
+
+// void AVehicleBase::SpawnHUD_Implementation()
+// {
+// 	if (!VehicleHUD)
+// 	{
+// 		VehicleHUD = CreateWidget<UUserWidget>(GetController<APlayerController>(), VehicleHUDClass);
+// 		if (VehicleHUD)
+// 			VehicleHUD->AddToPlayerScreen();	
+// 	}
+// }
+//
+// void AVehicleBase::RemoveHUD_Implementation()
+// {
+// 	if (VehicleHUD)
+// 	{
+// 		UE_LOG(LogTemp, Warning, TEXT("Removing HUD"));
+// 		VehicleHUD->RemoveFromRoot();
+// 		VehicleHUD = nullptr;
+// 	}
+// }
+
+
+void AVehicleBase::OnPilotKilled(ACharacterBase* Character, AController* Killer, AActor* Causer)
+{
+	Exit();
+}
+
+void AVehicleBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AVehicleBase, Pilot);
 }
 
 float AVehicleBase::CustomTakePointDamage_Implementation(FPointDamageEvent const& PointDamageEvent, float Force,

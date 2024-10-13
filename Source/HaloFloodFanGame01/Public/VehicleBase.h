@@ -56,8 +56,50 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetIsDestroyed(bool bNewIsDestroyed);
 
-	UFUNCTION(BlueprintCallable)
+	void NotifyRestarted() override;
+
+	virtual void UnPossessed() override;
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	void Enter(ACharacterBase* NewPilot);
+
+	UFUNCTION(Client, Reliable)
+	void CL_Enter(ACharacterBase* NewPilot);
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	void Exit();
+
+	UFUNCTION(Client, Reliable)
+	void CL_Exit();
+
+	UFUNCTION(Server, Reliable)
+	void SetPilotToPossess(ACharacterBase* NewPilot);
+
+	UFUNCTION(Server, Reliable)
+	void ResetPilot();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void AttachPilot();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void DetachPilot();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void SpawnHUD();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void RemoveHUD();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void SpawnControls();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void RemoveControls();
+
+	UFUNCTION()
+	void OnPilotKilled(ACharacterBase* Character, AController* Killer, AActor* Causer);
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	//IDamageableInterface
 	
@@ -70,7 +112,10 @@ public:
 	virtual void OnInteract_Implementation(ACharacterBase* Character) override;
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<UUserWidget> VehicleHUD;
+	TSubclassOf<UUserWidget> VehicleHUDClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UUserWidget* VehicleHUD;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UHealthComponent* HealthComponent;
@@ -83,6 +128,12 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnDamageStateChanged OnDamageStateChanged;
+
+	UPROPERTY(BlueprintReadWrite, ReplicatedUsing=AttachPilot)
+	ACharacterBase* Pilot;
+
+	UPROPERTY(BlueprintReadWrite)
+	AController* PilotController;
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsDestroyed = false;

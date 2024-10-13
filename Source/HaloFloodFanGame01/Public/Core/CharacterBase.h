@@ -8,6 +8,7 @@
 #include "GameFramework/Character.h"
 #include "CharacterBase.generated.h"
 
+class UBlendSpace1D;
 class AAIControllerBase;
 struct FInputActionValue;
 enum EAlertState : uint8;
@@ -124,6 +125,9 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MC_OnHealthDepleted(float Damage, FVector Force, FVector HitLocation = FVector(0,0,0), FName HitBoneName = "", AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
+	UFUNCTION()
+	void CreateRagdollCorpse();
+	
 	UFUNCTION(BlueprintNativeEvent)
 	void DropGrenades();
 	
@@ -357,6 +361,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	UAnimMontage* MeleeAnim;
+
+	UPROPERTY(EditDefaultsOnly)
+	UBlendSpace* HitReactionBS;
 
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="AI", meta = (ExposeOnSpawn = "true"))
 	ASmartObject* SmartObject;

@@ -19,6 +19,7 @@
 #include "TimerManager.h"
 #include "WorldCleanupManager.h"
 #include "Animation/AnimInstance.h"
+#include "Animation/AnimSingleNodeInstance.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Blueprint/UserWidget.h"
@@ -287,6 +288,12 @@ void ACharacterBase::SpawnBloodFX_Implementation(FPointDamageEvent PointDamageEv
 		
 	} else
 	{
+		if (HitReactionBS)
+		{
+			GetMesh()->PlayAnimation(HitReactionBS, false);
+			FVector BlendParams(50, 0.0, 0.0);
+			GetMesh()->GetSingleNodeInstance()->SetBlendSpacePosition(BlendParams);
+		}
 		if (BloodPFX)
 		{
 			UNiagaraComponent* BloodNiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(BloodPFX, GetMesh(), PointDamageEvent.HitInfo.BoneName, PointDamageEvent.HitInfo.ImpactPoint, PointDamageEvent.HitInfo.Normal.Rotation(), EAttachLocation::KeepWorldPosition, true);
@@ -427,18 +434,36 @@ void ACharacterBase::MC_OnHealthDepleted_Implementation(float Damage, FVector Fo
 		//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(100, 100, 100), GetActorLocation(), FRotator(-90,0,0)));
 	if (DeathSound)
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), DeathSound, GetActorLocation());
-	GetMesh()->GetAnimInstance()->Montage_Play(DeathAnim);
+	
 	GetCapsuleComponent()->DestroyComponent();
 	SetRootComponent(GetMesh());
-	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	GetMesh()->SetSimulatePhysics(true);
-	GetMesh()->AddImpulseAtLocation(Force, HitLocation, HitBoneName);
+	if (Force.Length() > 50000 || !DeathAnim)
+	{
+		GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		GetMesh()->SetSimulatePhysics(true);
+		GetMesh()->AddImpulseAtLocation(Force, HitLocation, HitBoneName);
+	} else
+	{
+		GetMesh()->GetAnimInstance()->Montage_Play(DeathAnim);
+		FTimerDelegate RagdollDelegate = FTimerDelegate::CreateUObject(this, &ACharacterBase::CreateRagdollCorpse);
+		GetWorldTimerManager().SetTimer(RagdollTimer, RagdollDelegate, DeathAnim->GetPlayLength(), false);
+	}
+	
+	
+	
+	
+	
 	OnKilled.Broadcast(this, EventInstigator, DamageCauser);
 	DropGrenades();
 	GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageRagdoll(this);
 	//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageRagdoll(this);
 }
 
+void ACharacterBase::CreateRagdollCorpse()
+{
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	GetMesh()->SetSimulatePhysics(true);
+}
 
 
 void ACharacterBase::DropGrenades_Implementation()
@@ -459,6 +484,7 @@ void ACharacterBase::DropGrenades_Implementation()
 		}
 	}
 }
+
 
 
 
@@ -589,7 +615,8 @@ void ACharacterBase::PlayerMelee_Implementation()
 
 void ACharacterBase::NPCMelee_Implementation()
 {
-	//GetMesh()->GetAnimInstance()->Montage_Play(MeleeAnim);
+	if (MeleeAnim)
+		GetMesh()->GetAnimInstance()->Montage_Play(MeleeAnim);
 	if (!CanMelee()) return;
 	GetWorld()->GetTimerManager().SetTimer(MeleeTimer, 1, false);
 	UE_LOG(LogTemp, Warning, TEXT("Melee"));
@@ -602,12 +629,12 @@ void ACharacterBase::NPCMelee_Implementation()
 	GetWorld()->SweepMultiByObjectType(SweepResult, GetActorLocation(), GetActorLocation() + GetActorForwardVector()*100, FQuat(0,0,0,0), ECollisionChannel::ECC_Pawn, BoxShape, CollisionParams);
 	for (auto Result : SweepResult)
 	{
-		
 		if (Result.GetActor() && Result.GetActor()->Implements<UDamageableInterface>())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Melee'd Actor: %s"), *Result.GetComponent()->GetName());
+			UE_LOG(LogTemp, Warning, TEXT("Melee'd Actor: %s"), *Result.GetActor()->GetActorLabel());
 			FDamageEvent DamageEvent;
-			Cast<IDamageableInterface>(Result.GetActor())->CustomTakeDamage(MeleeDamage, FVector(0,0,0), DamageEvent, nullptr, this);
+			IDamageableInterface::Execute_CustomTakeDamage(Result.GetActor(), MeleeDamage, FVector(0,0,0), DamageEvent, nullptr, this);
+			//Cast<IDamageableInterface>(Result.GetActor())->CustomTakeDamage(MeleeDamage, FVector(0,0,0), DamageEvent, nullptr, this);
 			//Result.GetActor()->TakeDamage(MeleeDamage, DamageEvent, nullptr, this);
 		}
 		
@@ -630,8 +657,7 @@ void ACharacterBase::ThrowEquippedGrenade()
 
 void ACharacterBase::ThrowGrenade_Implementation(int GrenadeIndex)
 {
-	if (IsPlayerControlled())
-	{
+
 		if (GrenadeInventory.Num() <= 0) return;
 		// if (ThrowGrenadeAnimation1P)
 		// 	GetMesh1P()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation1P);
@@ -660,23 +686,7 @@ void ACharacterBase::ThrowGrenade_Implementation(int GrenadeIndex)
 			}
 			OnGrenadeInventoryUpdated.Broadcast();
 		}
-	} else
-	{
-		if (GrenadeInventory[GrenadeIndex].GrenadeAmount <= 0) return;
-		OnGrenadeInventoryUpdated.Broadcast();
-		FVector EyesLoc;
-		FRotator EyesRot;
-		GetActorEyesViewPoint(EyesLoc, EyesRot);
-		FActorSpawnParameters ActorSpawnParameters;
-		ActorSpawnParameters.Owner = this;
-		AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActor(GrenadeInventory[GrenadeIndex].GrenadeClass, &EyesLoc, &EyesRot, ActorSpawnParameters));
-		Grenade->SetInstigator(this);
-		Grenade->SetArmed(true);
-		//PlayThrowGrenadeFX(Grenade);
-		//UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Grenade->ThrowSFX, Grenade->GetActorLocation());
-		FVector Force = GetBaseAimRotation().Vector() + FVector(0,0,0.1);
-		Grenade->Mesh->AddImpulse(Force*20000);
-	}
+	
 }
 
 
