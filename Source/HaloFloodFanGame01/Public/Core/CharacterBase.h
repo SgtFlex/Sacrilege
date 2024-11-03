@@ -158,17 +158,28 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	bool CanMelee();
 
+	UFUNCTION(NetMulticast, Unreliable)
+	void PlayMeleeFX();
+
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void EquipGrenadeType(TSubclassOf<AGrenadeBase> Grenade);
 
 	UFUNCTION(BlueprintCallable)
 	void ThrowEquippedGrenade();
 
+	UFUNCTION(Server, Reliable)
+	void SV_ThrowEquippedGrenade();
+
 	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void ThrowGrenade(int GrenadeIndex);
 
+	
+
 	UFUNCTION(BlueprintCallable, NetMulticast, Unreliable)
 	void PlayThrowGrenadeFX(AGrenadeBase* Grenade);
+
+	UFUNCTION(BlueprintCallable, NetMulticast, Unreliable)
+	void PlayThrowGrenadeAnimation();
 
 	UFUNCTION(BlueprintCallable)
 	void SwitchGrenadeType();
@@ -393,7 +404,16 @@ public:
 	FTimerHandle StunTimer;
 
 	UPROPERTY()
-	float StunAmount = 100;
+	FTimerHandle StunCooldownTimer;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float CurrentStunBuildup = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float StunThreshold = 100;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float StunCooldown = 3.0f;
 
 	UPROPERTY()
 	int CurGrenadeTypeI = 0;
@@ -423,6 +443,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	UAnimMontage* ThrowGrenadeAnimation1P;
+
+	UPROPERTY(EditDefaultsOnly)
+	UAnimMontage* ThrowGrenadeAnimation;
 
 	UPROPERTY()
 	TArray<AActor*> InteractableActors;

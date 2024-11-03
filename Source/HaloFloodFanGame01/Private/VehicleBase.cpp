@@ -21,6 +21,8 @@ AVehicleBase::AVehicleBase()
 	VehicleMesh = CreateDefaultSubobject<UStaticMeshComponent>("VehicleMesh");
 	SetRootComponent(VehicleMesh);
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>("HealthComponent");
+	ExitPoint = CreateDefaultSubobject<USceneComponent>("ExitPoint");
+	ExitPoint->SetupAttachment(VehicleMesh);
 }
 
 // Called when the game starts or when spawned
@@ -133,6 +135,33 @@ void AVehicleBase::CL_Enter_Implementation(ACharacterBase* NewPilot)
 	}
 }
 
+void AVehicleBase::SetPilotToPossess_Implementation(ACharacterBase* NewPilot)
+{
+	Pilot = NewPilot;
+	PilotController = Pilot->GetController();
+	SetOwner(PilotController);
+	AttachPilot();
+	Pilot->OnKilled.AddUniqueDynamic(this, &AVehicleBase::OnPilotKilled);
+	PilotController->UnPossess();
+	if (Cast<APlayerController>(PilotController))
+	{
+		PilotController->Possess(this);
+	} else
+	{
+		SpawnDefaultControllerWithTeam(Pilot->TeamId);
+	}
+}
+
+void AVehicleBase::AttachPilot_Implementation()
+{
+	if (IsValid(Pilot))
+	{
+		Pilot->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+		Pilot->AttachToComponent(VehicleMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("Seat"));
+		Pilot->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	}
+}
+
 void AVehicleBase::Exit_Implementation()
 {
 	if (IsPlayerControlled())
@@ -156,50 +185,28 @@ void AVehicleBase::ResetPilot_Implementation()
 	PilotController->Possess(Pilot);
 	Pilot->OnKilled.RemoveDynamic(this, &AVehicleBase::OnPilotKilled);
 	DetachPilot();
+	SetOwner(nullptr);
 	Pilot = nullptr;
 	PilotController = nullptr;
-}
-
-
-
-
-void AVehicleBase::SetPilotToPossess_Implementation(ACharacterBase* NewPilot)
-{
-	Pilot = NewPilot;
-	PilotController = Pilot->GetController();
-	SetOwner(PilotController);
-	AttachPilot();
-	Pilot->OnKilled.AddUniqueDynamic(this, &AVehicleBase::OnPilotKilled);
-	PilotController->UnPossess();
-	if (Cast<APlayerController>(PilotController))
-	{
-		PilotController->Possess(this);
-	} else
-	{
-		SpawnDefaultControllerWithTeam(Pilot->TeamId);
-	}
-	
-}
-
-void AVehicleBase::AttachPilot_Implementation()
-{
-	if (IsValid(Pilot))
-	{
-		Pilot->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-		Pilot->AttachToComponent(VehicleMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("Seat"));
-		Pilot->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	}
 }
 
 void AVehicleBase::DetachPilot_Implementation()
 {
 	if (IsValid(Pilot))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Called detach pilot on %d"), GetRemoteRole());
 		Pilot->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_NavWalking);
 		Pilot->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 		Pilot->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		Pilot->SetActorTransform(ExitPoint->GetComponentTransform());
+	} else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Invalid pilot"));
 	}
 }
+
+
+
 
 // void AVehicleBase::SpawnHUD_Implementation()
 // {

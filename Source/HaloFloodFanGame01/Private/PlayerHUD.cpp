@@ -99,8 +99,21 @@ void UPlayerHUD::UpdateSelectedGrenadeType(TSubclassOf<AGrenadeBase> GrenadeClas
 void UPlayerHUD::UpdateGrenadeInventory()
 {
 	const TArray<FGrenadeStruct> GrenadeInventory = PlayerCharacter->GrenadeInventory;
+	// for (auto GrenadeWidget : GrenadeWidgetMap)
+	// {
+	// 	for (auto GrenadeType : GrenadeInventory) //Update the grenade amount
+	// 	{
+	// 		if (GrenadeType.GrenadeClass == GrenadeWidget.Key)
+	// 		{
+	// 			GrenadeWidget.Value->GrenadeCounter->SetText(FText::AsNumber(GrenadeType.GrenadeAmount));
+	// 		} else //Destroy the grenade widget
+	// 		{
+	// 			
+	// 		}
+	// 	}
+	// }
 	OldGrenadeInventory = GrenadeInventory;
-	for (auto GrenadeStruct : GrenadeInventory)
+	for (FGrenadeStruct GrenadeStruct : GrenadeInventory)
 	{
 		if (!GrenadeWidgetMap.Contains(GrenadeStruct.GrenadeClass))
 		{
@@ -117,7 +130,7 @@ void UPlayerHUD::UpdateGrenadeInventory()
 		}
 		GrenadeWidgetMap[GrenadeStruct.GrenadeClass]->GrenadeCounter->SetText(FText::AsNumber(GrenadeStruct.GrenadeAmount));
 	}
-
+	
 	//Reorder the widgets
 	for (int i = 0; i < FragHUD->GetChildrenCount(); i++)
 	{

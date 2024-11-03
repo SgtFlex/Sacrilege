@@ -117,6 +117,9 @@ public:
 	
 	UPROPERTY()
 	float ShieldRegenTickRate = 0.01;
+
+	UPROPERTY()
+	UMeshComponent* MeshComp;
 	
 private:
 	UPROPERTY()
@@ -164,4 +167,6 @@ public:
 	void RegenShields();
 	UFUNCTION()
 	void StopShieldRegen();
+	UFUNCTION()
+	void PlayShieldFX(bool Show);
 };

@@ -355,8 +355,10 @@ float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent con
 	{
 		if (HealthComp->GetShields() <= 0)
 		{
-			StunAmount = StunAmount + (Force/50);
-			if (StunAmount >= 100)
+			
+			CurrentStunBuildup = CurrentStunBuildup + (Force/50);
+			UE_LOG(LogTemp, Warning, TEXT("Stun amount: %f"), CurrentStunBuildup);
+			if (CurrentStunBuildup >= StunThreshold)
 				Stun();
 			SpawnBloodFX(PointDamageEvent);
 		}
@@ -570,7 +572,7 @@ void ACharacterBase::PlayerMelee_Implementation()
 {
 	if (GetWorld()->GetTimerManager().TimerExists(MeleeTimer)) return;
 	GetWorld()->GetTimerManager().SetTimer(MeleeTimer, 1, false);
-	
+	PlayMeleeFX();
 	FVector TraceStart = GetFirstPersonCameraComponent()->GetComponentLocation();
 	FVector TraceEnd = GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*500;
 	FCollisionQueryParams CollisionParameters;
@@ -615,23 +617,22 @@ void ACharacterBase::PlayerMelee_Implementation()
 
 void ACharacterBase::NPCMelee_Implementation()
 {
-	if (MeleeAnim)
-		GetMesh()->GetAnimInstance()->Montage_Play(MeleeAnim);
+	
 	if (!CanMelee()) return;
+	PlayMeleeFX();
 	GetWorld()->GetTimerManager().SetTimer(MeleeTimer, 1, false);
 	UE_LOG(LogTemp, Warning, TEXT("Melee"));
-	FCollisionShape BoxShape = FCollisionShape::MakeBox(FVector(50, 50, 50));
+	FCollisionShape BoxShape = FCollisionShape::MakeBox(FVector(250, 250, 50));
 	TArray<FHitResult> SweepResult;
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(this);
 	//GetWorld()->SweepMultiByChannel(SweepResult, GetActorLocation(), GetActorLocation() + GetActorForwardVector()*100, FQuat(0,0,0,0), ECollisionChannel::ECC_Pawn, BoxShape, CollisionParams);
-	//GetWorld()->SweepMultiByChannel(SweepResult, GetActorLocation(), GetActorLocation() + GetActorForwardVector()*100, FQuat(0,0,0,0), ECollisionChannel::ECC_Pawn, BoxShape, CollisionParams);
-	GetWorld()->SweepMultiByObjectType(SweepResult, GetActorLocation(), GetActorLocation() + GetActorForwardVector()*100, FQuat(0,0,0,0), ECollisionChannel::ECC_Pawn, BoxShape, CollisionParams);
+	GetWorld()->SweepMultiByChannel(SweepResult, GetActorLocation(), GetActorLocation() + GetActorForwardVector()*100, FQuat(0,0,0,0), ECollisionChannel::ECC_Pawn, BoxShape, CollisionParams);
+	//GetWorld()->SweepMultiByObjectType(SweepResult, GetActorLocation(), GetActorLocation() + GetActorForwardVector()*100, FQuat(0,0,0,0), ECollisionChannel::ECC_Pawn, BoxShape, CollisionParams);
 	for (auto Result : SweepResult)
 	{
-		if (Result.GetActor() && Result.GetActor()->Implements<UDamageableInterface>())
+		if (Result.GetActor() && Result.GetActor()->Implements<UDamageableInterface>() && Result.GetActor()!=this)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Melee'd Actor: %s"), *Result.GetActor()->GetActorLabel());
 			FDamageEvent DamageEvent;
 			IDamageableInterface::Execute_CustomTakeDamage(Result.GetActor(), MeleeDamage, FVector(0,0,0), DamageEvent, nullptr, this);
 			//Cast<IDamageableInterface>(Result.GetActor())->CustomTakeDamage(MeleeDamage, FVector(0,0,0), DamageEvent, nullptr, this);
@@ -649,44 +650,60 @@ void ACharacterBase::NPCMelee_Implementation()
 	}
 }
 
+void ACharacterBase::PlayMeleeFX_Implementation()
+{
+	if (MeleeAnim)
+		GetMesh()->GetAnimInstance()->Montage_Play(MeleeAnim);
+}
+
 void ACharacterBase::ThrowEquippedGrenade()
 {
-	ThrowGrenade(CurGrenadeTypeI);
-	OnGrenadeInventoryUpdated.Broadcast();
+	SV_ThrowEquippedGrenade();
+}
+
+void ACharacterBase::SV_ThrowEquippedGrenade_Implementation()
+{
+	if (!IsPlayerControlled() && ThrowGrenadeAnimation)
+	{
+		PlayThrowGrenadeAnimation();
+	} else
+	{
+		PlayThrowGrenadeAnimation();
+		ThrowGrenade(CurGrenadeTypeI);
+	}
 }
 
 void ACharacterBase::ThrowGrenade_Implementation(int GrenadeIndex)
 {
+	
+	if (GrenadeInventory.Num() <= 0) return;
+	// if (ThrowGrenadeAnimation1P)
+	// 	GetMesh1P()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation1P);
+	GrenadeInventory[GrenadeIndex].GrenadeAmount -= 1;
+	const FTransform SpawnTransform = FTransform(GetFirstPersonCameraComponent()->GetForwardVector().Rotation(), GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*300);
+	FActorSpawnParameters ActorSpawnParameters;
+	ActorSpawnParameters.Instigator = this;
+	ActorSpawnParameters.Owner = this;
 
-		if (GrenadeInventory.Num() <= 0) return;
-		// if (ThrowGrenadeAnimation1P)
-		// 	GetMesh1P()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation1P);
-		GrenadeInventory[GrenadeIndex].GrenadeAmount -= 1;
-		const FTransform SpawnTransform = FTransform(GetFirstPersonCameraComponent()->GetForwardVector().Rotation(), GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*300);
-		FActorSpawnParameters ActorSpawnParameters;
-		ActorSpawnParameters.Instigator = this;
-		ActorSpawnParameters.Owner = this;
+	if (AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActorDeferred<AGrenadeBase>(GrenadeInventory[GrenadeIndex].GrenadeClass, SpawnTransform, this, this, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn)))
+	{
+		Grenade->SetInstigator(this);
+		Grenade->SetArmed(true);
+		Grenade->FinishSpawning(SpawnTransform);
+		PlayThrowGrenadeFX(Grenade);
+		//UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Grenade->ThrowSFX, Grenade->GetActorLocation());
+		FVector Direction = GetFirstPersonCameraComponent()->GetForwardVector() + FVector(0,0,0.15);
+		Direction.Normalize();
+		Grenade->Mesh->AddImpulse(Direction*2000.0f, NAME_None, true);
+		Grenade->Mesh->AddAngularImpulseInDegrees(Grenade->GetActorRightVector().GetSafeNormal()*1000 , NAME_None, true);
 
-		if (AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActorDeferred<AGrenadeBase>(GrenadeInventory[GrenadeIndex].GrenadeClass, SpawnTransform, this, this, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn)))
+		if (GrenadeInventory[GrenadeIndex].GrenadeAmount <= 0)
 		{
-			Grenade->SetInstigator(this);
-			Grenade->SetArmed(true);
-			Grenade->FinishSpawning(SpawnTransform);
-			PlayThrowGrenadeFX(Grenade);
-			//UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Grenade->ThrowSFX, Grenade->GetActorLocation());
-			FVector Direction = GetFirstPersonCameraComponent()->GetForwardVector() + FVector(0,0,0.15);
-			Direction.Normalize();
-			Grenade->Mesh->AddImpulse(Direction*2000.0f, NAME_None, true);
-			Grenade->Mesh->AddAngularImpulseInDegrees(Grenade->GetActorRightVector().GetSafeNormal()*1000 , NAME_None, true);
-	
-			if (GrenadeInventory[GrenadeIndex].GrenadeAmount <= 0)
-			{
-				GrenadeInventory.RemoveAt(GrenadeIndex);
-				SwitchToGrenadeType(GrenadeIndex);
-			}
-			OnGrenadeInventoryUpdated.Broadcast();
+			GrenadeInventory.RemoveAt(GrenadeIndex);
+			SwitchToGrenadeType(GrenadeIndex);
 		}
-	
+		OnGrenadeInventoryUpdated.Broadcast();
+	}
 }
 
 
@@ -695,9 +712,15 @@ void ACharacterBase::PlayThrowGrenadeFX_Implementation(AGrenadeBase* Grenade)
 	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Grenade->ThrowSFX, Grenade->GetActorLocation());
 	if (ThrowGrenadeAnimation1P)
 		GetMesh1P()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation1P);
+	// if (ThrowGrenadeAnimation && !IsPlayerControlled())
+	// 	GetMesh()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation);
 }
 
-
+void ACharacterBase::PlayThrowGrenadeAnimation_Implementation()
+{
+	if (ThrowGrenadeAnimation)
+		GetMesh()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation);
+}
 
 void ACharacterBase::SwitchGrenadeType()
 {
@@ -974,11 +997,13 @@ void ACharacterBase::RagdollSettled(UPrimitiveComponent* Component, FName Name)
 
 void ACharacterBase::Stun(float StunTime)
 {
-	StunAmount = 0;
+	if (GetWorldTimerManager().TimerExists(StunTimer)) return;
+	CurrentStunBuildup = 0;
 	const float StunDuration = 1.5f;
 	
 	if (AAIControllerBase* AIC = Cast<AAIControllerBase>(GetController()))
 	{
+		
 		AIC->BehaviorTreeComp->PauseLogic(FString("Stunned"));
 		AIC->StopMovement();
 		AIC->BlackboardComp->SetValueAsBool("IsStunned", true);

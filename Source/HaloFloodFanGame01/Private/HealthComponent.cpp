@@ -8,6 +8,7 @@
 #include "Components/AudioComponent.h"
 #include "Core/CharacterBase.h"
 #include "GameFramework/Actor.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values for this component's properties
@@ -18,6 +19,7 @@ UHealthComponent::UHealthComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 
 	ShieldAudioComponent = CreateDefaultSubobject<UAudioComponent>("AudioComp");
+	
 	// ...
 }
 
@@ -35,7 +37,7 @@ void UHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	
+	MeshComp = Cast<UMeshComponent>(GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
 	ShieldAudioComponent->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
 	if (ShieldAttenuationSettings)
 	{
@@ -61,7 +63,8 @@ void UHealthComponent::TakeDamage_Implementation(float Damage, FVector Force, FV
 	if (Shields > 0)
 	{
 		DamageLeft = Damage - Shields;
-		SetShields(Shields - Damage);
+		if (SetShields(Shields - Damage) <= 0) //After setting our new shields, check if our shields are now 0
+			BreakShields();
 	}
 	if (DamageLeft > 0 && Shields <= 0)
 	{
@@ -81,8 +84,8 @@ void UHealthComponent::Multi_TakeDamage_Implementation(float Damage, FVector For
 	
 	if (MaxShields > 0)
 	{
-		if (Shields <= 0)
-			BreakShields();
+		// if (Shields <= 0)
+		// 	BreakShields();
 		GetOwner()->GetWorldTimerManager().ClearTimer(ShieldRegenTimer);
 		GetOwner()->GetWorldTimerManager().SetTimer(ShieldDelayTimerHandle, this, &UHealthComponent::StartShieldRegen, ShieldRegenDelay);
 	}
@@ -96,9 +99,8 @@ void UHealthComponent::Multi_TakeDamage_Implementation(float Damage, FVector For
 		ShieldAudioComponent->SetSound(ShieldLowSFX);
 		ShieldAudioComponent->Play();
 	}
-	if (ShieldMat && Shields > 0) {
-		UMeshComponent* MeshComp = Cast<UMeshComponent>(GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
-		MeshComp->SetOverlayMaterial(ShieldMat);
+	if (Shields > 0) {
+		PlayShieldFX(true);
 	}
 	OnHealthUpdate.Broadcast(this);
 }
@@ -117,7 +119,6 @@ void UHealthComponent::Multi_HealthDepleted_Implementation(float Damage, FVector
 	FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
 	ShieldAudioComponent->Deactivate();
-	UMeshComponent* MeshComp = Cast<UMeshComponent>(GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
 	MeshComp->SetOverlayMaterial(nullptr);
 }
 
@@ -209,22 +210,20 @@ void UHealthComponent::SetShieldRegenRatePerSecond(float NewShieldRegenRatePerSe
 //Perhaps move this stuff to delegates called inside characters?
 void UHealthComponent::BreakShields_Implementation()
 {
-	if (ShieldMat) {
-		UMeshComponent* MeshComp = Cast<UMeshComponent>(GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
-		MeshComp->SetOverlayMaterial(nullptr);
-	}
-	if (ShieldBreakFX) UNiagaraFunctionLibrary::SpawnSystemAttached(ShieldBreakFX, Cast<ACharacterBase>(GetOwner())->GetMesh(),
+	PlayShieldFX(false);
+	if (ShieldBreakFX) UNiagaraFunctionLibrary::SpawnSystemAttached(ShieldBreakFX, Cast<ACharacter>(GetOwner())->GetMesh(),
 		NAME_None, FVector(0,0,0), FRotator(0,0,0),EAttachLocation::SnapToTarget, true);
 	if (ShieldBreakSFX)
 	{
-		ShieldAudioComponent->SetSound(ShieldBreakSFX);
-		ShieldAudioComponent->Play();
+		// ShieldAudioComponent->SetSound(ShieldBreakSFX);
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ShieldBreakSFX, GetOwner()->GetActorLocation());
+		// ShieldAudioComponent->Play();
 	}
 }
 
 void UHealthComponent::StartShieldRegen()
 {
-	
+	if (!IsAlive()) return;
 	if (ShieldStartRegenSFX)
 	{
 		ShieldAudioComponent->SetSound(ShieldStartRegenSFX);
@@ -239,11 +238,11 @@ void UHealthComponent::RegenShields()
 	SetShields(FMath::Min(MaxShields, Shields + ShieldRegenAmount));
 	if (Shields >= MaxShields)
 	{
-		if (ShieldMat) {
-			UMeshComponent* MeshComp = Cast<UMeshComponent>(GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
-			MeshComp->SetOverlayMaterial(nullptr);
-		}
+		PlayShieldFX(false);
 		StopShieldRegen();
+	} else
+	{
+		PlayShieldFX(true);
 	};
 	OnHealthUpdate.Broadcast(this);
 }
@@ -256,5 +255,13 @@ void UHealthComponent::StopShieldRegen()
 		ShieldAudioComponent->Play();
 	}
 	GetOwner()->GetWorldTimerManager().ClearTimer(ShieldRegenTimer);
+}
+
+void UHealthComponent::PlayShieldFX(bool Show)
+{
+	if (Show && ShieldMat)
+		MeshComp->SetOverlayMaterial(ShieldMat);
+	else
+		MeshComp->SetOverlayMaterial(nullptr);
 }
 

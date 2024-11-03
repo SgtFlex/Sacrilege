@@ -73,16 +73,16 @@ public:
 	void CL_Exit();
 
 	UFUNCTION(Server, Reliable)
-	void SetPilotToPossess(ACharacterBase* NewPilot);
-
-	UFUNCTION(Server, Reliable)
 	void ResetPilot();
 
 	UFUNCTION(NetMulticast, Reliable)
-	void AttachPilot();
-
-	UFUNCTION(NetMulticast, Reliable)
 	void DetachPilot();
+
+	UFUNCTION(Server, Reliable)
+	void SetPilotToPossess(ACharacterBase* NewPilot);
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void AttachPilot();
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void SpawnHUD();
@@ -125,6 +125,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	UStaticMeshComponent* VehicleMesh;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	USceneComponent* ExitPoint;
 
 	UPROPERTY(BlueprintAssignable)
 	FOnDamageStateChanged OnDamageStateChanged;
