@@ -9,7 +9,12 @@
 
 class UNiagaraSystem;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBulletFired);
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+
+
+
 class HALOFLOODFANGAME01_API UBulletFiringComponent : public USceneComponent
 {
 	GENERATED_BODY()
@@ -29,7 +34,7 @@ protected:
 	void PlayFX(FVector Location, FRotator Rotation);
 
 	UFUNCTION(BlueprintCallable)
-	virtual void FireBullet(FHitResult& HitResult, FVector EndLocation);
+	virtual void FireBullet(FHitResult& HitResult, FVector Direction,  TArray<AActor*> ActorsToIgnore, AActor* DamageCauser, AController* EventInstigator);
 
 public:	
 	// Called every frame
@@ -41,4 +46,25 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UNiagaraSystem* FiringVFX;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float HitScanRange = 5000;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float HitScanDamage = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UCurveFloat* HitScanFalloffCurve;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float HitScanForce = 100;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float HorizontalSpread = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float VerticalSpread = 0;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnBulletFired OnBulletFired;
 };
