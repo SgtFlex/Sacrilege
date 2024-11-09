@@ -493,8 +493,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
 
-	UPROPERTY(EditAnywhere)
-	USphereComponent* InteractionSphere;
+	// UPROPERTY(EditAnywhere)
+	// USphereComponent* InteractionSphere;
 
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))

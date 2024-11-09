@@ -19,10 +19,11 @@ AVehicleBase::AVehicleBase()
 	PrimaryActorTick.bCanEverTick = true;
 
 	VehicleMesh = CreateDefaultSubobject<UStaticMeshComponent>("VehicleMesh");
-	SetRootComponent(VehicleMesh);
+	VehicleSkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>("Mesh");
+	SetRootComponent(GetVehicleMesh());
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>("HealthComponent");
 	ExitPoint = CreateDefaultSubobject<USceneComponent>("ExitPoint");
-	ExitPoint->SetupAttachment(VehicleMesh);
+	ExitPoint->SetupAttachment(GetVehicleMesh());
 }
 
 // Called when the game starts or when spawned
@@ -163,7 +164,7 @@ void AVehicleBase::AttachPilot_Implementation()
 	if (IsValid(Pilot))
 	{
 		Pilot->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-		Pilot->AttachToComponent(VehicleMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("Seat"));
+		Pilot->AttachToComponent(GetVehicleMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("Seat"));
 		Pilot->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	}
 }
@@ -246,8 +247,13 @@ void AVehicleBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 	DOREPLIFETIME(AVehicleBase, Pilot);
 }
 
+UStaticMeshComponent* AVehicleBase::GetVehicleMesh()
+{
+	return VehicleMesh;
+}
+
 float AVehicleBase::CustomTakeDamage_Implementation(float DamageAmount, FVector Force, FDamageEvent const& DamageEvent,
-	AController* EventInstigator, AActor* DamageCauser)
+                                                    AController* EventInstigator, AActor* DamageCauser)
 {
 	HealthComponent->TakeDamage(DamageAmount, Force, FVector(0,0,0), NAME_None, EventInstigator, DamageCauser);
 	return DamageAmount;

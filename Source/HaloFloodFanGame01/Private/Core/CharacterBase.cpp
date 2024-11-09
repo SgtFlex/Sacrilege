@@ -65,10 +65,10 @@ ACharacterBase::ACharacterBase()
 	//FirstPersonCameraComponent->SetRelativeLocation(FVector(-10.f, 0.f, 60.f)); // Position the camera
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
 
-	InteractionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Interaction Sphere"));
-	InteractionSphere->SetupAttachment(GetRootComponent());
-	InteractionSphere->SetSphereRadius(500);
-	InteractionSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	// InteractionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Interaction Sphere"));
+	// InteractionSphere->SetupAttachment(GetRootComponent());
+	// InteractionSphere->SetSphereRadius(500);
+	// InteractionSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 }
 
 // Called when the game starts or when spawned
@@ -1051,7 +1051,9 @@ void ACharacterBase::SetCurrentInteractable_Implementation()
 	} else
 	{
 		TArray<AActor*> Actors;
-		InteractionSphere->GetOverlappingActors(Actors);
+		TArray<TEnumAsByte<EObjectTypeQuery>> Objects;
+		UKismetSystemLibrary::SphereOverlapActors(GetWorld(), GetActorLocation(), 300, Objects, AActor::StaticClass(), ActorsToIgnore, Actors);
+		//InteractionSphere->GetOverlappingActors(Actors);
 		
 		if (!Actors.IsEmpty())
 		{

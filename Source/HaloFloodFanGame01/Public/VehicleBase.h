@@ -8,6 +8,7 @@
 #include "GameFramework/Pawn.h"
 #include "VehicleBase.generated.h"
 
+class ACharacterBase;
 class UHealthComponent;
 
 UENUM(BlueprintType)
@@ -43,13 +44,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SpawnDefaultControllerWithTeam(uint8 TeamId);
 
-	UFUNCTION()
-	void OnHealthUpdated(UHealthComponent* HealthComp);
-
-	UFUNCTION()
-	void OnHealthDepleted(float Damage, FVector Force, FVector HitLocation,
-											  FName HitBoneName, AController* EventInstigator, AActor* DamageCauser);
-
+	
 	UFUNCTION(BlueprintCallable)
 	void UpdateDamageState();
 	
@@ -104,6 +99,18 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	UStaticMeshComponent* GetVehicleMesh();
+	
+	//Delegate Binds
+
+	UFUNCTION()
+	void OnHealthUpdated(UHealthComponent* HealthComp);
+
+	UFUNCTION()
+	void OnHealthDepleted(float Damage, FVector Force, FVector HitLocation,
+											  FName HitBoneName, AController* EventInstigator, AActor* DamageCauser);
+	
 	//IDamageableInterface
 
 	virtual float CustomTakeDamage_Implementation(float DamageAmount, FVector Force, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
@@ -130,6 +137,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	UStaticMeshComponent* VehicleMesh;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	USkeletalMeshComponent* VehicleSkeletalMesh;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	USceneComponent* ExitPoint;
