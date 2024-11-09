@@ -189,11 +189,13 @@ void AGunBase::PlayFireFX_Implementation()
 
 void AGunBase::SpawnTrailFX_Implementation(FHitResult Hit)
 {
+	
 	if (Mesh->DoesSocketExist("Muzzle") && TrailPFX)
 	{
 		FVector TrailEnd = (Hit.bBlockingHit) ? Hit.ImpactPoint : Hit.TraceEnd;
 		UNiagaraComponent* TrailPFXComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(TrailPFX, Mesh, "Muzzle", FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
-		TrailPFXComponent->SetVectorParameter("BeamEnd", TrailEnd);
+		if (TrailPFX)
+			TrailPFXComponent->SetVectorParameter("BeamEnd", TrailEnd);
 	}
 	if (Hit.bBlockingHit)
 	{
@@ -203,7 +205,8 @@ void AGunBase::SpawnTrailFX_Implementation(FHitResult Hit)
 			FVector Location = Hit.ImpactPoint;
 			FRotator Rotation = Hit.Normal.Rotation() + FRotator(-90, 0, 0);
 			AActor* Decal = GetWorld()->SpawnActor(ImpactDecal, &Location, &Rotation);
-			Decal->AttachToComponent(Hit.GetComponent(), FAttachmentTransformRules::KeepWorldTransform);
+			if (Decal)
+				Decal->AttachToComponent(Hit.GetComponent(), FAttachmentTransformRules::KeepWorldTransform);
 			//UGameplayStatics::SpawnDecalAttached(GetWorld(), FVector(10,10,10), ) //Perhaps optimize this in the future
 		}
 	}

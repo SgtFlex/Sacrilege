@@ -50,6 +50,9 @@ public:
 	void OnHealthDepleted(float Damage, FVector Force, FVector HitLocation,
 											  FName HitBoneName, AController* EventInstigator, AActor* DamageCauser);
 
+	UFUNCTION(BlueprintCallable)
+	void UpdateDamageState();
+	
 	UFUNCTION(BlueprintNativeEvent)
 	void SetDamageState(EDamageState NewDamageState);
 
@@ -102,6 +105,8 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	//IDamageableInterface
+
+	virtual float CustomTakeDamage_Implementation(float DamageAmount, FVector Force, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 	
 	virtual float CustomTakePointDamage_Implementation(FPointDamageEvent const& PointDamageEvent, float Force, AController* EventInstigator, AActor* DamageCauser) override;
 

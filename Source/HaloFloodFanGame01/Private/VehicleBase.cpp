@@ -31,6 +31,7 @@ void AVehicleBase::BeginPlay()
 	Super::BeginPlay();
 	HealthComponent->OnHealthUpdate.AddDynamic(this, &AVehicleBase::OnHealthUpdated);
 	HealthComponent->OnHealthDepleted.AddDynamic(this, &AVehicleBase::OnHealthDepleted);
+	UpdateDamageState();
 }
 
 // Called every frame
@@ -57,6 +58,17 @@ void AVehicleBase::SpawnDefaultControllerWithTeam(uint8 TeamId)
 
 void AVehicleBase::OnHealthUpdated(UHealthComponent* HealthComp)
 {
+	UpdateDamageState();
+}
+
+void AVehicleBase::OnHealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName,
+	AController* EventInstigator, AActor* DamageCauser)
+{
+	SetIsDestroyed(true);
+}
+
+void AVehicleBase::UpdateDamageState()
+{
 	const float Health = HealthComponent->GetHealth();
 	const float MaxHealth = HealthComponent->GetMaxHealth();
 	if (Health <= MaxHealth && Health > MaxHealth * 0.75)
@@ -69,12 +81,6 @@ void AVehicleBase::OnHealthUpdated(UHealthComponent* HealthComp)
 	{
 		SetDamageState(Critical);
 	}
-}
-
-void AVehicleBase::OnHealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName,
-	AController* EventInstigator, AActor* DamageCauser)
-{
-	SetIsDestroyed(true);
 }
 
 void AVehicleBase::SetDamageState_Implementation(EDamageState NewDamageState)
@@ -238,6 +244,13 @@ void AVehicleBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AVehicleBase, Pilot);
+}
+
+float AVehicleBase::CustomTakeDamage_Implementation(float DamageAmount, FVector Force, FDamageEvent const& DamageEvent,
+	AController* EventInstigator, AActor* DamageCauser)
+{
+	HealthComponent->TakeDamage(DamageAmount, Force, FVector(0,0,0), NAME_None, EventInstigator, DamageCauser);
+	return DamageAmount;
 }
 
 float AVehicleBase::CustomTakePointDamage_Implementation(FPointDamageEvent const& PointDamageEvent, float Force,

@@ -1122,7 +1122,6 @@ void ACharacterBase::NotifyRestarted()
 			SetupViewmodel(true);
 		}
 	}
-	
 }
 
 void ACharacterBase::UnPossessed()
