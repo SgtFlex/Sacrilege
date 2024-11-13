@@ -7,6 +7,9 @@
 #include "GameFramework/PlayerController.h"
 #include "PlayerControllerBase.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerDeath, ACharacterBase*, PlayerCharacter, APlayerControllerBase*, PlayerController);
+
+class ACharacterBase;
 class UPlayerHUD;
 /**
  * 
@@ -22,22 +25,39 @@ public:
 
 	virtual void OnPossess(APawn* InPawn) override;
 
+	UFUNCTION()
+	void OnControlledCharacterDied(ACharacterBase* DeadCharacter, AController* Inst, AActor* Causer);
+
 	//----------------------------------------------------------------------//
 	// IGenericTeamAgentInterface
 	//----------------------------------------------------------------------//
-	private:
-	FGenericTeamId TeamID;
-public:
-	virtual void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
-	virtual FGenericTeamId GetGenericTeamId() const override { return TeamID; }
 	
+public:
+	
+	virtual void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
+	
+	virtual FGenericTeamId GetGenericTeamId() const override { return TeamID; }
+
+	virtual void SetPawn(APawn* InPawn) override;
+
+public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UUserWidget> PlayerHUDClass;
 
 	UPROPERTY(BlueprintReadOnly)
 	FTimerHandle PlayerRespawnTimerHandle;
 
+	UPROPERTY()
+	ACharacterBase* ControlledCharacter;
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	uint8 TeamNumber = 2;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnPlayerDeath OnPlayerDeath;
+
+private:
+	UPROPERTY()
+	FGenericTeamId TeamID;
 };

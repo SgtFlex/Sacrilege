@@ -43,7 +43,6 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SpawnDefaultControllerWithTeam(uint8 TeamId);
-
 	
 	UFUNCTION(BlueprintCallable)
 	void UpdateDamageState();
@@ -100,7 +99,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-	UStaticMeshComponent* GetVehicleMesh();
+	USkeletalMeshComponent* GetVehicleMesh();
 	
 	//Delegate Binds
 

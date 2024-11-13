@@ -32,6 +32,7 @@ void AFirefightGameMode::BeginPlay()
 	Super::BeginPlay();
 
 	HaloGameState = GetGameState<AHaloGameState>();
+	
 }
 
 void AFirefightGameMode::OnEnemyKilled(ACharacterBase* Character, AController* EventInstigator, AActor* DamageCauser)
@@ -99,6 +100,7 @@ void AFirefightGameMode::StartMatch()
 		Spawners.Add(Cast<AAISpawner>(a));
 	}
 	AvailableSpawners = Spawners;
+	OnGameStart.Broadcast();
 	StartSet();
 
 
@@ -108,16 +110,18 @@ void AFirefightGameMode::StartMatch()
 void AFirefightGameMode::StartSet()
 {
 	//GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushGlobalNotification("Set start");
-	HaloGameState->SetCurrentSet(HaloGameState->GetCurrentWave()+1);
+	HaloGameState->SetCurrentSet(HaloGameState->GetCurrentSet()+1);
 	HaloGameState->SetCurrentWave(0);
+	OnSetStart.Broadcast(HaloGameState->GetCurrentWave(), HaloGameState->GetCurrentWave());
 	StartWave();
-
+	
 }
 
 void AFirefightGameMode::FinishSet()
 {
 	MaxSquadCost = (MaxSquadCost + 1) * 2;
 	GetWorldTimerManager().SetTimer(SetFinishDelayTimer, this, &AFirefightGameMode::StartSet, 10);
+	OnSetEnd.Broadcast(HaloGameState->GetCurrentWave(), HaloGameState->GetCurrentWave());
 }
 
 void AFirefightGameMode::StartWave()
@@ -125,6 +129,7 @@ void AFirefightGameMode::StartWave()
 	HaloGameState->SetCurrentWave(HaloGameState->GetCurrentWave()+1);
 	SquadsToSpawn.Append(CalculateWave());
 	SpawnWave(SquadsToSpawn);
+	OnWaveStart.Broadcast(HaloGameState->GetCurrentWave(), HaloGameState->GetCurrentWave());
 }
 
 // int AFirefightGameMode::GetCurrentSet()
@@ -174,7 +179,7 @@ void AFirefightGameMode::SpawnWave(TArray<FSquadStruct> WaveToSpawn)
 	UE_LOG(LogTemp, Warning, TEXT("Spawning wave!"));
 	for (auto AvailableSpawner : AvailableSpawners)
 	{
-		AvailableSpawner->SpawnSquad(SquadsToSpawn[0].SquadUnits);
+		AvailableSpawner->SpawnSquad(SquadsToSpawn[0].SquadUnits, SquadsToSpawn[0].SquadVehicles);
 		// TArray<ACharacterBase*> SpawnedChars = AvailableSpawner->SpawnSquad(SquadsToSpawn[0].SquadUnits, false);
 		// for (auto SpawnedChar : SpawnedChars)
 		// {
@@ -218,9 +223,17 @@ void AFirefightGameMode::GameFinished()
 	UGameplayStatics::OpenLevel(GetWorld(), FName(UGameplayStatics::GetCurrentLevelName(GetWorld())));
 }
 
+void AFirefightGameMode::OnPostLogin(AController* NewPlayer)
+{
+	Super::OnPostLogin(NewPlayer);
+	if (APlayerControllerBase* PC = Cast<APlayerControllerBase>(NewPlayer))
+		PC->OnPlayerDeath.AddUniqueDynamic(this, &AFirefightGameMode::PlayerDied);
+}
+
 void AFirefightGameMode::RestartPlayer(AController* NewPlayer)
 {
 	RestartPlayerBP(NewPlayer);
+	
 }
 
 void AFirefightGameMode::PlayerDied_Implementation(ACharacterBase* PlayerCharacter, APlayerControllerBase* PlayerController)
@@ -293,9 +306,8 @@ void AFirefightGameMode::HandleStartingNewPlayer_Implementation(APlayerControlle
 
 void AFirefightGameMode::EndGame()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Game ended"));
-	//GetWorld()->GetPlay
 	RestartGame();
+	OnGameEnd.Broadcast();
 }
 
 

@@ -4,6 +4,7 @@
 #include "AISpawner.h"
 
 #include "HealthComponent.h"
+#include "VehicleBase.h"
 #include "Core/CharacterBase.h"
 
 #include "Components/BoxComponent.h"
@@ -47,7 +48,45 @@ void AAISpawner::Tick(float DeltaTime)
 
 }
 
-void AAISpawner::SpawnSquad(TMap<TSubclassOf<ACharacterBase>, int> SquadToSpawn)
+void AAISpawner::TriggerSpawn()
+{
+	SpawnedChars.Empty();
+	TArray<ACharacterBase*> Spawned;
+	
+	FVector BoxExtents = Box->GetScaledBoxExtent();
+	BoxExtents[2] = 0;
+	if (bUseDropship)
+	{
+		SpawnDropship(Squad);
+	} else
+	{
+		for (auto elem : Squad)
+		{
+			for (int i = 0; i < elem.Value; ++i)
+			{
+				FVector Loc = UKismetMathLibrary::RandomPointInBoundingBox(GetActorLocation(), BoxExtents);
+				FRotator Rot = FRotator(0,0,0);
+				ACharacterBase* Char = SpawnUnit(elem.Key, Loc, Rot);
+				if (Char)
+				{
+					Spawned.Add(Char);
+				}
+			}
+		}
+		for (auto elem : SquadVehicles)
+		{
+			for (int i = 0; i < elem.Value; ++i)
+			{
+				FVector Loc = UKismetMathLibrary::RandomPointInBoundingBox(GetActorLocation(), BoxExtents);
+				FRotator Rot = FRotator(0,0,0);
+				GetWorld()->SpawnActor(elem.Key, &Loc, &Rot);
+			}
+		}
+	}
+	OnAvailable.Broadcast(this);
+}
+
+void AAISpawner::SpawnSquad(TMap<TSubclassOf<ACharacterBase>, int> SquadToSpawn, TMap<TSubclassOf<AVehicleBase>, int> Vehicles)
 {
 	SpawnedChars.Empty();
 	TArray<ACharacterBase*> Spawned;
@@ -57,7 +96,6 @@ void AAISpawner::SpawnSquad(TMap<TSubclassOf<ACharacterBase>, int> SquadToSpawn)
 	if (bUseDropship)
 	{
 		SpawnDropship(SquadToSpawn);
-		//return nullptr;
 	} else
 	{
 		for (auto elem : SquadToSpawn)
@@ -71,10 +109,17 @@ void AAISpawner::SpawnSquad(TMap<TSubclassOf<ACharacterBase>, int> SquadToSpawn)
 				{
 					Spawned.Add(Char);
 				}
-			
 			}
 		}
-		//return Spawned;
+		for (auto elem : Vehicles)
+		{
+			for (int i = 0; i < elem.Value; ++i)
+			{
+				FVector Loc = UKismetMathLibrary::RandomPointInBoundingBox(GetActorLocation(), BoxExtents);
+				FRotator Rot = FRotator(0,0,0);
+				GetWorld()->SpawnActor(elem.Key, &Loc, &Rot);
+			}
+		}
 	}
 	OnAvailable.Broadcast(this);
 }

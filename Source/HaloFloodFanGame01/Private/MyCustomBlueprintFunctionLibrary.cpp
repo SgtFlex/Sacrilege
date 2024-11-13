@@ -107,3 +107,11 @@ void UMyCustomBlueprintFunctionLibrary::FireExplosionWithCosmetics(const UObject
 	if (CameraShake) UGameplayStatics::PlayWorldCameraShake(WorldContextObject, CameraShake, Location, InnerRadius, OuterRadius * 10);
 	if (ForceFeedbackEffect) UGameplayStatics::SpawnForceFeedbackAtLocation(WorldContextObject, ForceFeedbackEffect, Location);
 }
+
+float UMyCustomBlueprintFunctionLibrary::SetGlobalGravity(AWorldSettings* WorldSettings, float GlobalGravity)
+{
+	WorldSettings->bGlobalGravitySet = true;
+	WorldSettings->GlobalGravityZ = GlobalGravity;
+
+	return WorldSettings->GlobalGravityZ;
+}

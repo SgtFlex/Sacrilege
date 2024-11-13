@@ -18,7 +18,6 @@ AVehicleBase::AVehicleBase()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	VehicleMesh = CreateDefaultSubobject<UStaticMeshComponent>("VehicleMesh");
 	VehicleSkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>("Mesh");
 	SetRootComponent(GetVehicleMesh());
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>("HealthComponent");
@@ -110,13 +109,14 @@ void AVehicleBase::NotifyRestarted()
 
 void AVehicleBase::UnPossessed()
 {
-	
+	//Bugs out all clients
 	// if (IsLocallyControlled())
 	// {
 	// 	RemoveHUD();
 	// 	RemoveControls();
 	// }
 	Super::UnPossessed();
+	
 }
 
 
@@ -166,6 +166,7 @@ void AVehicleBase::AttachPilot_Implementation()
 		Pilot->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 		Pilot->AttachToComponent(GetVehicleMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("Seat"));
 		Pilot->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		Pilot->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Vehicle, ECR_Ignore);
 	}
 }
 
@@ -188,8 +189,13 @@ void AVehicleBase::CL_Exit_Implementation()
 void AVehicleBase::ResetPilot_Implementation()
 {
 	if (!Pilot) return;
-	GetController()->UnPossess();
-	PilotController->Possess(Pilot);
+	if (GetController())
+	{
+		GetController()->UnPossess();
+		if (Pilot->GetHealthComponent()->IsAlive())
+			PilotController->Possess(Pilot);
+	}
+	
 	Pilot->OnKilled.RemoveDynamic(this, &AVehicleBase::OnPilotKilled);
 	DetachPilot();
 	SetOwner(nullptr);
@@ -205,6 +211,7 @@ void AVehicleBase::DetachPilot_Implementation()
 		Pilot->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_NavWalking);
 		Pilot->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 		Pilot->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		Pilot->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Vehicle, ECR_Block);
 		Pilot->SetActorTransform(ExitPoint->GetComponentTransform());
 	} else
 	{
@@ -247,9 +254,9 @@ void AVehicleBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 	DOREPLIFETIME(AVehicleBase, Pilot);
 }
 
-UStaticMeshComponent* AVehicleBase::GetVehicleMesh()
+USkeletalMeshComponent* AVehicleBase::GetVehicleMesh()
 {
-	return VehicleMesh;
+	return VehicleSkeletalMesh;
 }
 
 float AVehicleBase::CustomTakeDamage_Implementation(float DamageAmount, FVector Force, FDamageEvent const& DamageEvent,

@@ -375,6 +375,7 @@ UHealthComponent* ACharacterBase::GetHealthComponent_Implementation()
 
 void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector DamageForce, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
+	OnKilled.Broadcast(this, EventInstigator, DamageCauser);
 	SV_OnHealthDepleted(Damage, DamageForce, HitLocation, HitBoneName, EventInstigator, DamageCauser);
 	// if (!HasAuthority()) return;
 	//GetHealthComponent()->Deactivate();
@@ -412,15 +413,19 @@ void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector Damag
 void ACharacterBase::SV_OnHealthDepleted_Implementation(float Damage, FVector Force, FVector HitLocation,
 	FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
+	
 	if (GetController())
 	{
 		if (Cast<AAIController>(GetController())) GetController()->Destroy();
 		UAIPerceptionSystem::GetCurrent( GetWorld() )->UnregisterSource(*this);
 		if (Cast<APlayerControllerBase>(GetController()))
 		{
-			APlayerController* PC = PlayerController;
+			APlayerControllerBase* PC = PlayerController;
 			PlayerController->UnPossess();
-			Cast<AFirefightGameMode>(GetWorld()->GetAuthGameMode())->OnPlayerCharDied.Broadcast(this, Cast<APlayerControllerBase>(PC));
+			//PlayerController->OnPlayerDeath.Broadcast(this, PC);
+			//@TODO Hard reference to game mode, needs to be removed
+			// if (AFirefightGameMode* FirefightGameMode = Cast<AFirefightGameMode>(GetWorld()->GetAuthGameMode()))
+			// 	FirefightGameMode->OnPlayerCharDied.Broadcast(this, Cast<APlayerControllerBase>(PC));
 		}
 	}
 	MC_OnHealthDepleted(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
@@ -429,6 +434,7 @@ void ACharacterBase::SV_OnHealthDepleted_Implementation(float Damage, FVector Fo
 void ACharacterBase::MC_OnHealthDepleted_Implementation(float Damage, FVector Force, FVector HitLocation,
 	FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
+	
 	if (EquippedWeapon)
 		DropWeapon();
 	if (BloodDecalMaterial)
@@ -455,7 +461,7 @@ void ACharacterBase::MC_OnHealthDepleted_Implementation(float Damage, FVector Fo
 	
 	
 	
-	OnKilled.Broadcast(this, EventInstigator, DamageCauser);
+	//OnKilled.Broadcast(this, EventInstigator, DamageCauser);
 	DropGrenades();
 	GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageRagdoll(this);
 	//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageRagdoll(this);
@@ -1105,7 +1111,7 @@ void ACharacterBase::NotifyRestarted()
 {
 	Super::NotifyRestarted();
 	bUseControllerRotationYaw = IsPlayerControlled();
-	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	if (APlayerControllerBase* PC = Cast<APlayerControllerBase>(GetController()))
 	{
 		PlayerController = PC;
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))

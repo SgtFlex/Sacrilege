@@ -8,6 +8,7 @@
 #include "GameFramework/Character.h"
 #include "CharacterBase.generated.h"
 
+class APlayerControllerBase;
 class UBlendSpace1D;
 class AAIControllerBase;
 struct FInputActionValue;
@@ -229,6 +230,7 @@ public:
 	UFUNCTION(Server, Reliable)
 	void FinishSwitchingWeapons();
 
+	UFUNCTION()
 	virtual void ScopeWeapon();
 
 	UFUNCTION()
@@ -261,6 +263,7 @@ public:
 	UFUNCTION(NetMulticast, Unreliable)
 	void PlayStunAnimation(float StunTime);
 
+	UFUNCTION()
 	void Unstun(AAIControllerBase* AIC);
 
 	UFUNCTION(Server, Reliable)
@@ -417,11 +420,9 @@ public:
 
 	UPROPERTY()
 	int CurGrenadeTypeI = 0;
-
-	
 	
 	UPROPERTY(BlueprintReadOnly)
-	APlayerController* PlayerController;
+	APlayerControllerBase* PlayerController;
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnInteractableChanged OnInteractableChanged;
@@ -548,8 +549,10 @@ protected:
 	UPROPERTY()
 	FTimerHandle PossessionDelay;
 
+	UPROPERTY()
 	FVector StartMeleeLoc;
-	
+
+	UPROPERTY()
 	FVector EndMeleeLoc;
 
 	UPROPERTY()

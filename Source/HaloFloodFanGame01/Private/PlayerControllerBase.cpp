@@ -7,6 +7,7 @@
 #include "PlayerHUD.h"
 #include "Core/CharacterBase.h"
 #include "GameFramework/GameModeBase.h"
+#include "HaloFloodFanGame01/FirefightGamemode.h"
 #include "HaloFloodFanGame01/PlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -41,11 +42,29 @@ void APlayerControllerBase::OnPossess(APawn* InPawn)
 	// }
 }
 
+void APlayerControllerBase::OnControlledCharacterDied(ACharacterBase* DeadCharacter, AController* Inst,
+	AActor* Causer)
+{
+	OnPlayerDeath.Broadcast(ControlledCharacter, this);
+}
+
 void APlayerControllerBase::SetGenericTeamId(const FGenericTeamId& NewTeamID)
 {
 	if (TeamID != NewTeamID)
 	{
 		TeamID = NewTeamID;
 		// @todo notify perception system that a controller changed team ID
+	}
+}
+
+void APlayerControllerBase::SetPawn(APawn* InPawn)
+{
+	Super::SetPawn(InPawn);
+	if (ACharacterBase* CharacterBase = Cast<ACharacterBase>(InPawn))
+	{
+		if (ControlledCharacter)
+			ControlledCharacter->OnKilled.RemoveDynamic(this, &APlayerControllerBase::OnControlledCharacterDied);
+		ControlledCharacter = CharacterBase;
+		ControlledCharacter->OnKilled.AddUniqueDynamic(this, &APlayerControllerBase::OnControlledCharacterDied);
 	}
 }

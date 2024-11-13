@@ -13,7 +13,12 @@ class ACharacterBase;
 class AAISpawner;
 class APlayerCharacter;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameStart);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameEnd);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWaveStart, int, CurrentSet, int, CurrentWave);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWaveEnd, int, CurrentSet, int, CurrentWave);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSetStart, int, CurrentSet, int, CurrentWave);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSetEnd, int, CurrentSet, int, CurrentWave);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerCharDied, ACharacterBase*, PlayerCharacter, APlayerControllerBase*, PlayerController);
 
 USTRUCT(BlueprintType)
@@ -25,6 +30,9 @@ struct FSquadStruct
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TMap<TSubclassOf<ACharacterBase>, int> SquadUnits;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TMap<TSubclassOf<AVehicleBase>, int> SquadVehicles;
 	
 };
 
@@ -35,26 +43,42 @@ class AFirefightGameMode : public AHaloGameMode
 
 public:
 	AFirefightGameMode();
-
-
 	
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
 	void OnEnemyKilled(ACharacterBase* Character = nullptr, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
+
 	void StartMatch() override;
+
+	UFUNCTION()
 	void StartSet();
+
+	UFUNCTION()
 	void FinishSet();
+
+	UFUNCTION()
 	void StartWave();
+
+	UFUNCTION()
 	void FinishWave();
+
+	UFUNCTION()
 	TArray<FSquadStruct> CalculateWave();
+
+	UFUNCTION()
 	void SpawnWave(TArray<FSquadStruct> WaveToSpawn);
 
 	UFUNCTION(BlueprintCallable)
 	void ManageCharacter(ACharacterBase* Character);
-	
+
+	UFUNCTION()
 	void OnSpawnerAvailable(AAISpawner* Spawner);
+
+	UFUNCTION()
 	void GameFinished();
+
+	virtual void OnPostLogin(AController* NewPlayer) override;
 
 	virtual void RestartPlayer(AController* NewPlayer) override;
 	
@@ -90,13 +114,29 @@ public:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 	
 public:
+	UPROPERTY()
 	FTimerHandle SetFinishDelayTimer;
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnPlayerCharDied OnPlayerCharDied;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintAssignable)
+	FOnSetStart OnSetStart;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintAssignable)
+	FOnSetStart OnSetEnd;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintAssignable)
 	FOnWaveStart OnWaveStart;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintAssignable)
+	FOnWaveEnd OnWaveEnd;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintAssignable)
+	FOnGameStart OnGameStart;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintAssignable)
+	FOnGameEnd OnGameEnd;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int maxWave = 5;
@@ -116,6 +156,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int PlayerLives = 5;
 
+	UPROPERTY()
 	int CurPlayerLives;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)

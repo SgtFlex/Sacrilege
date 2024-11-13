@@ -37,7 +37,10 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable)
-	void SpawnSquad(TMap<TSubclassOf<ACharacterBase>, int> SquadToSpawn);
+	void TriggerSpawn();
+
+	UFUNCTION(BlueprintCallable)
+	void SpawnSquad(TMap<TSubclassOf<ACharacterBase>, int> SquadToSpawn, TMap<TSubclassOf<AVehicleBase>, int> Vehicles);
 
 	UFUNCTION(BlueprintCallable)
 	ACharacterBase* SpawnUnit(TSubclassOf<ACharacterBase> Unit, FVector SpawnLoc, FRotator SpawnRot);
@@ -50,6 +53,9 @@ public:
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TMap<TSubclassOf<ACharacterBase>, int> Squad;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TMap<TSubclassOf<ACharacterBase>, int> SquadVehicles;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UBoxComponent* Box;

@@ -29,4 +29,7 @@ public:
 	
 	UFUNCTION(BlueprintCallable, meta=(WorldContext="WorldContextObject"))
     static void FireExplosionWithCosmetics(const UObject* WorldContextObject, TArray<AActor*>& ActorsToIgnore, FVector Location = FVector(0,0,0), float BaseDamage = 50, float MinimumDamage = 10, float OuterRadius = 500, float InnerRadius = 100, float DamageFalloff = 0, float Force = 100, AActor* DamageCauser = nullptr, AController* EventInstigator = nullptr, UNiagaraSystem* Particles = nullptr, USoundBase* Sound = nullptr, TSubclassOf<UCameraShakeBase> CameraShake = nullptr, UForceFeedbackEffect* ForceFeedbackEffect = nullptr);
+
+	UFUNCTION(BlueprintCallable)
+	static float SetGlobalGravity(AWorldSettings* WorldSettings, float GlobalGravity);
 };
