@@ -52,6 +52,8 @@ void AVehicleBase::SpawnDefaultControllerWithTeam(uint8 TeamId)
 	SpawnDefaultController();
 	if (AAIControllerBase* AIC = Cast<AAIControllerBase>(GetController()))
 	{
+		AAIControllerBase* PilotAIC = Cast<AAIControllerBase>(PilotController);
+		AIC->SetSmartObject(PilotAIC->SmartObject);
 		AIC->SetGenericTeamId(TeamId);
 	}
 }

@@ -32,7 +32,7 @@ void AFirefightGameMode::BeginPlay()
 	Super::BeginPlay();
 
 	HaloGameState = GetGameState<AHaloGameState>();
-	
+	SetMatchState(MatchState::InProgress);
 }
 
 void AFirefightGameMode::OnEnemyKilled(ACharacterBase* Character, AController* EventInstigator, AActor* DamageCauser)
@@ -82,6 +82,13 @@ void AFirefightGameMode::FinishWave()
 		StartWave();
 	}
 }
+
+bool AFirefightGameMode::ReadyToStartMatch_Implementation()
+{
+	// return Super::ReadyToStartMatch_Implementation();
+	return true;
+}
+
 //
 // int AFirefightGameMode::GetCurrentWave()
 // {
@@ -100,7 +107,7 @@ void AFirefightGameMode::StartMatch()
 		Spawners.Add(Cast<AAISpawner>(a));
 	}
 	AvailableSpawners = Spawners;
-	OnGameStart.Broadcast();
+	//OnGameStart.Broadcast();
 	StartSet();
 
 
@@ -112,7 +119,7 @@ void AFirefightGameMode::StartSet()
 	//GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushGlobalNotification("Set start");
 	HaloGameState->SetCurrentSet(HaloGameState->GetCurrentSet()+1);
 	HaloGameState->SetCurrentWave(0);
-	OnSetStart.Broadcast(HaloGameState->GetCurrentWave(), HaloGameState->GetCurrentWave());
+	//OnSetStart.Broadcast(HaloGameState->GetCurrentWave(), HaloGameState->GetCurrentWave());
 	StartWave();
 	
 }
@@ -121,7 +128,7 @@ void AFirefightGameMode::FinishSet()
 {
 	MaxSquadCost = (MaxSquadCost + 1) * 2;
 	GetWorldTimerManager().SetTimer(SetFinishDelayTimer, this, &AFirefightGameMode::StartSet, 10);
-	OnSetEnd.Broadcast(HaloGameState->GetCurrentWave(), HaloGameState->GetCurrentWave());
+	//OnSetEnd.Broadcast(HaloGameState->GetCurrentWave(), HaloGameState->GetCurrentWave());
 }
 
 void AFirefightGameMode::StartWave()
@@ -129,7 +136,7 @@ void AFirefightGameMode::StartWave()
 	HaloGameState->SetCurrentWave(HaloGameState->GetCurrentWave()+1);
 	SquadsToSpawn.Append(CalculateWave());
 	SpawnWave(SquadsToSpawn);
-	OnWaveStart.Broadcast(HaloGameState->GetCurrentWave(), HaloGameState->GetCurrentWave());
+	//OnWaveStart.Broadcast(HaloGameState->GetCurrentWave(), HaloGameState->GetCurrentWave());
 }
 
 // int AFirefightGameMode::GetCurrentSet()
@@ -164,7 +171,7 @@ TArray<FSquadStruct> AFirefightGameMode::CalculateWave()
 
 void AFirefightGameMode::SpawnWave(TArray<FSquadStruct> WaveToSpawn)
 {
-	OnWaveStart.Broadcast(HaloGameState->GetCurrentSet(), HaloGameState->GetCurrentWave());
+	//OnWaveStart.Broadcast(HaloGameState->GetCurrentSet(), HaloGameState->GetCurrentWave());
 	//GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushGlobalNotification("Reinforcements");
 	SquadsAtWaveStart = SquadsToSpawn;
 	SquadsAtWaveStart.Append(WaveToSpawn);
@@ -307,7 +314,7 @@ void AFirefightGameMode::HandleStartingNewPlayer_Implementation(APlayerControlle
 void AFirefightGameMode::EndGame()
 {
 	RestartGame();
-	OnGameEnd.Broadcast();
+	//OnGameEnd.Broadcast();
 }
 
 

@@ -117,7 +117,9 @@ void AAISpawner::SpawnSquad(TMap<TSubclassOf<ACharacterBase>, int> SquadToSpawn,
 			{
 				FVector Loc = UKismetMathLibrary::RandomPointInBoundingBox(GetActorLocation(), BoxExtents);
 				FRotator Rot = FRotator(0,0,0);
-				GetWorld()->SpawnActor(elem.Key, &Loc, &Rot);
+				FActorSpawnParameters ActorSpawnParameters;
+				ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+				GetWorld()->SpawnActor(elem.Key, &Loc, &Rot, ActorSpawnParameters);
 			}
 		}
 	}

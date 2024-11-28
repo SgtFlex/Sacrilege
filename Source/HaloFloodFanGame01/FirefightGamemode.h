@@ -13,12 +13,7 @@ class ACharacterBase;
 class AAISpawner;
 class APlayerCharacter;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameStart);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameEnd);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWaveStart, int, CurrentSet, int, CurrentWave);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWaveEnd, int, CurrentSet, int, CurrentWave);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSetStart, int, CurrentSet, int, CurrentWave);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSetEnd, int, CurrentSet, int, CurrentWave);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerCharDied, ACharacterBase*, PlayerCharacter, APlayerControllerBase*, PlayerController);
 
 USTRUCT(BlueprintType)
@@ -49,7 +44,7 @@ public:
 	UFUNCTION()
 	void OnEnemyKilled(ACharacterBase* Character = nullptr, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
-	void StartMatch() override;
+	virtual void StartMatch() override;
 
 	UFUNCTION()
 	void StartSet();
@@ -62,6 +57,8 @@ public:
 
 	UFUNCTION()
 	void FinishWave();
+
+	virtual bool ReadyToStartMatch_Implementation() override;
 
 	UFUNCTION()
 	TArray<FSquadStruct> CalculateWave();
@@ -120,23 +117,6 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnPlayerCharDied OnPlayerCharDied;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintAssignable)
-	FOnSetStart OnSetStart;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintAssignable)
-	FOnSetStart OnSetEnd;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintAssignable)
-	FOnWaveStart OnWaveStart;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintAssignable)
-	FOnWaveEnd OnWaveEnd;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintAssignable)
-	FOnGameStart OnGameStart;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintAssignable)
-	FOnGameEnd OnGameEnd;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int maxWave = 5;

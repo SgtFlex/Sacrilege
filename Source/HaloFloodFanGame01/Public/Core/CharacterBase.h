@@ -188,8 +188,8 @@ public:
 	UFUNCTION(BlueprintCallable, Server, Unreliable)
 	void SwitchToGrenadeType(int Index);
 	
-	UFUNCTION(BlueprintCallable)
-	virtual void UseEquipment();
+	UFUNCTION(BlueprintNativeEvent)
+	void UseEquipment();
 
 	UFUNCTION(BlueprintCallable)
 	virtual void PrimaryAttack_Pull();
@@ -337,6 +337,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true), Replicated)
 	TArray<FGrenadeStruct> GrenadeInventory;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true))
+	TSubclassOf<AActor> EquipmentClass;
 
 	UPROPERTY(BlueprintReadOnly, Replicated, ReplicatedUsing=EquipWeapon)
 	AGunBase* EquippedWeapon;

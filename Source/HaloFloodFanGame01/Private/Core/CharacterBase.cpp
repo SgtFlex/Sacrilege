@@ -747,7 +747,7 @@ void ACharacterBase::SwitchToGrenadeType_Implementation(int Index = 0)
 	OnGrenadeTypeSwitched.Broadcast(GrenadeInventory[CurGrenadeTypeI].GrenadeClass);
 }
 
-void ACharacterBase::UseEquipment()
+void ACharacterBase::UseEquipment_Implementation()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Used Equipment"));
 }
