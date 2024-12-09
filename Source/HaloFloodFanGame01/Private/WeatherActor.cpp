@@ -40,7 +40,7 @@ void AWeatherActor::Tick(float DeltaTime)
 	if (HasAuthority())
 	{
 		CurrentPitch = StartTime + ((GetWorld()->TimeSeconds*0.1) * TimeScale);
-		UKismetMathLibrary::FMod(StartTime + ((GetWorld()->TimeSeconds*0.1) * TimeScale), 360.0f, CurrentPitch); //Do one full rotation every full hour
+		//@TODO FIX, broke in 5.5 UKismetMathLibrary::FMod(StartTime + ((GetWorld()->TimeSeconds*0.1) * TimeScale), 360.0f, CurrentPitch); //Do one full rotation every full hour
 	}
 	
 	SetActorRotation(FRotator(CurrentPitch,0, 0));
