@@ -63,13 +63,13 @@ void APDA::CL_BeginPlay_Implementation()
 	}
 }
 
-void APDA::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{
-	
-	StopBuildPreview();
-	CL_EndPlay();
-	Super::EndPlay(EndPlayReason);
-}
+// void APDA::EndPlay(const EEndPlayReason::Type EndPlayReason)
+// {
+// 	
+// 	StopBuildPreview();
+// 	CL_EndPlay();
+// 	Super::EndPlay(EndPlayReason);
+// }
 
 void APDA::CL_EndPlay_Implementation()
 {

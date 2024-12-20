@@ -363,6 +363,7 @@ float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent con
 			SpawnBloodFX(PointDamageEvent);
 		}
 	}
+	OnTakeCustomPointDamage.Broadcast(PointDamageEvent.Damage);
 	return x;
 }
 

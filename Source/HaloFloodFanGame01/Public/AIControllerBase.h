@@ -14,6 +14,10 @@ class ACharacterBase;
 /**
  * 
  */
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEnemyUpdated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAlertStateChanged, EAlertState, NewAlertState);
+
 UCLASS()
 class HALOFLOODFANGAME01_API AAIControllerBase : public AAIController
 {
@@ -37,6 +41,7 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	void OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
 
+	UFUNCTION()
 	void UpdatedPerception(AActor* Actor, FAIStimulus Stimulus, bool AlertedByAllies = false);
 
 	UFUNCTION(BlueprintCallable)
@@ -59,6 +64,12 @@ public:
 	void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
 
 public:
+	UPROPERTY(BlueprintAssignable)
+	FOnEnemyUpdated OnEnemyUpdated;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnAlertStateChanged OnAlertStateChanged;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ACharacterBase* PawnChar;
 	

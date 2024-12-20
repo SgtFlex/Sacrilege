@@ -39,6 +39,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractableChanged, AActor*, Int
 //
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPickupWeapon);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDropWeapon);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTakeCustomPointDamage, float, Damage);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponsUpdated, AGunBase*, NewGun, AGunBase*, OldGun);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnKilled, ACharacterBase*, Character, AController*, Instigator, AActor*, Causer);
 
@@ -307,6 +308,10 @@ protected:
 	void SpawnDefaultController() override;
 public:
 	//Delegates
+
+	UPROPERTY(BlueprintAssignable)
+	FOnTakeCustomPointDamage OnTakeCustomPointDamage;
+	
 	UPROPERTY(BlueprintAssignable)
 	FWeaponsUpdated WeaponsUpdated;
 	
@@ -327,6 +332,7 @@ public:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	UHealthComponent* HealthComponent;
+	
 
 	//Loadout
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true))

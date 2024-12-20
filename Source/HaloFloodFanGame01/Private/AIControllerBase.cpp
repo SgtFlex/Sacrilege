@@ -212,6 +212,7 @@ void AAIControllerBase::UpdateTargetedEnemy(AActor* Actor)
 			// 	EnemyChar->OnKilled.AddDynamic(this, &AAIControllerBase::UpdateTargetedEnemy);
 			// }
 			BlackboardComp->SetValueAsVector(TEXT("StimulusLocation"), ClosestEnemy->GetActorLocation());
+			OnEnemyUpdated.Broadcast();
 			return;
 		}
 	}
@@ -259,7 +260,10 @@ void AAIControllerBase::AlertAllies(float AlertRadius, AActor* Actor, FAIStimulu
 
 void AAIControllerBase::SetAlertState(TEnumAsByte<EAlertState> NewAlertState)
 {
+	if (NewAlertState != BlackboardComp->GetValueAsEnum("AlertState"))
+		OnAlertStateChanged.Broadcast(NewAlertState);
 	BlackboardComp->SetValueAsEnum(TEXT("AlertState"), NewAlertState);
+	
 	if (PawnChar)
 	{
 		//GEngine->AddOnScreenDebugMessage(-1, 2, FColor(255,255,255,255), "Setting alert state");
