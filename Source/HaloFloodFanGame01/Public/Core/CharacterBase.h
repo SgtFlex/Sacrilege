@@ -265,7 +265,7 @@ public:
 	void PlayStunAnimation(float StunTime);
 
 	UFUNCTION()
-	void Unstun(AAIControllerBase* AIC);
+	void Unstun();
 
 	UFUNCTION(Server, Reliable)
 	void SetCurrentInteractable();

@@ -1017,9 +1017,9 @@ void ACharacterBase::Stun(float StunTime)
 		AIC->ClearFocus(EAIFocusPriority::Gameplay);
 		PlayStunAnimation(StunDuration);
 		UE_LOG(LogTemp, Warning, TEXT("Stunned"));
-		FTimerDelegate UnstunDelegate = FTimerDelegate::CreateUObject(this, &ACharacterBase::Unstun, AIC);
-		GetWorldTimerManager().SetTimer(StunTimer, UnstunDelegate, StunDuration, false);
-		//GetWorld()->GetTimerManager().SetTimer(StunTimer, this, &ACharacterBase::Unstun, StunDuration, false);
+		FTimerDelegate UnstunDelegate = FTimerDelegate::CreateUObject(this, &ACharacterBase::Unstun);
+		// GetWorld()->GetTimerManager().SetTimer(StunTimer, UnstunDelegate, StunDuration, false);
+		GetWorld()->GetTimerManager().SetTimer(StunTimer, this, &ACharacterBase::Unstun, StunDuration, false);
 	}
 }
 
@@ -1029,10 +1029,9 @@ void ACharacterBase::PlayStunAnimation_Implementation(float StunTime)
 		GetMesh()->GetAnimInstance()->Montage_Play(HurtAnim);
 }
 
-void ACharacterBase::Unstun(AAIControllerBase* AIC)
+void ACharacterBase::Unstun()
 {
-	
-	if (IsValid(AIC))
+	if (AAIControllerBase* AIC = Cast<AAIControllerBase>(GetController()))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Unstunned"));
 		AIC->BehaviorTreeComp->ResumeLogic(FString("Unstunned"));

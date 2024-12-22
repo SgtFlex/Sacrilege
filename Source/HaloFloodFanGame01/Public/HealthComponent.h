@@ -12,6 +12,12 @@ class UNiagaraSystem;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnHealthDepleted, float, Damage, FVector, Force, FVector, HitLocation,
                                               FName, HitBoneName, AController*, EventInstigator, AActor*, DamageCauser);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthUpdate, UHealthComponent*, HealthComp);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHealthDamaged);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShieldDamaged);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShieldBreak);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShieldStartRegen);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShieldFinishRegen);
+
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class HALOFLOODFANGAME01_API UHealthComponent : public UActorComponent
