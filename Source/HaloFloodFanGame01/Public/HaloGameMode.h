@@ -13,5 +13,13 @@ UCLASS()
 class HALOFLOODFANGAME01_API AHaloGameMode : public AGameMode
 {
 	GENERATED_BODY()
+
+
+public:
+private:
+
+protected:
+	
+	
 	
 };

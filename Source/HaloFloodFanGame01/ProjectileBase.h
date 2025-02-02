@@ -64,12 +64,18 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (DeprecatedProperty))
 	TSubclassOf<ADecalActor> ImpactDecalClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UAudioComponent* IdleSoundComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UAudioComponent* TestIdleSoundComponent;
+
 	
 private:
 	UPROPERTY()
 	FTimerHandle DespawnTimerHandle;
 
-	UPROPERTY()
-	UAudioComponent* IdleSoundComponent;
+	
 };
 

@@ -112,11 +112,17 @@ public:
 	
 	//IDamageableInterface
 
-	virtual float CustomTakeDamage_Implementation(float DamageAmount, FVector Force, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
-	
-	virtual float CustomTakePointDamage_Implementation(FPointDamageEvent const& PointDamageEvent, float Force, AController* EventInstigator, AActor* DamageCauser) override;
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	float CustomTakeDamage(float DamageAmount, FVector Force, FDamageEvent const& DamageEvent, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
-	virtual float CustomTakeRadialDamage_Implementation(float Force, FRadialDamageEvent const& RadialDamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	float CustomTakePointDamage(FPointDamageEvent const& PointDamageEvent, float Force, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	float CustomTakeRadialDamage(float Force, FRadialDamageEvent const& RadialDamageEvent, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	UHealthComponent* GetHealthComponent();
 
 	//IInteractableInterface
 

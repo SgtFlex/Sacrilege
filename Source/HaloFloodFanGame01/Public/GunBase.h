@@ -75,6 +75,9 @@ public:
 
 	UFUNCTION(NetMulticast, Unreliable)
 	void SpawnTrailFX(FHitResult Hit);
+	
+	UFUNCTION(BlueprintImplementableEvent)
+	void K2_SpawnTrailFX(FHitResult Hit);
 
 	UFUNCTION()
 	void UpdateMagazineElements();
@@ -133,7 +136,7 @@ public:
 	
 	virtual void OnInteract_Implementation(ACharacterBase* Character) override;
 
-	virtual void GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon) override;
+	virtual void GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon, ACharacterBase* InteractingCharacter) override;
 
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 

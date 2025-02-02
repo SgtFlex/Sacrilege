@@ -76,6 +76,9 @@ public:
 	bool bUseDropPod = false;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool bCanSpawnVehicles = true;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	uint8 DefaultTeam = 2;
 
 };

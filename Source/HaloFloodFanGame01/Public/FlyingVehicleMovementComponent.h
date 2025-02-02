@@ -38,6 +38,8 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, Replicated)
 	FVector TargetDirection;
+
+	FVector CurrentDirection;
 	
 	FVector CurrentVelocity;
 	

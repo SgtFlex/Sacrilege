@@ -21,7 +21,7 @@ struct FSquadStruct
 {
 	GENERATED_BODY()
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float Cost;
+	float Cost = 0;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TMap<TSubclassOf<ACharacterBase>, int> SquadUnits;

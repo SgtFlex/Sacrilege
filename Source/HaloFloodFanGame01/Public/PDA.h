@@ -30,7 +30,7 @@ struct FBuyable
 	FText Description;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	UTexture2D* Image;
+	UTexture2D* Image = nullptr;
 	
 };
 class UWidgetComponent;

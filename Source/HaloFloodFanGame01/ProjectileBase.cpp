@@ -40,6 +40,9 @@ AProjectileBase::AProjectileBase()
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = true;
 
+
+	IdleSoundComponent = CreateDefaultSubobject<UAudioComponent>("AudioComponent");
+	IdleSoundComponent->SetupAttachment(RootComponent);
 	// Die after 3 seconds by default
 	InitialLifeSpan = 5.0f;
 }
@@ -49,11 +52,11 @@ void AProjectileBase::BeginPlay()
 	Super::BeginPlay();
 
 	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &AProjectileBase::OnOverlap);
-	if (IdleSound)
-	{
-		IdleSoundComponent = UGameplayStatics::SpawnSoundAttached(IdleSound, GetRootComponent());
-		IdleSoundComponent->Play();
-	}
+	// if (IdleSound)
+	// {
+	// 	IdleSoundComponent = UGameplayStatics::SpawnSoundAttached(IdleSound, GetRootComponent());
+	// 	IdleSoundComponent->Play();
+	// }
 }
 
 void AProjectileBase::OnProjectileOverlapped_Implementation(UPrimitiveComponent* OverlappedComponent,
@@ -93,7 +96,7 @@ void AProjectileBase::OnProjectileOverlapped_Implementation(UPrimitiveComponent*
 		GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageDecal(UGameplayStatics::SpawnDecalAttached(ImpactDecalMaterial, FVector(1,1,1) * FMath::RandRange(0.1f, 1.0f), OtherComp, NAME_None, SweepResult.ImpactPoint, SweepResult.Normal.Rotation() + FRotator(-90, FMath::RandRange(-180, 180), 0), EAttachLocation::KeepWorldPosition));
 		//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAttached(ImpactDecalMaterial, FVector(1,1,1) * FMath::RandRange(0.1f, 1.0f), OtherComp, NAME_None, SweepResult.ImpactPoint, SweepResult.Normal.Rotation() + FRotator(-90, FMath::RandRange(-180, 180), 0), EAttachLocation::KeepWorldPosition));
 	}
-	if (IdleSoundComponent) IdleSoundComponent->Stop();
+	IdleSoundComponent->Stop();
 	FTimerDelegate TimerDelegate;
 	TimerDelegate.BindLambda([&]()
 	{

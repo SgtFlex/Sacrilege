@@ -545,6 +545,11 @@ void ACharacterBase::MeleeDamageCode()
 void ACharacterBase::MeleeUpdate(float Alpha)
 {
 	SetActorLocation(FMath::Lerp(StartMeleeLoc, EndMeleeLoc, Alpha));
+	if (Controller)
+	{
+		Controller->SetControlRotation(FMath::Lerp(StartMeleeRotation, (EndMeleeLoc - StartMeleeLoc).Rotation(), Alpha));
+	}
+	
 }
 
 
@@ -596,6 +601,7 @@ void ACharacterBase::PlayerMelee_Implementation()
 				if (MeleeCurve)
 				{
 					StartMeleeLoc = GetActorLocation();
+					StartMeleeRotation = GetController()->GetControlRotation();
 					EndMeleeLoc = MeleeHit.GetActor()->GetActorLocation();
 					
 					FOnTimelineFloat TimelineCallback;
@@ -933,6 +939,8 @@ void ACharacterBase::Server_PickupWeapon_Implementation(AGunBase* Gun)
 	Gun->SetOwner(this);
 	Gun->Mesh->SetSimulatePhysics(false);
 	Gun->SetActorEnableCollision(false);
+
+	Gun->SetReplicateMovement(false);
 	#if WITH_EDITOR
 		UE_LOG(LogTemp, Warning, TEXT("%s picked up %s"), *GetActorLabel(), *Gun->GetActorLabel());
 	#endif
@@ -986,6 +994,7 @@ void ACharacterBase::DropWeapon()
 {
 	EquippedWeapon->ReleaseTrigger();
 	EquippedWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	EquippedWeapon->SetReplicateMovement(true);
 	EquippedWeapon->SetActorEnableCollision(true);
 	EquippedWeapon->Mesh->SetSimulatePhysics(true);
 	EquippedWeapon->Mesh->AddImpulse(GetControlRotation().Vector() * 300, NAME_None, true);

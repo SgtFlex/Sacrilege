@@ -12,6 +12,7 @@ void AHaloGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
 	DOREPLIFETIME(AHaloGameState, curWave);
 	DOREPLIFETIME(AHaloGameState, curSet);
+	DOREPLIFETIME(AHaloGameState, CurrentEnemyCount);
 }
 
 int AHaloGameState::GetCurrentWave()

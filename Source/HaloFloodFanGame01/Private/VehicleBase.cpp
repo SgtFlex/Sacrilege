@@ -283,6 +283,11 @@ float AVehicleBase::CustomTakeRadialDamage_Implementation(float Force, FRadialDa
 	return RadialDamageEvent.Params.BaseDamage;
 }
 
+UHealthComponent* AVehicleBase::GetHealthComponent_Implementation()
+{
+	return HealthComponent;
+}
+
 void AVehicleBase::OnInteract_Implementation(ACharacterBase* Character)
 {
 	IInteractableInterface::OnInteract_Implementation(Character);

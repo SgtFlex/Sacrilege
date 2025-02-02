@@ -150,9 +150,9 @@ void AGunBase::OnInteract_Implementation(ACharacterBase* Character)
 	Character->PickupWeapon(this);
 }
 
-void AGunBase::GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon)
+void AGunBase::GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon, ACharacterBase* InteractingCharacter)
 {
-	IInteractableInterface::GetInteractInfo_Implementation(Text, Icon);
+	IInteractableInterface::GetInteractInfo_Implementation(Text, Icon, InteractingCharacter);
 
 	Text = InteractText;
 	Icon = InteractIcon;
@@ -189,7 +189,7 @@ void AGunBase::PlayFireFX_Implementation()
 
 void AGunBase::SpawnTrailFX_Implementation(FHitResult Hit)
 {
-	
+	K2_SpawnTrailFX(Hit);
 	if (Mesh->DoesSocketExist("Muzzle") && TrailPFX)
 	{
 		FVector TrailEnd = (Hit.bBlockingHit) ? Hit.ImpactPoint : Hit.TraceEnd;

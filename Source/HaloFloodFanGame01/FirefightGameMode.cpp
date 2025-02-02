@@ -183,22 +183,40 @@ void AFirefightGameMode::SpawnWave(TArray<FSquadStruct> WaveToSpawn)
 		UE_LOG(LogTemp, Warning, TEXT("No spawners found"));
 		return;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Spawning wave!"));
-	for (auto AvailableSpawner : AvailableSpawners)
+
+	TArray<AAISpawner*> SpawnersTemp = AvailableSpawners;
+	TArray<AAISpawner*> VehicleSpawners;
+	for (auto Spawner : Spawners)
 	{
-		AvailableSpawner->SpawnSquad(SquadsToSpawn[0].SquadUnits, SquadsToSpawn[0].SquadVehicles);
-		// TArray<ACharacterBase*> SpawnedChars = AvailableSpawner->SpawnSquad(SquadsToSpawn[0].SquadUnits, false);
-		// for (auto SpawnedChar : SpawnedChars)
-		// {
-		// 	if (SpawnedChar)
-		// 	{
-		// 		SpawnedChar->OnKilled.AddDynamic(this, &AFirefightGameMode::OnEnemyKilled);
-		// 		CurrentEnemyCount++;
-		// 	}
-		// }
-		SquadsToSpawn.RemoveAt(0);
-		if (SquadsToSpawn.IsEmpty()) break;
+		if (Spawner->bCanSpawnVehicles)
+			VehicleSpawners.Add(Spawner);
 	}
+	UE_LOG(LogTemp, Warning, TEXT("Spawning wave"));
+	
+	while (!SquadsToSpawn.IsEmpty())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Checking spawn conditions..."));
+		//Check to see if we're spawning vehicles or not
+		if (!SquadsToSpawn[0].SquadVehicles.IsEmpty())
+		{
+			if (!VehicleSpawners.IsEmpty())
+			{
+				VehicleSpawners[0]->SpawnSquad(SquadsToSpawn[0].SquadUnits, SquadsToSpawn[0].SquadVehicles);
+				VehicleSpawners.RemoveAt(0);
+				UE_LOG(LogTemp, Warning, TEXT("Spawning vehicle squad"));
+			} else UE_LOG(LogTemp, Warning, TEXT("No vehicle spawners found"));
+		} else
+		{
+			if (!SpawnersTemp.IsEmpty())
+			{
+				SpawnersTemp[0]->SpawnSquad(SquadsToSpawn[0].SquadUnits, SquadsToSpawn[0].SquadVehicles);
+                SpawnersTemp.RemoveAt(0);
+                UE_LOG(LogTemp, Warning, TEXT("Spawning infantry only squad"));
+			} else UE_LOG(LogTemp, Warning, TEXT("No spawners found"));
+		}
+		SquadsToSpawn.RemoveAt(0);
+	}
+	UE_LOG(LogTemp, Warning, TEXT("Finished spawning wave"));
 }
 
 void AFirefightGameMode::ManageCharacter(ACharacterBase* Character)

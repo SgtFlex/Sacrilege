@@ -54,7 +54,7 @@ struct FGrenadeStruct
 	TSubclassOf<AGrenadeBase> GrenadeClass;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int GrenadeAmount;
+	int GrenadeAmount = 0;
 	
 };
 
@@ -563,6 +563,9 @@ protected:
 
 	UPROPERTY()
 	FVector EndMeleeLoc;
+
+	UPROPERTY()
+	FRotator StartMeleeRotation;
 
 	UPROPERTY()
 	FHitResult MeleeHit;

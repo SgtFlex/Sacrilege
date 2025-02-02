@@ -6,6 +6,7 @@
 #include "UObject/Interface.h"
 #include "InteractableInterface.generated.h"
 
+class ACharacterBase;
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI, Blueprintable)
 class UInteractableInterface : public UInterface
@@ -26,5 +27,5 @@ public:
 	void OnInteract(ACharacterBase* Character);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void GetInteractInfo(FText &Text, UTexture2D* &Icon);
+	void GetInteractInfo(FText &Text, UTexture2D* &Icon, ACharacterBase* InteractingCharacter);
 };
