@@ -13,8 +13,5 @@ Packages
 *.suo
 *.xcodeproj
 *.xcworkspace
-MegaScans
 CitySampleVehicles
 BlackAlder
-MSPresets
-FPS_Weapon_Bundle
