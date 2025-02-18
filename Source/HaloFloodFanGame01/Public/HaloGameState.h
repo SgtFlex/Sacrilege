@@ -6,51 +6,16 @@
 #include "GameFramework/GameState.h"
 #include "HaloGameState.generated.h"
 
-class ACharacterBase;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWaveChanged, int, CurrentWave);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSetChanged, int, CurrentSet);
+
 
 
 UCLASS()
 class HALOFLOODFANGAME01_API AHaloGameState : public AGameState
 {
 	GENERATED_BODY()
-
-public:
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&) const override;
-	
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-	int GetCurrentWave();
-
-	UFUNCTION(NetMulticast, Reliable)
-	void SetCurrentWave(int NewWave);
-
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-	int GetCurrentSet();
-
-	UFUNCTION(NetMulticast, Reliable)
-	void SetCurrentSet(int NewSet);
-
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-	int GetCurrentEnemyCount();
-
-	
 	
 public:
-	UPROPERTY(BlueprintAssignable)
-	FOnSetChanged OnSetChanged;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnWaveChanged OnWaveChanged;
-
-protected:	
-	UPROPERTY(Replicated)
-	int curWave = 0;
-
-	UPROPERTY(Replicated)
-	int curSet = 0;
-
-	UPROPERTY(BlueprintReadWrite, Replicated)
-	int CurrentEnemyCount = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<UUserWidget> GamestateHUD;
 };

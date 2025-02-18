@@ -6,6 +6,7 @@
 #include "HaloGameMode.h"
 #include "FirefightGamemode.generated.h"
 
+class AFirefightGameState;
 class AHaloGameState;
 class AVehicleBase;
 class AGunBase;
@@ -179,7 +180,7 @@ private:
 
 protected:
 	UPROPERTY()
-	AHaloGameState* HaloGameState;
+	AFirefightGameState* FirefightGameState;
 };
 
 

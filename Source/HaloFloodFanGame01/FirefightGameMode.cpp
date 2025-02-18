@@ -3,6 +3,7 @@
 #include "FirefightGamemode.h"
 
 #include "AISpawner.h"
+#include "FirefightGameState.h"
 #include "GunBase.h"
 #include "HaloGameState.h"
 #include "HaloPlayerState.h"
@@ -31,7 +32,7 @@ void AFirefightGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	HaloGameState = GetGameState<AHaloGameState>();
+	FirefightGameState = GetGameState<AFirefightGameState>();
 	SetMatchState(MatchState::InProgress);
 }
 
@@ -48,7 +49,7 @@ void AFirefightGameMode::OnEnemyKilled(ACharacterBase* Character, AController* E
 	CurrentEnemyCount--;
 	
 
-	if (HaloGameState->GetCurrentWave() != maxWave)
+	if (FirefightGameState->GetCurrentWave() != maxWave)
 	{
 		if (CurrentEnemyCount<=4)
 			FinishWave();
@@ -67,9 +68,9 @@ void AFirefightGameMode::FinishWave()
 	
 	
 	
-	if (HaloGameState->GetCurrentWave() == maxWave)
+	if (FirefightGameState->GetCurrentWave() == maxWave)
 	{
-		if (HaloGameState->GetCurrentSet() == maxSet)
+		if (FirefightGameState->GetCurrentSet() == maxSet)
 		{
 			GameFinished();
 			return;
@@ -117,8 +118,8 @@ void AFirefightGameMode::StartMatch()
 void AFirefightGameMode::StartSet()
 {
 	//GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushGlobalNotification("Set start");
-	HaloGameState->SetCurrentSet(HaloGameState->GetCurrentSet()+1);
-	HaloGameState->SetCurrentWave(0);
+	FirefightGameState->SetCurrentSet(FirefightGameState->GetCurrentSet()+1);
+	FirefightGameState->SetCurrentWave(0);
 	//OnSetStart.Broadcast(HaloGameState->GetCurrentWave(), HaloGameState->GetCurrentWave());
 	StartWave();
 	
@@ -133,7 +134,7 @@ void AFirefightGameMode::FinishSet()
 
 void AFirefightGameMode::StartWave()
 {
-	HaloGameState->SetCurrentWave(HaloGameState->GetCurrentWave()+1);
+	FirefightGameState->SetCurrentWave(FirefightGameState->GetCurrentWave()+1);
 	SquadsToSpawn.Append(CalculateWave());
 	SpawnWave(SquadsToSpawn);
 	//OnWaveStart.Broadcast(HaloGameState->GetCurrentWave(), HaloGameState->GetCurrentWave());

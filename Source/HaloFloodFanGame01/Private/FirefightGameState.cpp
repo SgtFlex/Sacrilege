@@ -1,0 +1,51 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "FirefightGameState.h"
+#include "NotificationSubsystem.h"
+#include "Net/UnrealNetwork.h"
+
+void AFirefightGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AFirefightGameState, curWave);
+	DOREPLIFETIME(AFirefightGameState, curSet);
+	DOREPLIFETIME(AFirefightGameState, CurrentEnemyCount);
+}
+
+int AFirefightGameState::GetCurrentWave()
+{
+	return curWave;
+}
+
+void AFirefightGameState::SetCurrentWave_Implementation(int NewWave)
+{
+	if (HasAuthority())
+	{
+		curWave = NewWave;
+	}
+	GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushGlobalNotification("Reinforcements");
+	OnWaveChanged.Broadcast(curWave);
+}
+
+
+int AFirefightGameState::GetCurrentSet()
+{
+	return curSet;
+}
+
+void AFirefightGameState::SetCurrentSet_Implementation(int NewSet)
+{
+	if (HasAuthority())
+	{
+		curSet = NewSet;
+	}
+	GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushGlobalNotification("Set start");
+	OnSetChanged.Broadcast(curSet);
+}
+
+int AFirefightGameState::GetCurrentEnemyCount()
+{
+	return CurrentEnemyCount;
+}
