@@ -261,18 +261,16 @@ USkeletalMeshComponent* AVehicleBase::GetVehicleMesh()
 	return VehicleSkeletalMesh;
 }
 
-float AVehicleBase::CustomTakeDamage_Implementation(float DamageAmount, FVector Force, FDamageEvent const& DamageEvent,
-                                                    AController* EventInstigator, AActor* DamageCauser)
+float AVehicleBase::CustomTakeDamage_Implementation(float Damage, FVector Force, AController* EventInstigator, AActor* DamageCauser)
 {
-	HealthComponent->TakeDamage(DamageAmount, Force, FVector(0,0,0), NAME_None, EventInstigator, DamageCauser);
-	return DamageAmount;
+	HealthComponent->TakeDamage(Damage, Force, FVector(0,0,0), NAME_None, EventInstigator, DamageCauser);
+	return Damage;
 }
 
-float AVehicleBase::CustomTakePointDamage_Implementation(FPointDamageEvent const& PointDamageEvent, float Force,
-                                                         AController* EventInstigator, AActor* DamageCauser)
+float AVehicleBase::CustomTakePointDamage_Implementation(float Damage, FVector Direction, const FHitResult& HitInfo, float Force, AController* EventInstigator, AActor* DamageCauser)
 {
-	HealthComponent->TakeDamage(PointDamageEvent.Damage, PointDamageEvent.ShotDirection*Force, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.BoneName, EventInstigator, DamageCauser);
-	return PointDamageEvent.Damage;
+	HealthComponent->TakeDamage(Damage, Direction*Force, HitInfo.Location, HitInfo.BoneName, EventInstigator, DamageCauser);
+	return Damage;
 }
 
 float AVehicleBase::CustomTakeRadialDamage_Implementation(float Force, FRadialDamageEvent const& RadialDamageEvent,

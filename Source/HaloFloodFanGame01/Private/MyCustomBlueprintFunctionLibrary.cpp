@@ -35,7 +35,7 @@ void UMyCustomBlueprintFunctionLibrary::FireHitScanBullet(FHitResult& Hit, const
 				//IDamageableInterface* DamageableActor = Cast<IDamageableInterface>(Hit.GetActor());
 				Damage = FalloffCurve!=nullptr ? Damage * FalloffCurve->GetFloatValue(Hit.Distance/Range) : Damage;
 				FPointDamageEvent PointDamageEvent = FPointDamageEvent(Damage, Hit, HitDir, UDamageType::StaticClass());
-				IDamageableInterface::Execute_CustomTakePointDamage(Hit.GetActor(), PointDamageEvent, Force, EventInstigator, DamageCauser);
+				IDamageableInterface::Execute_CustomTakePointDamage(Hit.GetActor(), Damage, HitDir, Hit, Force, EventInstigator, DamageCauser);
 				//DamageableActor->CustomTakePointDamage(PointDamageEvent, Force, EventInstigator, DamageCauser);
 			}
 			if (Hit.GetComponent() && Hit.GetComponent()->IsSimulatingPhysics())

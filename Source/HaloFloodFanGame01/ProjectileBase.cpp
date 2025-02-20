@@ -77,7 +77,7 @@ void AProjectileBase::OnProjectileOverlapped_Implementation(UPrimitiveComponent*
 	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && (OtherActor->Implements<UDamageableInterface>()))
 	{
 		FPointDamageEvent PointDamageEvent = FPointDamageEvent(Damage, SweepResult, Direction, UDamageType::StaticClass());
-		IDamageableInterface::Execute_CustomTakePointDamage(OtherActor, PointDamageEvent, Force, GetInstigatorController(), this);
+		IDamageableInterface::Execute_CustomTakePointDamage(OtherActor, Damage, Direction, SweepResult, Force, GetInstigatorController(), this);
 		//DamageableActor->CustomTakePointDamage(PointDamageEvent, Force, GetInstigatorController(), this);
 	}
 	

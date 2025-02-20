@@ -162,16 +162,15 @@ float AGrenadeBase::CustomOnTakeAnyDamage(float DamageAmount, FVector Force,
 	return DamageAmount;
 }
 
-float AGrenadeBase::CustomTakeDamage_Implementation(float DamageAmount, FVector Force, FDamageEvent const& DamageEvent,
-	AController* EventInstigator, AActor* DamageCauser)
+float AGrenadeBase::CustomTakeDamage_Implementation(float Damage, FVector Force, AController* EventInstigator, AActor* DamageCauser)
 {
-	return CustomOnTakeAnyDamage(DamageAmount, Force, EventInstigator, DamageCauser);
+	return CustomOnTakeAnyDamage(Damage, Force, EventInstigator, DamageCauser);
 }
 
-float AGrenadeBase::CustomTakePointDamage_Implementation(FPointDamageEvent const& PointDamageEvent, float Force,
-	AController* EventInstigator, AActor* DamageCauser)
+
+float AGrenadeBase::CustomTakePointDamage_Implementation(float Damage, FVector Direction, const FHitResult& HitInfo, float Force, AController* EventInstigator, AActor* DamageCauser)
 {
-	return CustomOnTakeAnyDamage(PointDamageEvent.Damage, PointDamageEvent.ShotDirection * Force, EventInstigator, DamageCauser);
+	return CustomOnTakeAnyDamage(Damage, Direction * Force, EventInstigator, DamageCauser);
 }
 
 float AGrenadeBase::CustomTakeRadialDamage_Implementation(float Force, FRadialDamageEvent const& RadialDamageEvent,

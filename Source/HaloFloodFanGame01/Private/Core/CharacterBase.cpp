@@ -281,7 +281,7 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 }
 
-void ACharacterBase::SpawnBloodFX_Implementation(FPointDamageEvent PointDamageEvent)
+void ACharacterBase::SpawnBloodFX_Implementation(FVector Direction, const FHitResult& HitInfo)
 {
 	if (GetHealthComponent()->GetShields() > 0)
 	{
@@ -296,14 +296,14 @@ void ACharacterBase::SpawnBloodFX_Implementation(FPointDamageEvent PointDamageEv
 		}
 		if (BloodPFX)
 		{
-			UNiagaraComponent* BloodNiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(BloodPFX, GetMesh(), PointDamageEvent.HitInfo.BoneName, PointDamageEvent.HitInfo.ImpactPoint, PointDamageEvent.HitInfo.Normal.Rotation(), EAttachLocation::KeepWorldPosition, true);
+			UNiagaraComponent* BloodNiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(BloodPFX, GetMesh(), HitInfo.BoneName, HitInfo.ImpactPoint, HitInfo.Normal.Rotation(), EAttachLocation::KeepWorldPosition, true);
 			//BloodNiagaraComponent->SetNiagaraVariableActor("Character", this);
 			BloodNiagaraComponent->SetVariableActor("Character", this);
 		}
 		if (BloodSplatterMat)
 		{
 			UGameplayStatics::SpawnDecalAttached(BloodSplatterMat, FVector(10,10,10), GetMesh(),
-			PointDamageEvent.HitInfo.BoneName, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Normal.Rotation() + FRotator(-90, 0, FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition, 0);
+			HitInfo.BoneName, HitInfo.Location, HitInfo.Normal.Rotation() + FRotator(-90, 0, FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition, 0);
 		}
 		if (BloodDecalMaterial)
 		{
@@ -312,7 +312,7 @@ void ACharacterBase::SpawnBloodFX_Implementation(FPointDamageEvent PointDamageEv
 			FHitResult HitResult;
 			FCollisionQueryParams QueryParams;
 			QueryParams.AddIgnoredActor(this);
-			GetWorld()->LineTraceSingleByChannel(HitResult, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.Location + (PointDamageEvent.ShotDirection * 4000),ECollisionChannel::ECC_Visibility, QueryParams);
+			GetWorld()->LineTraceSingleByChannel(HitResult, HitInfo.Location, HitInfo.Location + (Direction * 4000),ECollisionChannel::ECC_Visibility, QueryParams);
 			if (HitResult.bBlockingHit)
 			{
 				GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageDecal(UGameplayStatics::SpawnDecalAttached(BloodDecalMaterial, FVector(DecalSize,DecalSize,DecalSize), HitResult.GetComponent(), HitResult.BoneName, HitResult.Location, HitResult.Normal.Rotation() + FRotator(-180,0,FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition));
@@ -329,10 +329,9 @@ float ACharacterBase::CustomTakeRadialDamage_Implementation(float Force, FRadial
 	return ChangeHealth(this, RadialDamageEvent.Params.BaseDamage, (Cast<AActor>(this)->GetActorLocation() - RadialDamageEvent.Origin).GetSafeNormal() * Force, FVector(0,0,0), FName(""), EventInstigator, DamageCauser);
 }
 
-float ACharacterBase::CustomTakeDamage_Implementation(float DamageAmount, FVector Force,
-                                                      FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+float ACharacterBase::CustomTakeDamage_Implementation(float Damage, FVector Force, AController* EventInstigator, AActor* DamageCauser)
 {
-	return ChangeHealth(this, DamageAmount, Force, FVector(0,0,0), FName(""), EventInstigator, DamageCauser);
+	return ChangeHealth(this, Damage, Force, FVector(0,0,0), FName(""), EventInstigator, DamageCauser);
 }
 
 // float ACharacterBase::CustomOnTakeAnyDamage_Implementation(float DamageAmount, FVector Force,
@@ -341,14 +340,14 @@ float ACharacterBase::CustomTakeDamage_Implementation(float DamageAmount, FVecto
 // 	return IDamageableInterface::CustomOnTakeAnyDamage(DamageAmount, Force, EventInstigator, DamageCauser);
 // }
 
-float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent const& PointDamageEvent, float Force, AController* EventInstigator, AActor* DamageCauser)
+float ACharacterBase::CustomTakePointDamage_Implementation(float Damage, FVector Direction, const FHitResult& HitInfo, float Force, AController* EventInstigator, AActor* DamageCauser)
 {
 	if (!HasAuthority()) return 0;
-	float x = IDamageableInterface::ChangeHealth(this, PointDamageEvent.Damage, PointDamageEvent.ShotDirection * Force, PointDamageEvent.HitInfo.Location, PointDamageEvent.HitInfo.BoneName, EventInstigator, DamageCauser);
+	float x = IDamageableInterface::ChangeHealth(this, Damage, Direction * Force, HitInfo.Location, HitInfo.BoneName, EventInstigator, DamageCauser);
 	//float x = IDamageableInterface::CustomTakePointDamage(PointDamageEvent, Force, EventInstigator, DamageCauser);
 	if (EventInstigator && Cast<AAIControllerBase>(GetController()))
 	{
-		UAISense_Damage::ReportDamageEvent(GetWorld(), this, EventInstigator->GetPawn(), PointDamageEvent.Damage, Cast<AActor>(EventInstigator)->GetActorLocation(), PointDamageEvent.HitInfo.Location);
+		UAISense_Damage::ReportDamageEvent(GetWorld(), this, EventInstigator->GetPawn(), Damage, Cast<AActor>(EventInstigator)->GetActorLocation(), HitInfo.Location);
 	}
 	
 	if (const UHealthComponent* HealthComp = GetHealthComponent())
@@ -360,10 +359,10 @@ float ACharacterBase::CustomTakePointDamage_Implementation(FPointDamageEvent con
 			UE_LOG(LogTemp, Warning, TEXT("Stun amount: %f"), CurrentStunBuildup);
 			if (CurrentStunBuildup >= StunThreshold)
 				Stun();
-			SpawnBloodFX(PointDamageEvent);
+			SpawnBloodFX(Direction, HitInfo);
 		}
 	}
-	OnTakeCustomPointDamage.Broadcast(PointDamageEvent.Damage);
+	OnTakeCustomPointDamage.Broadcast(Damage);
 	return x;
 }
 
@@ -538,7 +537,7 @@ void ACharacterBase::MeleeDamageCode()
 	PointDamageEvent.HitInfo = MeleeHit;
 	FVector Dir = MeleeHit.Location - MeleeHit.TraceStart;
 	Dir.Normalize();
-	IDamageableInterface::Execute_CustomTakePointDamage(MeleeHit.GetActor(), PointDamageEvent, MeleeForce, GetInstigatorController(), this);
+	IDamageableInterface::Execute_CustomTakePointDamage(MeleeHit.GetActor(), MeleeDamage, Dir, MeleeHit, MeleeForce, GetInstigatorController(), this);
 	//HitActor->CustomTakePointDamage(PointDamageEvent, MeleeForce);
 }
 
@@ -647,7 +646,7 @@ void ACharacterBase::NPCMelee_Implementation()
 		if (Result.GetActor() && Result.GetActor()->Implements<UDamageableInterface>() && Result.GetActor()!=this)
 		{
 			FDamageEvent DamageEvent;
-			IDamageableInterface::Execute_CustomTakeDamage(Result.GetActor(), MeleeDamage, FVector(0,0,0), DamageEvent, nullptr, this);
+			IDamageableInterface::Execute_CustomTakeDamage(Result.GetActor(), MeleeDamage, FVector(0,0,0), nullptr, this);
 			//Cast<IDamageableInterface>(Result.GetActor())->CustomTakeDamage(MeleeDamage, FVector(0,0,0), DamageEvent, nullptr, this);
 			//Result.GetActor()->TakeDamage(MeleeDamage, DamageEvent, nullptr, this);
 		}
