@@ -22,6 +22,7 @@ struct FHitScanTrace
 
 class UPlayerHUD;
 class ACharacterBase;
+class AProjectileBase;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFire);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReload);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAmmoUpdated);
@@ -69,6 +70,9 @@ public:
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void SpawnBullet();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	AActor* SpawnProjectile(TSubclassOf<AActor> ProjectileClass);
 
 	UFUNCTION(NetMulticast, Unreliable)
 	void PlayFireFX();

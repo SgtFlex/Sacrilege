@@ -13,6 +13,7 @@
 #include "Components/Image.h"
 #include "Engine/DamageEvents.h"
 #include "HaloFloodFanGame01/PlayerCharacter.h"
+#include "HaloFloodFanGame01/ProjectileBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Perception/AISense_Hearing.h"
@@ -172,6 +173,8 @@ bool AGunBase::CanFire()
 	return !(bReloading || CurMagazine <= 0);
 }
 
+
+
 void AGunBase::UpdateMagazineElements()
 {
 	OnAmmoUpdated.Broadcast();
@@ -232,19 +235,7 @@ void AGunBase::SpawnBullet_Implementation()
 	{
 		if (ProjectileClass)
 		{
-			FVector Location = Mesh->DoesSocketExist("Muzzle") ? Mesh->GetSocketLocation("Muzzle") : GetActorLocation() + GetActorForwardVector()*50000.0f;
-			FRotator Rotation;
-			if (OwningPawn)
-			{
-				Rotation = OwningPawn->GetBaseAimRotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
-			} else
-			{
-				Rotation = GetActorRotation();
-			}
-			FActorSpawnParameters ActorSpawnParameters;
-			ActorSpawnParameters.Owner = this;
-			ActorSpawnParameters.Instigator = Cast<ACharacterBase>(this->GetOwner());
-			GetWorld()->SpawnActor(ProjectileClass, &Location, &Rotation, ActorSpawnParameters);
+			SpawnProjectile(ProjectileClass);
 		} else
 		{
 			FHitResult Hit;
@@ -291,6 +282,25 @@ void AGunBase::SpawnBullet_Implementation()
 	}
 	SpawnMuzzleFX();
 }
+
+AActor* AGunBase::SpawnProjectile_Implementation(TSubclassOf<AActor> ProjToSpawn)
+{
+	APawn* OwningPawn = Cast<APawn>(GetOwner());
+	FVector Location = Mesh->DoesSocketExist("Muzzle") ? Mesh->GetSocketLocation("Muzzle") : GetActorLocation() + GetActorForwardVector()*50000.0f;
+	FRotator Rotation;
+	if (OwningPawn)
+	{
+		Rotation = OwningPawn->GetBaseAimRotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
+	} else
+	{
+		Rotation = GetActorRotation();
+	}
+	FActorSpawnParameters ActorSpawnParameters;
+	ActorSpawnParameters.Owner = this;
+	ActorSpawnParameters.Instigator = Cast<ACharacterBase>(this->GetOwner());
+	return GetWorld()->SpawnActor(ProjToSpawn, &Location, &Rotation, ActorSpawnParameters);
+}
+
 
 // void AGunBase::Server_SpawnBullet_Implementation()
 // {
