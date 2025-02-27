@@ -36,7 +36,7 @@ void AFirefightGameMode::BeginPlay()
 	SetMatchState(MatchState::InProgress);
 }
 
-void AFirefightGameMode::OnEnemyKilled(ACharacterBase* Character, AController* EventInstigator, AActor* DamageCauser)
+void AFirefightGameMode::EnemyKilled_Implementation(ACharacterBase* Character, AController* EventInstigator, AActor* DamageCauser)
 {
 	if (APlayerController* PlayerController = Cast<APlayerController>(EventInstigator))
 	{
@@ -58,6 +58,8 @@ void AFirefightGameMode::OnEnemyKilled(ACharacterBase* Character, AController* E
 		if (CurrentEnemyCount<=0)
 			FinishWave();
 	}
+	FirefightEnemies.Remove(Character);
+	OnEnemyKilled.Broadcast(Character, EventInstigator, DamageCauser);
 }
 
 void AFirefightGameMode::FinishWave()
@@ -222,7 +224,8 @@ void AFirefightGameMode::SpawnWave(TArray<FSquadStruct> WaveToSpawn)
 
 void AFirefightGameMode::ManageCharacter(ACharacterBase* Character)
 {
-	Character->OnKilled.AddDynamic(this, &AFirefightGameMode::OnEnemyKilled);
+	Character->OnKilled.AddDynamic(this, &AFirefightGameMode::EnemyKilled);
+	FirefightEnemies.Add(Character);
 	CurrentEnemyCount++;
 }
 

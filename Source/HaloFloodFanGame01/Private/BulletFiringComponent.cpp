@@ -35,6 +35,7 @@ AProjectileBase* UBulletFiringComponent::FireProjectile(TSubclassOf<AProjectileB
 	FRotator Rotation = Direction.Rotation();
 	FActorSpawnParameters ActorSpawnParameters;
 	ActorSpawnParameters.Owner = Owner;
+	ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	if (Instigator)
 		if (APawn* Pawn = Instigator->GetPawn())
 			ActorSpawnParameters.Instigator = Pawn;

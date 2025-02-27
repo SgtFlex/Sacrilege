@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "HaloGameState.h"
 #include "FirefightGameState.generated.h"
+class ACharacterBase;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWaveChanged, int, CurrentWave);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSetChanged, int, CurrentSet);
 /**

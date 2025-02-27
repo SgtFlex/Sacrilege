@@ -16,6 +16,8 @@ class APlayerCharacter;
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerCharDied, ACharacterBase*, PlayerCharacter, APlayerControllerBase*, PlayerController);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnEnemyKilled, ACharacterBase*, Character, AController*, EventInstigator, AActor*, DamageCauser);
+
 
 USTRUCT(BlueprintType)
 struct FSquadStruct
@@ -42,8 +44,8 @@ public:
 	
 	virtual void BeginPlay() override;
 
-	UFUNCTION()
-	void OnEnemyKilled(ACharacterBase* Character = nullptr, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
+	UFUNCTION(BlueprintNativeEvent)
+	void EnemyKilled(ACharacterBase* Character = nullptr, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
 	virtual void StartMatch() override;
 
@@ -118,6 +120,9 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnPlayerCharDied OnPlayerCharDied;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnEnemyKilled OnEnemyKilled;
+
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int maxWave = 5;
@@ -172,6 +177,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUserWidget> LoadoutScreenClass;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	TArray<ACharacterBase*> FirefightEnemies;
 	
 private:
 	int MaxWavePool = 5;
