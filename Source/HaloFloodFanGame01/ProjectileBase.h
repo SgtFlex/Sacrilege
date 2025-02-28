@@ -34,7 +34,7 @@ public:
 	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
 
 public:
-	UPROPERTY(VisibleDefaultsOnly, Category=Projectile)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Projectile)
 	USphereComponent* CollisionComp;
 
 	/** Projectile movement component */
@@ -71,11 +71,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UAudioComponent* TestIdleSoundComponent;
 
-	
 private:
 	UPROPERTY()
 	FTimerHandle DespawnTimerHandle;
 
-	
 };
 

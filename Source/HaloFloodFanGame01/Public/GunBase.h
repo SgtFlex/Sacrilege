@@ -7,6 +7,8 @@
 #include "GameFramework/Actor.h"
 #include "GunBase.generated.h"
 
+class UBulletFiringComponent;
+
 USTRUCT()
 struct FHitScanTrace
 {
@@ -23,6 +25,7 @@ struct FHitScanTrace
 class UPlayerHUD;
 class ACharacterBase;
 class AProjectileBase;
+class UPhysicalMaterial;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFire);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReload);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAmmoUpdated);
@@ -34,6 +37,9 @@ class HALOFLOODFANGAME01_API AGunBase : public AActor, public IInteractableInter
 public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Mesh)
 	USkeletalMeshComponent* Mesh;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Bullets)
+	UBulletFiringComponent* BulletFiringComponent;
 
 	UPROPERTY(BlueprintAssignable)
 	FOnFire OnFire;
@@ -67,12 +73,15 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool CanFire();
+
+	UFUNCTION(BlueprintCallable)
+	FVector GetAim();
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void SpawnBullet();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	AActor* SpawnProjectile(TSubclassOf<AActor> ProjectileClass);
+	AActor* SpawnProjectile(TSubclassOf<AActor> ProjToSpawn);
 
 	UFUNCTION(NetMulticast, Unreliable)
 	void PlayFireFX();
@@ -152,13 +161,13 @@ public:
 	UPROPERTY(EditAnywhere, meta = (Category="Attributes"))
 	TSubclassOf<AActor> ProjectileClass;
 
-	//Damage of the hitscan applied to the hit actor
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes|Hitscan", EditCondition="!ProjectileClass"))
-	float Damage = 15;
+	// //Damage of the hitscan applied to the hit actor
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes|Hitscan", EditCondition="!ProjectileClass", DeprecatedProperty))
+	// float Damage = 15;
 
-	//Force of the hitscan applied to the hit component if it simulates physics
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes|Hitscan", EditCondition="!ProjectileClass"))
-	float Force = 1000;
+	// //Force of the hitscan applied to the hit component if it simulates physics
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes|Hitscan", EditCondition="!ProjectileClass", DeprecatedProperty))
+	// float Force = 1000;
 
 	//Fire rate of the gun in bullets per minute
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
@@ -202,12 +211,12 @@ public:
 	UPROPERTY(EditAnywhere, meta = (Category="Attributes"))
 	float VerticalSpread = 0;
 
-	//Range of the hitscan trace
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes|Hitscan", EditCondition="!ProjectileClass"))
-	float Range = 5000;
-
-	UPROPERTY(EditAnywhere, meta = (Category="Attributes|Hitscan", EditCondition="!ProjectileClass"))
-	UCurveFloat* FalloffCurve;
+	// //Range of the hitscan trace
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes|Hitscan", EditCondition="!ProjectileClass", DeprecatedProperty))
+	// float Range = 5000;
+	//
+	// UPROPERTY(EditAnywhere, meta = (Category="Attributes|Hitscan", EditCondition="!ProjectileClass", DeprecatedProperty))
+	// UCurveFloat* FalloffCurve;
 
 	//The maximum bullets in a magazine
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
@@ -315,10 +324,19 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	UForceFeedbackEffect* FireFeedback;
+
+	UPROPERTY(BlueprintReadOnly)
+	APawn* OwningPawn;
+
+	UPROPERTY(EditDefaultsOnly)
+	TMap<TEnumAsByte<EPhysicalSurface>, TSubclassOf<AActor>> ImpactFXMap;
+
+	
+	
 private:
 	UPROPERTY()
 	ACharacterBase* CharacterOwner;
 	
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<AActor> ImpactDecal;
+	TSubclassOf<AActor> ImpactDecal;	
 };

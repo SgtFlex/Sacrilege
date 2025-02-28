@@ -7,6 +7,7 @@
 #include "BulletFiringComponent.generated.h"
 
 
+class UBullet;
 class UNiagaraSystem;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBulletFired);
@@ -27,18 +28,22 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-	UFUNCTION(BlueprintCallable)
-    virtual AProjectileBase* FireProjectile(TSubclassOf<AProjectileBase> ProjectileClass, FVector Direction, AActor* Owner, AController* Instigator);
+	
 
 	UFUNCTION(NetMulticast, Unreliable)
 	void PlayFX(FVector Location, FRotator Rotation);
 
-	UFUNCTION(BlueprintCallable)
-	virtual void FireBullet(FHitResult& HitResult, FVector Direction,  TArray<AActor*> ActorsToIgnore, AActor* DamageCauser, AController* EventInstigator);
+	
 
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	UFUNCTION(BlueprintCallable)
+	virtual AProjectileBase* FireProjectile(TSubclassOf<AProjectileBase> ProjectileClass, FVector Direction, AActor* Owner, AController* Instigator);
+
+	UFUNCTION(BlueprintCallable)
+	virtual void FireBullet(FHitResult& HitResult, FVector Direction,  TArray<AActor*> ActorsToIgnore, AActor* DamageCauser, AController* EventInstigator);
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -47,16 +52,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UNiagaraSystem* FiringVFX;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DeprecatedProperty))
 	float HitScanRange = 5000;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DeprecatedProperty))
 	float HitScanDamage = 5;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DeprecatedProperty))
 	UCurveFloat* HitScanFalloffCurve;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DeprecatedProperty))
 	float HitScanForce = 100;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -64,6 +69,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float VerticalSpread = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<UBullet> Bullet;
 
 	UPROPERTY(BlueprintAssignable)
 	FOnBulletFired OnBulletFired;

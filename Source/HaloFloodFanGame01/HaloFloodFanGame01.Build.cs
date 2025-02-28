@@ -8,7 +8,7 @@ public class HaloFloodFanGame01 : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "EnhancedInput", "UMG" , "Niagara", "AIModule", "ChaosVehicles"});
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "EnhancedInput", "UMG" , "Niagara", "AIModule", "ChaosVehicles", "PhysicsCore"});
 		DynamicallyLoadedModuleNames.Add("OnlineSubsystemSteam");
 	}
 }

@@ -2,11 +2,13 @@
 
 #include "GunBase.h"
 
+#include "BulletFiringComponent.h"
 #include "GrenadeWidget.h"
 #include "HaloGameState.h"
 #include "MyCustomBlueprintFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
+#include "PlayerControllerBase.h"
 #include "VectorTypes.h"
 #include "WorldCleanupManager.h"
 #include "Camera/CameraComponent.h"
@@ -30,6 +32,9 @@ AGunBase::AGunBase()
 	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
 	Mesh->SetSimulatePhysics(true);
 	RootComponent = Mesh;
+
+	BulletFiringComponent = CreateDefaultSubobject<UBulletFiringComponent>("BulletFiringComponent");
+	BulletFiringComponent->SetupAttachment(Mesh, "Muzzle");
 
 	bReplicates = true;
 	
@@ -97,8 +102,8 @@ void AGunBase::Server_StartReload_Implementation()
 
 void AGunBase::Multi_StartReload_Implementation()
 {
-	if (ACharacterBase* PlayerChar = Cast<ACharacterBase>(GetOwner()))
-		PlayerChar->GetMesh1P()->GetAnimInstance()->Montage_Play(ReloadAnimation1P,   ReloadAnimation1P->GetPlayLength() / ReloadSpeed);
+	if (CharacterOwner)
+		CharacterOwner->GetMesh1P()->GetAnimInstance()->Montage_Play(ReloadAnimation1P,   ReloadAnimation1P->GetPlayLength() / ReloadSpeed);
 	if (ReloadSound) UGameplayStatics::SpawnSoundAttached(ReloadSound, GetRootComponent());
 }
 
@@ -173,6 +178,17 @@ bool AGunBase::CanFire()
 	return !(bReloading || CurMagazine <= 0);
 }
 
+FVector AGunBase::GetAim()
+{
+	if (CharacterOwner)
+	{
+		return CharacterOwner->GetBaseAimRotation().Vector();
+	} else
+	{
+		return GetActorRotation().Vector();
+	}
+	
+}
 
 
 void AGunBase::UpdateMagazineElements()
@@ -182,11 +198,11 @@ void AGunBase::UpdateMagazineElements()
 
 void AGunBase::PlayFireFX_Implementation()
 {
-	if (ACharacterBase* PlayerChar = Cast<ACharacterBase>(GetOwner()))
+	if (CharacterOwner)
 	{
-		PlayerChar->GetMesh()->GetAnimInstance()->Montage_Play(PlayerChar->FiringAnim);
-		if (FireAnimation1P) PlayerChar->GetMesh1P()->GetAnimInstance()->Montage_Play(FireAnimation1P);
-		if (APlayerController* PC = Cast<APlayerController>(PlayerChar->GetController())) PC->ClientPlayForceFeedback(FireFeedback);
+		CharacterOwner->GetMesh()->GetAnimInstance()->Montage_Play(CharacterOwner->FiringAnim);
+		if (FireAnimation1P) CharacterOwner->GetMesh1P()->GetAnimInstance()->Montage_Play(FireAnimation1P);
+		if (CharacterOwner->PlayerController) CharacterOwner->PlayerController->ClientPlayForceFeedback(FireFeedback);
 	}
 }
 
@@ -202,23 +218,36 @@ void AGunBase::SpawnTrailFX_Implementation(FHitResult Hit)
 	}
 	if (Hit.bBlockingHit)
 	{
-		if (HitSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, Hit.Location);
-		if (ImpactDecal && !Cast<IDamageableInterface>(Hit.GetActor()))
+		//if (HitSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, Hit.Location);
+		TSubclassOf<AActor>* ImpactFXClass = ImpactFXMap.Find(Hit.PhysMaterial->SurfaceType);
+		UE_LOG(LogTemp, Warning, TEXT("Hit: %s"), *Hit.PhysMaterial->GetFName().ToString());
+		if (ImpactFXClass)
 		{
 			FVector Location = Hit.ImpactPoint;
 			FRotator Rotation = Hit.Normal.Rotation() + FRotator(-90, 0, 0);
-			AActor* Decal = GetWorld()->SpawnActor(ImpactDecal, &Location, &Rotation);
+			AActor* Decal = GetWorld()->SpawnActor(*ImpactFXClass, &Location, &Rotation);
 			if (Decal)
 				Decal->AttachToComponent(Hit.GetComponent(), FAttachmentTransformRules::KeepWorldTransform);
-			//UGameplayStatics::SpawnDecalAttached(GetWorld(), FVector(10,10,10), ) //Perhaps optimize this in the future
 		}
+		// else
+		// {
+		// 	if (ImpactDecal)
+		// 	{
+		// 		FVector Location = Hit.ImpactPoint;
+		// 		FRotator Rotation = Hit.Normal.Rotation() + FRotator(-90, 0, 0);
+		// 		AActor* Decal = GetWorld()->SpawnActor(ImpactDecal, &Location, &Rotation);
+		// 		if (Decal)
+		// 			Decal->AttachToComponent(Hit.GetComponent(), FAttachmentTransformRules::KeepWorldTransform);
+		// 		//UGameplayStatics::SpawnDecalAttached(GetWorld(), FVector(10,10,10), ) //Perhaps optimize this in the future
+		// 	}
+		// }
 	}
 }
 
 void AGunBase::SpawnBullet_Implementation()
 {
 	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, GetOwner(), 0.0f);
-	APawn* OwningPawn = Cast<APawn>(GetOwner());
+	
 	AController* EventInstigator = nullptr;
 	PlayFireFX();
 	// if (ACharacterBase* OwningChar = Cast<ACharacterBase>(GetOwner()))
@@ -241,36 +270,23 @@ void AGunBase::SpawnBullet_Implementation()
 			FHitResult Hit;
 			FVector TraceStart;
 			FRotator EyeRotation;
-			if (OwningPawn)
+			if (CharacterOwner)
 			{
-				OwningPawn->GetActorEyesViewPoint(TraceStart, EyeRotation);
-				EyeRotation = OwningPawn->GetBaseAimRotation();
-				EyeRotation = EyeRotation + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
-				EventInstigator = OwningPawn->GetController();
+				CharacterOwner->GetActorEyesViewPoint(TraceStart, EyeRotation);
+				EventInstigator = CharacterOwner->GetController();
 			} else
 			{
 				TraceStart = GetActorLocation();
-				EyeRotation = GetActorRotation();
 			}
-			
-			// if (OwningPawn && OwningPawn->GetController())
-			// {
-			// 	//OwningPawn->GetController()->GetPlayerViewPoint(TraceStart, EyeRotation);
-			// 	//EyeRotation = EyeRotation + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
-			//
-			// } else
-			// {
-			// 	TraceStart = GetActorLocation();
-			// 	EyeRotation = GetActorRotation();
-			// }
+			EyeRotation = GetAim().Rotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
 			
 			TArray<AActor*> ActorsToIgnore;
 			ActorsToIgnore.Add(this);
 			ActorsToIgnore.Add(GetOwner());
 			// The actual bullet trace, with a width for accuracy forgiveness
 			//UKismetSystemLibrary::SphereTraceSingle(GetWorld(), TraceStart, TraceEnd, 20, UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Camera), false, ActorsToIgnore, EDrawDebugTrace::None, Hit, true, FLinearColor::Red, FLinearColor::Green, 5);
-
-			UMyCustomBlueprintFunctionLibrary::FireHitScanBullet(Hit, GetWorld(), ActorsToIgnore, TraceStart, EyeRotation.Vector(), Range, FalloffCurve, Damage, Force, this, EventInstigator);
+			BulletFiringComponent->FireBullet(Hit, EyeRotation.Vector(), ActorsToIgnore, this, EventInstigator);
+			//UMyCustomBlueprintFunctionLibrary::FireHitScanBullet(Hit, GetWorld(), ActorsToIgnore, TraceStart, EyeRotation.Vector(), Range, FalloffCurve, Damage, Force, this, EventInstigator);
 			SpawnTrailFX(Hit);
 
 		}
@@ -285,122 +301,19 @@ void AGunBase::SpawnBullet_Implementation()
 
 AActor* AGunBase::SpawnProjectile_Implementation(TSubclassOf<AActor> ProjToSpawn)
 {
-	APawn* OwningPawn = Cast<APawn>(GetOwner());
 	FVector Location = Mesh->DoesSocketExist("Muzzle") ? Mesh->GetSocketLocation("Muzzle") : GetActorLocation() + GetActorForwardVector()*50000.0f;
-	FRotator Rotation;
-	if (OwningPawn)
-	{
-		Rotation = OwningPawn->GetBaseAimRotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
-	} else
-	{
-		Rotation = GetActorRotation();
-	}
+	FRotator Rotation = GetAim().Rotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
 	FActorSpawnParameters ActorSpawnParameters;
 	ActorSpawnParameters.Owner = this;
-	ActorSpawnParameters.Instigator = Cast<ACharacterBase>(this->GetOwner());
+	ActorSpawnParameters.Instigator = CharacterOwner;
 	return GetWorld()->SpawnActor(ProjToSpawn, &Location, &Rotation, ActorSpawnParameters);
 }
 
-
-// void AGunBase::Server_SpawnBullet_Implementation()
-// {
-// 	Multi_SpawnBullet();
-// }
-//
-// void AGunBase::Multi_SpawnBullet_Implementation()
-// {
-// 	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, GetOwner(), 0.0f);
-// 	APawn* OwningPawn = Cast<APawn>(GetOwner());
-// 	if (ACharacterBase* OwningChar = Cast<ACharacterBase>(GetOwner()))
-// 	{
-// 		OwningChar->GetMesh()->GetAnimInstance()->Montage_Play(OwningChar->FiringAnim);
-// 	}
-// 	
-// 	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetOwner()))
-// 	{
-// 		if (FireAnimation1P) PlayerChar->GetMesh1P()->GetAnimInstance()->Montage_Play(FireAnimation1P);
-// 		if (APlayerController* PC = Cast<APlayerController>(PlayerChar->GetController())) PC->ClientPlayForceFeedback(FireFeedback);
-// 	}
-// 	
-// 	for (int i = 0; i < MultiShot; ++i)
-// 	{
-// 		if (ProjectileClass)
-// 		{
-// 			FVector Location = Mesh->DoesSocketExist("Muzzle") ? Mesh->GetSocketLocation("Muzzle") : GetActorLocation() + GetActorForwardVector()*50000.0f;
-// 			FRotator Rotation;
-// 			if (OwningPawn)
-// 			{
-// 				Rotation = OwningPawn->GetBaseAimRotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
-// 			} else
-// 			{
-// 				Rotation = GetActorRotation();
-// 			}
-// 			FActorSpawnParameters ActorSpawnParameters;
-// 			ActorSpawnParameters.Owner = this;
-// 			ActorSpawnParameters.Instigator = Cast<ACharacterBase>(this->GetOwner());
-// 			GetWorld()->SpawnActor(ProjectileClass, &Location, &Rotation, ActorSpawnParameters);
-// 		} else
-// 		{
-// 			FHitResult Hit;
-// 			FVector TraceStart;
-// 			FRotator EyeRotation;
-// 			if (OwningPawn && OwningPawn->GetController())
-// 			{
-// 				OwningPawn->GetController()->GetPlayerViewPoint(TraceStart, EyeRotation);
-// 				EyeRotation = EyeRotation + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
-// 				//OwningPawn->GetActorEyesViewPoint(TraceStart, EyeRotation);
-// 				//EyeRotation = OwningPawn->GetBaseAimRotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
-//
-// 			} else
-// 			{
-// 				TraceStart = GetActorLocation();
-// 				EyeRotation = GetActorRotation();
-// 			}
-// 			
-// 			TArray<AActor*> ActorsToIgnore;
-// 			ActorsToIgnore.Add(this);
-// 			ActorsToIgnore.Add(GetOwner());
-// 			// The actual bullet trace, with a width for accuracy forgiveness
-// 			//UKismetSystemLibrary::SphereTraceSingle(GetWorld(), TraceStart, TraceEnd, 20, UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Camera), false, ActorsToIgnore, EDrawDebugTrace::None, Hit, true, FLinearColor::Red, FLinearColor::Green, 5);
-// 			AController* EventInstigator = nullptr;
-// 			if (OwningPawn)
-// 			{
-// 				EventInstigator = OwningPawn->GetController();
-// 			}
-// 			UMyCustomBlueprintFunctionLibrary::FireHitScanBullet(Hit, GetWorld(), ActorsToIgnore, TraceStart, EyeRotation.Vector(), Range, FalloffCurve, Damage, Force, this, EventInstigator);
-// 			if (Mesh->DoesSocketExist("Muzzle") && TrailPFX)
-// 			{
-// 				FVector TrailEnd = (Hit.bBlockingHit) ? Hit.ImpactPoint : Hit.TraceEnd;
-// 				UNiagaraComponent* TrailPFXComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(TrailPFX, Mesh, "Muzzle", FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
-// 				TrailPFXComponent->SetVectorParameter("BeamEnd", TrailEnd);
-// 			}
-// 			if (Hit.bBlockingHit)
-// 			{
-// 				if (HitSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, Hit.Location);
-// 				if (ImpactDecal && !Cast<IDamageableInterface>(Hit.GetActor()))
-// 				{
-// 					FVector Location = Hit.ImpactPoint;
-// 					FRotator Rotation = Hit.Normal.Rotation() + FRotator(-90, 0, 0);
-// 					AActor* Decal = GetWorld()->SpawnActor(ImpactDecal, &Location, &Rotation);
-// 					Decal->AttachToComponent(Hit.GetComponent(), FAttachmentTransformRules::KeepWorldTransform);
-// 					//UGameplayStatics::SpawnDecalAttached(GetWorld(), FVector(10,10,10), ) //Perhaps optimize this in the future
-// 				}
-// 			}
-// 		}
-// 	}
-// 	BulletsFired++;
-// 	if (BulletsFired==BurstAmount)
-// 	{
-// 		ReleaseTrigger();
-// 	}
-// 	SpawnMuzzleFX();
-// }
-
 void AGunBase::SpawnMuzzleFX_Implementation()
 {
-	if (ACharacterBase* Char = Cast<ACharacterBase>(GetOwner()))
-		if (FiringCameraShake && Char->IsPlayerControlled() && Char->IsLocallyControlled())
-			Cast<APlayerController>(Char->GetController())->PlayerCameraManager->StartCameraShake(FiringCameraShake, 1, ECameraShakePlaySpace::CameraLocal);
+	if (CharacterOwner)
+		if (FiringCameraShake && CharacterOwner->IsPlayerControlled() && CharacterOwner->IsLocallyControlled())
+			Cast<APlayerController>(CharacterOwner->GetController())->PlayerCameraManager->StartCameraShake(FiringCameraShake, 1, ECameraShakePlaySpace::CameraLocal);
 	if (FiringSound)
 		UGameplayStatics::SpawnSoundAttached(FiringSound, GetRootComponent());
 	if (Mesh->DoesSocketExist("Muzzle") && MuzzlePFX && !ScopeActive)
@@ -410,10 +323,10 @@ void AGunBase::SpawnMuzzleFX_Implementation()
 bool AGunBase::ScopeIn_Implementation()
 {
 	if (ScopeActive || ZoomFOV == 0) return false;
-	if (ACharacterBase* PlayerChar = Cast<ACharacterBase>(GetOwner()))
+	if (CharacterOwner)
 	{
 		ScopeActive = true;
-		ScopeOverlay = CreateWidget<UUserWidget>(Cast<APlayerController>(PlayerChar->GetController()), ScopeWidget);
+		ScopeOverlay = CreateWidget<UUserWidget>(CharacterOwner->PlayerController, ScopeWidget);
 		ScopeOverlay->AddToPlayerScreen();
 		//PlayerChar->GetFirstPersonCameraComponent()->SetFieldOfView(10);
 		if (ScopeInSFX) UGameplayStatics::PlaySound2D(GetWorld(), ScopeInSFX);
@@ -424,7 +337,7 @@ bool AGunBase::ScopeIn_Implementation()
 void AGunBase::ScopeOut_Implementation()
 {
 	if (!ScopeActive) return;
-	if (ACharacterBase* PlayerChar = Cast<ACharacterBase>(GetOwner()))
+	if (CharacterOwner)
 	{
 		ScopeOverlay->RemoveFromParent();
 		//PlayerChar->GetFirstPersonCameraComponent()->SetFieldOfView(90);

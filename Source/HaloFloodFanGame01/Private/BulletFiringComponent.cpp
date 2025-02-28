@@ -3,6 +3,7 @@
 
 #include "BulletFiringComponent.h"
 
+#include "Bullet.h"
 #include "MyCustomBlueprintFunctionLibrary.h"
 #include "NiagaraFunctionLibrary.h"
 #include "HaloFloodFanGame01/ProjectileBase.h"
@@ -53,8 +54,9 @@ void UBulletFiringComponent::PlayFX_Implementation(FVector Location, FRotator Ro
 void UBulletFiringComponent::FireBullet(FHitResult& HitResult, FVector Direction,  TArray<AActor*> ActorsToIgnore, AActor* DamageCauser, AController* EventInstigator)
 {
 	OnBulletFired.Broadcast();
+	if (!Bullet) return;
 	UMyCustomBlueprintFunctionLibrary::FireHitScanBullet(HitResult, GetWorld(), ActorsToIgnore,
-		GetComponentLocation(), (Direction.Rotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0)).Vector(), HitScanRange, HitScanFalloffCurve, HitScanDamage, HitScanForce, DamageCauser, EventInstigator);
+		GetComponentLocation(), (Direction.Rotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0)).Vector(),Bullet.GetDefaultObject()->Range, Bullet.GetDefaultObject()->FalloffCurve, Bullet.GetDefaultObject()->Damage, Bullet.GetDefaultObject()->Force, DamageCauser, EventInstigator);
 	PlayFX(GetComponentLocation(), Direction.Rotation());
 }
 
