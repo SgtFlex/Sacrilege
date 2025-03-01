@@ -2,24 +2,18 @@
 
 #include "GunBase.h"
 
+#include "Bullet.h"
 #include "BulletFiringComponent.h"
 #include "GrenadeWidget.h"
-#include "HaloGameState.h"
-#include "MyCustomBlueprintFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "PlayerControllerBase.h"
-#include "VectorTypes.h"
 #include "WorldCleanupManager.h"
-#include "Camera/CameraComponent.h"
 #include "Components/Image.h"
-#include "Engine/DamageEvents.h"
 #include "HaloFloodFanGame01/PlayerCharacter.h"
-#include "HaloFloodFanGame01/ProjectileBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Perception/AISense_Hearing.h"
-#include "Perception/AISense_Sight.h"
 
 
 // Sets default values
@@ -171,6 +165,7 @@ void AGunBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetime
 	DOREPLIFETIME(AGunBase, CurMagazine);
 	DOREPLIFETIME(AGunBase, CurReserve);
 	DOREPLIFETIME(AGunBase, bFiring);
+	DOREPLIFETIME(AGunBase, CharacterOwner);
 }
 
 bool AGunBase::CanFire()
@@ -219,14 +214,11 @@ void AGunBase::SpawnTrailFX_Implementation(FHitResult Hit)
 	if (Hit.bBlockingHit)
 	{
 		//if (HitSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, Hit.Location);
-		TSubclassOf<AActor>* ImpactFXClass = ImpactFXMap.Find(Hit.PhysMaterial->SurfaceType);
-		UE_LOG(LogTemp, Warning, TEXT("Hit: %s"), *Hit.PhysMaterial->GetFName().ToString());
-		if (ImpactFXClass)
+		if (const TSubclassOf<AActor>* ImpactFXClass = BulletFiringComponent->BulletInfo.GetDefaultObject()->SurfaceResponsesFX.Find(Hit.PhysMaterial->SurfaceType))
 		{
-			FVector Location = Hit.ImpactPoint;
-			FRotator Rotation = Hit.Normal.Rotation() + FRotator(-90, 0, 0);
-			AActor* Decal = GetWorld()->SpawnActor(*ImpactFXClass, &Location, &Rotation);
-			if (Decal)
+			const FVector Location = Hit.ImpactPoint;
+			const FRotator Rotation = Hit.Normal.Rotation() + FRotator(-90, 0, 0);
+			if (AActor* Decal = GetWorld()->SpawnActor(*ImpactFXClass, &Location, &Rotation))
 				Decal->AttachToComponent(Hit.GetComponent(), FAttachmentTransformRules::KeepWorldTransform);
 		}
 		// else
@@ -268,25 +260,17 @@ void AGunBase::SpawnBullet_Implementation()
 		} else
 		{
 			FHitResult Hit;
-			FVector TraceStart;
 			FRotator EyeRotation;
 			if (CharacterOwner)
 			{
-				CharacterOwner->GetActorEyesViewPoint(TraceStart, EyeRotation);
 				EventInstigator = CharacterOwner->GetController();
-			} else
-			{
-				TraceStart = GetActorLocation();
 			}
 			EyeRotation = GetAim().Rotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
 			
 			TArray<AActor*> ActorsToIgnore;
 			ActorsToIgnore.Add(this);
 			ActorsToIgnore.Add(GetOwner());
-			// The actual bullet trace, with a width for accuracy forgiveness
-			//UKismetSystemLibrary::SphereTraceSingle(GetWorld(), TraceStart, TraceEnd, 20, UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Camera), false, ActorsToIgnore, EDrawDebugTrace::None, Hit, true, FLinearColor::Red, FLinearColor::Green, 5);
 			BulletFiringComponent->FireBullet(Hit, EyeRotation.Vector(), ActorsToIgnore, this, EventInstigator);
-			//UMyCustomBlueprintFunctionLibrary::FireHitScanBullet(Hit, GetWorld(), ActorsToIgnore, TraceStart, EyeRotation.Vector(), Range, FalloffCurve, Damage, Force, this, EventInstigator);
 			SpawnTrailFX(Hit);
 
 		}

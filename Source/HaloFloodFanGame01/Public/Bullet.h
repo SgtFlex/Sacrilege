@@ -15,8 +15,6 @@ class HALOFLOODFANGAME01_API UBullet : public UObject
 	GENERATED_BODY()
 	
 public:
-	
-	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Damage = 5.0f;
 

@@ -52,17 +52,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UNiagaraSystem* FiringVFX;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DeprecatedProperty))
-	float HitScanRange = 5000;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DeprecatedProperty))
-	float HitScanDamage = 5;
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DeprecatedProperty))
+	// float HitScanRange = 5000;
+	//
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DeprecatedProperty))
+	// float HitScanDamage = 5;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DeprecatedProperty))
 	UCurveFloat* HitScanFalloffCurve;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DeprecatedProperty))
-	float HitScanForce = 100;
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DeprecatedProperty))
+	// float HitScanForce = 100;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float HorizontalSpread = 0;
@@ -71,7 +71,7 @@ public:
 	float VerticalSpread = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<UBullet> Bullet;
+	TSubclassOf<UBullet> BulletInfo;
 
 	UPROPERTY(BlueprintAssignable)
 	FOnBulletFired OnBulletFired;

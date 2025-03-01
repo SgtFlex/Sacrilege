@@ -54,9 +54,9 @@ void UBulletFiringComponent::PlayFX_Implementation(FVector Location, FRotator Ro
 void UBulletFiringComponent::FireBullet(FHitResult& HitResult, FVector Direction,  TArray<AActor*> ActorsToIgnore, AActor* DamageCauser, AController* EventInstigator)
 {
 	OnBulletFired.Broadcast();
-	if (!Bullet) return;
+	if (!BulletInfo) return;
 	UMyCustomBlueprintFunctionLibrary::FireHitScanBullet(HitResult, GetWorld(), ActorsToIgnore,
-		GetComponentLocation(), (Direction.Rotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0)).Vector(),Bullet.GetDefaultObject()->Range, Bullet.GetDefaultObject()->FalloffCurve, Bullet.GetDefaultObject()->Damage, Bullet.GetDefaultObject()->Force, DamageCauser, EventInstigator);
+		GetComponentLocation(), (Direction.Rotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0)).Vector(),BulletInfo.GetDefaultObject()->Range, BulletInfo.GetDefaultObject()->FalloffCurve, BulletInfo.GetDefaultObject()->Damage, BulletInfo.GetDefaultObject()->Force, DamageCauser, EventInstigator);
 	PlayFX(GetComponentLocation(), Direction.Rotation());
 }
 

@@ -334,7 +334,7 @@ public:
 	
 	
 private:
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	ACharacterBase* CharacterOwner;
 	
 	UPROPERTY(EditAnywhere)
