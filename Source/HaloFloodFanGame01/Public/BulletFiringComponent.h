@@ -11,6 +11,8 @@ class UBullet;
 class UNiagaraSystem;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBulletFired);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBulletHit, FHitResult, HitResult);
+
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 
@@ -43,7 +45,7 @@ public:
 	virtual AProjectileBase* FireProjectile(TSubclassOf<AProjectileBase> ProjectileClass, FVector Direction, AActor* Owner, AController* Instigator);
 
 	UFUNCTION(BlueprintCallable)
-	virtual void FireBullet(FHitResult& HitResult, FVector Direction,  TArray<AActor*> ActorsToIgnore, AActor* DamageCauser, AController* EventInstigator);
+	virtual void FireBullet(FHitResult& HitResult, FVector AimLocation, FVector Direction,  TArray<AActor*> ActorsToIgnore, AActor* DamageCauser, AController* EventInstigator);
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -75,4 +77,7 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnBulletFired OnBulletFired;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnBulletHit OnBulletHit;
 };

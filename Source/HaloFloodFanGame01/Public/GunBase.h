@@ -75,7 +75,7 @@ public:
 	bool CanFire();
 
 	UFUNCTION(BlueprintCallable)
-	FVector GetAim();
+	void GetAim(FVector& AimLocation, FVector& AimDirection);
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void SpawnBullet();

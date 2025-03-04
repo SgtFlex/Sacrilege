@@ -18,25 +18,40 @@
 
 void UMyCustomBlueprintFunctionLibrary::Ignite(UPrimitiveComponent* Component, float DamagePerSecond, float Duration)
 {
+	
 }
 
-void UMyCustomBlueprintFunctionLibrary::FireHitScanBullet(FHitResult& Hit, const UObject* WorldContextObject, TArray<AActor*>& ActorsToIgnore, FVector StartLocation, FVector Direction, float Range, UCurveFloat* FalloffCurve, float Damage, float Force, AActor* DamageCauser, AController* EventInstigator)
+void UMyCustomBlueprintFunctionLibrary::FireHitScanBullet(FHitResult& Hit, const UObject* WorldContextObject, TArray<AActor*>& ActorsToIgnore, FVector StartLocation, FVector Direction, float Range, UCurveFloat* FalloffCurve, float Damage, float Force, AActor* DamageCauser, AController* EventInstigator, float MagnetizeRadius)
 {
 	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull))
 	{
-		UKismetSystemLibrary::SphereTraceSingle(World, StartLocation, StartLocation + (Direction * Range), 20, TraceTypeQuery1, true, ActorsToIgnore, EDrawDebugTrace::None, Hit, true, FLinearColor::Red, FLinearColor::Green, 5);
-		//DrawDebugLine(World, StartLocation, StartLocation + (Direction * Range), FColor(0, 255, 0, 255), false, 5, 0, 5);
+		FHitResult HitThin;
+		UKismetSystemLibrary::LineTraceSingle(World, StartLocation, StartLocation + (Direction*Range), TraceTypeQuery1, true, ActorsToIgnore, EDrawDebugTrace::None, HitThin, true);
+		if (HitThin.bBlockingHit && HitThin.GetActor()->Implements<UDamageableInterface>())
+		{
+			Hit = HitThin;
+		} else
+		{
+			FHitResult HitMagnetized;
+			UKismetSystemLibrary::SphereTraceSingle(World, StartLocation, StartLocation + (Direction * Range), MagnetizeRadius, TraceTypeQuery1, true, ActorsToIgnore, EDrawDebugTrace::None, HitMagnetized, true);
+			if (HitMagnetized.bBlockingHit && HitMagnetized.GetActor()->Implements<UDamageableInterface>())
+			{
+				Hit = HitMagnetized;
+			} else
+			{
+				Hit = HitThin;
+			}
+		}
+
 		if (Hit.bBlockingHit && Hit.GetActor())
 		{
 			FVector HitDir = (Hit.Location - StartLocation).GetSafeNormal();
 			UAISense_Hearing::ReportNoiseEvent(World, Hit.Location, 1.0f, EventInstigator);
 			if (Hit.GetActor()->Implements<UDamageableInterface>())
 			{
-				//IDamageableInterface* DamageableActor = Cast<IDamageableInterface>(Hit.GetActor());
 				Damage = FalloffCurve!=nullptr ? Damage * FalloffCurve->GetFloatValue(Hit.Distance/Range) : Damage;
 				FPointDamageEvent PointDamageEvent = FPointDamageEvent(Damage, Hit, HitDir, UDamageType::StaticClass());
 				IDamageableInterface::Execute_CustomTakePointDamage(Hit.GetActor(), Damage, HitDir, Hit, Force, EventInstigator, DamageCauser);
-				//DamageableActor->CustomTakePointDamage(PointDamageEvent, Force, EventInstigator, DamageCauser);
 			}
 			if (Hit.GetComponent() && Hit.GetComponent()->IsSimulatingPhysics())
 			{

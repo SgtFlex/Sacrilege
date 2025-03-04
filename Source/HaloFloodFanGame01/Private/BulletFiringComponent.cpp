@@ -51,12 +51,13 @@ void UBulletFiringComponent::PlayFX_Implementation(FVector Location, FRotator Ro
 	UNiagaraFunctionLibrary::SpawnSystemAttached(FiringVFX, this, NAME_None, FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
 }
 
-void UBulletFiringComponent::FireBullet(FHitResult& HitResult, FVector Direction,  TArray<AActor*> ActorsToIgnore, AActor* DamageCauser, AController* EventInstigator)
+void UBulletFiringComponent::FireBullet(FHitResult& HitResult, FVector AimLocation, FVector Direction,  TArray<AActor*> ActorsToIgnore, AActor* DamageCauser, AController* EventInstigator)
 {
 	OnBulletFired.Broadcast();
 	if (!BulletInfo) return;
 	UMyCustomBlueprintFunctionLibrary::FireHitScanBullet(HitResult, GetWorld(), ActorsToIgnore,
-		GetComponentLocation(), (Direction.Rotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0)).Vector(),BulletInfo.GetDefaultObject()->Range, BulletInfo.GetDefaultObject()->FalloffCurve, BulletInfo.GetDefaultObject()->Damage, BulletInfo.GetDefaultObject()->Force, DamageCauser, EventInstigator);
+		AimLocation, (Direction.Rotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0)).Vector(),BulletInfo.GetDefaultObject()->Range, BulletInfo.GetDefaultObject()->FalloffCurve, BulletInfo.GetDefaultObject()->Damage, BulletInfo.GetDefaultObject()->Force, DamageCauser, EventInstigator);
+	OnBulletHit.Broadcast(HitResult);
 	PlayFX(GetComponentLocation(), Direction.Rotation());
 }
 

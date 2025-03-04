@@ -173,14 +173,18 @@ bool AGunBase::CanFire()
 	return !(bReloading || CurMagazine <= 0);
 }
 
-FVector AGunBase::GetAim()
+void AGunBase::GetAim(FVector& AimLocation, FVector& AimDirection)
 {
 	if (CharacterOwner)
 	{
-		return CharacterOwner->GetBaseAimRotation().Vector();
+		FRotator Rot;
+		GetActorEyesViewPoint(AimLocation, Rot);
+		
+		AimDirection = CharacterOwner->GetBaseAimRotation().Vector();
 	} else
 	{
-		return GetActorRotation().Vector();
+		AimLocation = BulletFiringComponent->GetComponentLocation();
+		AimDirection = GetActorRotation().Vector();
 	}
 	
 }
@@ -261,16 +265,19 @@ void AGunBase::SpawnBullet_Implementation()
 		{
 			FHitResult Hit;
 			FRotator EyeRotation;
+			FVector AimLocation;
+			FVector AimDirection;
+			GetAim(AimLocation, AimDirection);
 			if (CharacterOwner)
 			{
 				EventInstigator = CharacterOwner->GetController();
 			}
-			EyeRotation = GetAim().Rotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
+			EyeRotation = AimDirection.Rotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
 			
 			TArray<AActor*> ActorsToIgnore;
 			ActorsToIgnore.Add(this);
 			ActorsToIgnore.Add(GetOwner());
-			BulletFiringComponent->FireBullet(Hit, EyeRotation.Vector(), ActorsToIgnore, this, EventInstigator);
+			BulletFiringComponent->FireBullet(Hit, AimLocation,EyeRotation.Vector(), ActorsToIgnore, this, EventInstigator);
 			SpawnTrailFX(Hit);
 
 		}
@@ -285,8 +292,13 @@ void AGunBase::SpawnBullet_Implementation()
 
 AActor* AGunBase::SpawnProjectile_Implementation(TSubclassOf<AActor> ProjToSpawn)
 {
+	FVector AimLocation;
+	FVector AimDirection;
+	GetAim(AimLocation, AimDirection);
+	
+	
 	FVector Location = Mesh->DoesSocketExist("Muzzle") ? Mesh->GetSocketLocation("Muzzle") : GetActorLocation() + GetActorForwardVector()*50000.0f;
-	FRotator Rotation = GetAim().Rotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
+	FRotator Rotation = AimDirection.Rotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
 	FActorSpawnParameters ActorSpawnParameters;
 	ActorSpawnParameters.Owner = this;
 	ActorSpawnParameters.Instigator = CharacterOwner;

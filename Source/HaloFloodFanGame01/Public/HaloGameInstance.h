@@ -13,5 +13,8 @@ UCLASS()
 class HALOFLOODFANGAME01_API UHaloGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
-	
+
+public:
+	UFUNCTION(BlueprintImplementableEvent)
+	void Supercombine(AActor* Actor);
 };
