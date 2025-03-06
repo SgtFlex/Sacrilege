@@ -12,7 +12,6 @@ FNeedleStruct UHaloWorldSubsystem::AddNeedleToActor(AActor* Actor, AProjectileBa
 			Struct.Actor = Actor;
 			Struct.Projectiles.Add(Needle);
 			
-			UE_LOG(LogTemp, Warning, TEXT("Found Struct for %s, added %s, length %d"), *Actor->GetActorLabel(), *Needle->GetActorLabel(), Struct.Projectiles.Num());
 			return Struct;
 		}
 	}
@@ -20,7 +19,6 @@ FNeedleStruct UHaloWorldSubsystem::AddNeedleToActor(AActor* Actor, AProjectileBa
 	Struct.Actor = Actor;
 	Struct.Projectiles.Add(Needle);
 	NeedledActorArray.Add(Struct);
-	UE_LOG(LogTemp, Warning, TEXT("Created Struct"));
 	return Struct;
 }
 
@@ -37,23 +35,34 @@ void UHaloWorldSubsystem::GetEmbeddedNeedles(AActor* Actor, TArray<AProjectileBa
 
 void UHaloWorldSubsystem::RemoveNeedleFromActor(AActor* Actor, AProjectileBase* Needle)
 {
-	for (FNeedleStruct Struct : NeedledActorArray)
+	for (int32 i = 0; i < NeedledActorArray.Num(); i++)
 	{
-		if (Struct.Actor == Actor)
+		if (NeedledActorArray[i].Actor == Actor)
 		{
-			Struct.Projectiles.Remove(Needle);
-			if (Struct.Projectiles.Num() <= 0)
+			NeedledActorArray[i].Projectiles.Remove(Needle);
+			if (NeedledActorArray[i].Projectiles.Num() <= 0)
 			{
-				NeedledActorArray.Remove(Struct);
+				NeedledActorArray.RemoveAt(i);
 			}
 			return;
 		}
 	}
+	// for (FNeedleStruct& Struct : NeedledActorArray)
+	// {
+	// 	if (Struct.Actor == Actor)
+	// 	{
+	// 		Struct.Projectiles.Remove(Needle);
+	// 		if (Struct.Projectiles.Num() <= 0)
+	// 		{
+	// 			NeedledActorArray.Remove(Struct);
+	// 		}
+	// 		return;
+	// 	}
+	// }
 }
 
 void UHaloWorldSubsystem::RemoveAllNeedlesFromActor(AActor* Actor)
 {
-	FNeedleStruct FoundStruct;
 	for (FNeedleStruct Struct : NeedledActorArray)
 	{
 		if (Struct.Actor == Actor)

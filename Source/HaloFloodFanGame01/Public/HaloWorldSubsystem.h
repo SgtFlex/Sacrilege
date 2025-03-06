@@ -25,9 +25,7 @@ struct FNeedleStruct
 	bool operator==(const FNeedleStruct& Other) const
 	{
 		return Actor == Other.Actor;
-	}
-
-	
+	}	
 };
 
 UCLASS(Blueprintable)
