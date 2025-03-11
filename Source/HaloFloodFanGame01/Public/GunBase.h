@@ -149,7 +149,7 @@ public:
 	
 	virtual void OnInteract_Implementation(ACharacterBase* Character) override;
 
-	virtual void GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon, ACharacterBase* InteractingCharacter) override;
+	// virtual void GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon, ACharacterBase* InteractingCharacter) override;
 
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -264,7 +264,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	float ZoomFOV = 0;
 	
-	UPROPERTY(EditAnywhere, meta = (Category="HUD"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="HUD"))
 	UTexture2D* WeaponIcon;
 
 	UPROPERTY()

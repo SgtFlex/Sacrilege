@@ -897,10 +897,12 @@ void ACharacterBase::SetupViewmodel_Implementation(bool FirstPerson)
 		
 		if (FirstPerson && IsPlayerControlled() && IsLocallyControlled())
 		{
+			GetMesh1P()->bPauseAnims = false;
 			if (EquippedWeapon->DrawSFX) UGameplayStatics::PlaySoundAtLocation(GetWorld(), EquippedWeapon->DrawSFX, GetActorLocation());
 			EquippedWeapon->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
 		} else
 		{
+			GetMesh1P()->bPauseAnims = true;
 			EquippedWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
 		}
 	}

@@ -150,14 +150,14 @@ void AGunBase::OnInteract_Implementation(ACharacterBase* Character)
 	Character->PickupWeapon(this);
 }
 
-void AGunBase::GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon, ACharacterBase* InteractingCharacter)
-{
-	IInteractableInterface::GetInteractInfo_Implementation(Text, Icon, InteractingCharacter);
-
-	Text = InteractText;
-	Icon = InteractIcon;
-	
-}
+// void AGunBase::GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon, ACharacterBase* InteractingCharacter)
+// {
+// 	IInteractableInterface::GetInteractInfo_Implementation(Text, Icon, InteractingCharacter);
+//
+// 	Text = InteractText;
+// 	Icon = InteractIcon;
+// 	
+// }
 
 void AGunBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {

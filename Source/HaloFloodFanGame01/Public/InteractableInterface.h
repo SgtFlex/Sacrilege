@@ -27,5 +27,5 @@ public:
 	void OnInteract(ACharacterBase* Character);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void GetInteractInfo(FText& ActionText, FText& ObjectText, UTexture2D* &Icon, ACharacterBase* InteractingCharacter);
+	void GetInteractInfo(FText &ActionText, FText& ObjectText, UTexture2D* &Icon, ACharacterBase* InteractingCharacter);
 };
