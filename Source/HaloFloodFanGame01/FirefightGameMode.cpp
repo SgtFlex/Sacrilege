@@ -38,6 +38,7 @@ void AFirefightGameMode::BeginPlay()
 
 void AFirefightGameMode::EnemyKilled_Implementation(ACharacterBase* Character, AController* EventInstigator, AActor* DamageCauser)
 {
+	Character->OnDestroyed.RemoveDynamic(this, &AFirefightGameMode::CharacterDestroyed);
 	if (APlayerController* PlayerController = Cast<APlayerController>(EventInstigator))
 	{
 		AHaloPlayerState* HPS = PlayerController->GetPlayerState<AHaloPlayerState>();
@@ -101,7 +102,6 @@ bool AFirefightGameMode::ReadyToStartMatch_Implementation()
 void AFirefightGameMode::StartMatch()
 {
 	Super::StartMatch();
-	//GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushGlobalNotification("Firefight");
 	TArray<AActor*> OutActors;
 	
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AAISpawner::StaticClass(), OutActors);
@@ -111,9 +111,10 @@ void AFirefightGameMode::StartMatch()
 	}
 	AvailableSpawners = Spawners;
 	//OnGameStart.Broadcast();
-	StartSet();
 
-
+	FTimerHandle SetDelayTimerHandle;
+	FirefightGameState->MatchStarted();
+	GetWorldTimerManager().SetTimer(SetDelayTimerHandle, this, &AFirefightGameMode::StartSet, 10.0f);
 	OnPlayerCharDied.AddDynamic(this, &AFirefightGameMode::PlayerDied);
 }
 
@@ -130,8 +131,9 @@ void AFirefightGameMode::StartSet()
 void AFirefightGameMode::FinishSet()
 {
 	MaxSquadCost = (MaxSquadCost + 1) * 2;
+	FirefightGameState->SetFinished();
 	GetWorldTimerManager().SetTimer(SetFinishDelayTimer, this, &AFirefightGameMode::StartSet, 10);
-	//OnSetEnd.Broadcast(HaloGameState->GetCurrentWave(), HaloGameState->GetCurrentWave());
+	OnSetEnd.Broadcast();
 }
 
 void AFirefightGameMode::StartWave()
@@ -222,9 +224,16 @@ void AFirefightGameMode::SpawnWave(TArray<FSquadStruct> WaveToSpawn)
 	UE_LOG(LogTemp, Warning, TEXT("Finished spawning wave"));
 }
 
+void AFirefightGameMode::CharacterDestroyed(AActor* DestroyedActor)
+{
+	EnemyKilled(Cast<ACharacterBase>(DestroyedActor), nullptr, nullptr);
+}
+
 void AFirefightGameMode::ManageCharacter(ACharacterBase* Character)
 {
 	Character->OnKilled.AddDynamic(this, &AFirefightGameMode::EnemyKilled);
+	//Had to disable, doubles the speed of progressing waves
+	Character->OnDestroyed.AddDynamic(this, &AFirefightGameMode::CharacterDestroyed);
 	FirefightEnemies.Add(Character);
 	CurrentEnemyCount++;
 }

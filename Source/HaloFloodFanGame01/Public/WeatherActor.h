@@ -42,7 +42,7 @@ public:
 	UCurveLinearColor* SkyLightColorCurve;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float TimeScale = 1;
+	float TimeScale = 1.0f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool RandomStartTime = false;

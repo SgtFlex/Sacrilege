@@ -39,8 +39,11 @@ void AWeatherActor::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	if (HasAuthority())
 	{
-		CurrentPitch = StartTime + ((GetWorld()->TimeSeconds*0.1) * TimeScale);
-		//@TODO FIX, broke in 5.5 UKismetMathLibrary::FMod(StartTime + ((GetWorld()->TimeSeconds*0.1) * TimeScale), 360.0f, CurrentPitch); //Do one full rotation every full hour
+		if (TimeScale > 0)
+		{
+			CurrentPitch = StartTime + ((GetWorld()->TimeSeconds*0.1) * TimeScale);
+			//@TODO FIX, broke in 5.5 UKismetMathLibrary::FMod(StartTime + ((GetWorld()->TimeSeconds*0.1) * TimeScale), 360.0f, CurrentPitch); //Do one full rotation every full hour
+		}
 	}
 	
 	SetActorRotation(FRotator(CurrentPitch,0, 0));

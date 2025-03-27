@@ -132,7 +132,7 @@ void AVehicleBase::Enter_Implementation(ACharacterBase* NewPilot)
 		CL_Enter(NewPilot);
 	}
 	
-	
+	OnEntered.Broadcast();
 }
 
 void AVehicleBase::CL_Enter_Implementation(ACharacterBase* NewPilot)
@@ -177,6 +177,7 @@ void AVehicleBase::Exit_Implementation()
 	if (IsPlayerControlled())
 		CL_Exit();
 	ResetPilot();
+	OnExited.Broadcast();
 }
 
 void AVehicleBase::CL_Exit_Implementation()

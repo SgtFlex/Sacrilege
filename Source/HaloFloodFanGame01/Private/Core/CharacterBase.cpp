@@ -894,7 +894,6 @@ void ACharacterBase::SetupViewmodel_Implementation(bool FirstPerson)
 {
 	if (EquippedWeapon)
 	{
-		
 		if (FirstPerson && IsPlayerControlled() && IsLocallyControlled())
 		{
 			GetMesh1P()->bPauseAnims = false;

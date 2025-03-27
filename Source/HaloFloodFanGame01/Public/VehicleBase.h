@@ -20,6 +20,8 @@ enum EDamageState : uint8
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDamageStateChanged, EDamageState, NewDamageState);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEntered);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnExited);
 
 UCLASS()
 class HALOFLOODFANGAME01_API AVehicleBase : public APawn, public IDamageableInterface, public IInteractableInterface
@@ -160,5 +162,13 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsDestroyed = false;
+
+	
+	//Delegates
+	UPROPERTY(BlueprintAssignable)
+	FOnEntered	OnEntered;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnExited	OnExited;
 
 };

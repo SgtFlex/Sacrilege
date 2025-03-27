@@ -17,4 +17,12 @@ class HALOFLOODFANGAME01_API UHaloGameInstance : public UGameInstance
 public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void Supercombine(AActor* Actor);
+
+	virtual void LoadComplete(const float LoadTime, const FString& MapName) override;
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void AddLoadScreen();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void RemoveLoadScreen();
 };

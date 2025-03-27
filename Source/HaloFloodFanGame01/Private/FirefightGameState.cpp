@@ -25,7 +25,7 @@ void AFirefightGameState::SetCurrentWave_Implementation(int NewWave)
 	{
 		curWave = NewWave;
 	}
-	GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushGlobalNotification("Reinforcements");
+	WaveStarted();
 	OnWaveChanged.Broadcast(curWave);
 }
 
@@ -37,11 +37,11 @@ int AFirefightGameState::GetCurrentSet()
 
 void AFirefightGameState::SetCurrentSet_Implementation(int NewSet)
 {
+	SetStarted();
 	if (HasAuthority())
 	{
 		curSet = NewSet;
 	}
-	GetWorld()->GetSubsystem<UNotificationSubsystem>()->PushGlobalNotification("Set start");
 	OnSetChanged.Broadcast(curSet);
 }
 

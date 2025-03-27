@@ -25,16 +25,28 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void SetCurrentWave(int NewWave);
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void WaveStarted();
+
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	int GetCurrentSet();
 
 	UFUNCTION(NetMulticast, Reliable)
 	void SetCurrentSet(int NewSet);
+	
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	int GetCurrentEnemyCount();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void SetStarted();
 	
+	UFUNCTION(BlueprintImplementableEvent)
+	void SetFinished();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void MatchStarted();
+
 	
 public:
 	UPROPERTY(BlueprintAssignable)

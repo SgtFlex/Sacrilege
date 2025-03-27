@@ -17,6 +17,7 @@ class APlayerCharacter;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerCharDied, ACharacterBase*, PlayerCharacter, APlayerControllerBase*, PlayerController);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnEnemyKilled, ACharacterBase*, Character, AController*, EventInstigator, AActor*, DamageCauser);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSetEnd);
 
 
 USTRUCT(BlueprintType)
@@ -55,6 +56,9 @@ public:
 	UFUNCTION()
 	void FinishSet();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void SetIntermission();
+
 	UFUNCTION()
 	void StartWave();
 
@@ -69,6 +73,8 @@ public:
 	UFUNCTION()
 	void SpawnWave(TArray<FSquadStruct> WaveToSpawn);
 
+	UFUNCTION()
+	void CharacterDestroyed(AActor* DestroyedActor);
 	UFUNCTION(BlueprintCallable)
 	void ManageCharacter(ACharacterBase* Character);
 
@@ -114,6 +120,9 @@ public:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 	
 public:
+	UPROPERTY(BlueprintAssignable)
+	FOnSetEnd OnSetEnd;
+	
 	UPROPERTY()
 	FTimerHandle SetFinishDelayTimer;
 	
