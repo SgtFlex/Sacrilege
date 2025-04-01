@@ -12,11 +12,14 @@ class UNiagaraSystem;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnHealthDepleted, float, Damage, FVector, Force, FVector, HitLocation,
                                               FName, HitBoneName, AController*, EventInstigator, AActor*, DamageCauser);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthUpdate, UHealthComponent*, HealthComp);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHealthDamaged);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShieldDamaged);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthDamaged, float, Health);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnShieldDamaged, float, Shields);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShieldBreak);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShieldStartRegen);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShieldFinishRegen);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthReplicated, float, Health);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnShieldsReplicated, float, Shields);
+
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -51,8 +54,14 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	bool IsAlive();
+
+	UFUNCTION()
+	void OnRep_Health();
+
+	UFUNCTION()
+	void OnRep_Shields();
 public:
-	UPROPERTY(EditAnywhere, Replicated, Category="Unit Information|Health", meta = (DisplayPriority=1))
+	UPROPERTY(EditAnywhere, ReplicatedUsing=OnRep_Health, Category="Unit Information|Health", meta = (DisplayPriority=1))
 	float Health = 100;
 	
 	UPROPERTY(EditAnywhere, Category="Unit Information|Health", meta = (DisplayPriority=1))
@@ -73,7 +82,7 @@ public:
 	UPROPERTY(EditAnywhere, Category="Unit Information|Health", meta = (DisplayPriority=1))
 	float MaxHealthArmor = 100;
 	
-	UPROPERTY(EditAnywhere, Replicated, Category="Unit Information|Shields", meta = (DisplayPriority=1))
+	UPROPERTY(EditAnywhere, ReplicatedUsing=OnRep_Shields, Category="Unit Information|Shields", meta = (DisplayPriority=1))
 	float Shields = 100;
 	
 	UPROPERTY(EditAnywhere, Category="Unit Information|Shields", meta = (DisplayPriority=1))
@@ -126,6 +135,23 @@ public:
 
 	UPROPERTY()
 	UMeshComponent* MeshComp;
+
+	//DELEGATES
+
+	UPROPERTY(BlueprintAssignable)
+	FOnHealthReplicated OnHealthReplicated;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnShieldsReplicated OnShieldsReplicated;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnShieldDamaged OnShieldDamaged;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnShieldBreak OnShieldBreak;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnHealthDamaged OnHealthDamaged;
 	
 private:
 	UPROPERTY()

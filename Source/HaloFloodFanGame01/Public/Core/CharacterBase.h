@@ -113,7 +113,7 @@ public:
 	float CustomTakeRadialDamage(float Force, FRadialDamageEvent const& RadialDamageEvent, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
 	UFUNCTION(NetMulticast, Unreliable)
-	void SpawnBloodFX(FVector Direction, const FHitResult& HitInfo);
+	void MulticastSpawnBloodFX(FVector Direction, const FHitResult& HitInfo);
 	
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	UHealthComponent* GetHealthComponent();
@@ -161,7 +161,7 @@ public:
 	bool CanMelee();
 
 	UFUNCTION(NetMulticast, Unreliable)
-	void PlayMeleeFX();
+	void MulticastPlayMeleeFX();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void EquipGrenadeType(TSubclassOf<AGrenadeBase> Grenade);
@@ -173,21 +173,21 @@ public:
 	void SV_ThrowEquippedGrenade();
 
 	UFUNCTION(BlueprintCallable, Server, Reliable)
-	void ThrowGrenade(int GrenadeIndex);
+	void ServerThrowGrenade(int GrenadeIndex);
 
 	
 
 	UFUNCTION(BlueprintCallable, NetMulticast, Unreliable)
-	void PlayThrowGrenadeFX(AGrenadeBase* Grenade);
+	void MulticastPlayThrowGrenadeFX(AGrenadeBase* Grenade);
 
 	UFUNCTION(BlueprintCallable, NetMulticast, Unreliable)
-	void PlayThrowGrenadeAnimation();
+	void MulticastPlayThrowGrenadeAnimation();
 
 	UFUNCTION(BlueprintCallable)
 	void SwitchGrenadeType();
 
 	UFUNCTION(BlueprintCallable, Server, Unreliable)
-	void SwitchToGrenadeType(int Index);
+	void ServerSwitchToGrenadeType(int Index);
 	
 	UFUNCTION(BlueprintNativeEvent)
 	void UseEquipment();
@@ -229,31 +229,40 @@ public:
 	virtual void Multi_SwitchWeapon();
 
 	UFUNCTION(Server, Reliable)
-	void FinishSwitchingWeapons();
+	void ServerFinishSwitchingWeapons();
 
 	UFUNCTION()
 	virtual void ScopeWeapon();
 
 	UFUNCTION()
-	virtual void EquipWeapon(AGunBase* Gun);
+	virtual void DrawEquippedWeapon();
 
-	UFUNCTION(BlueprintCallable, Client, Unreliable)
+	UFUNCTION(BlueprintCallable)
 	virtual void SetupViewmodel(bool FirstPerson);
 
-	UFUNCTION(NetMulticast, Unreliable)
-	virtual void HolsterWeapon(AGunBase* Gun);
+	UFUNCTION(NetMulticast, Reliable)
+	virtual void MulticastHolsterEquippedWeapon();
 
 	UFUNCTION(BlueprintCallable)
 	virtual void PickupWeapon(AGunBase* Gun);
 
-	UFUNCTION(Server, Reliable, BlueprintCallable)
+	UFUNCTION(Server, Reliable)
 	virtual void Server_PickupWeapon(AGunBase* Gun);
 	
-	UFUNCTION(NetMulticast, Reliable, BlueprintCallable)
-    virtual void Multi_PickupWeapon(AGunBase* Gun);
+	// UFUNCTION(NetMulticast, Reliable, BlueprintCallable)
+	// virtual void Multi_PickupWeapon(AGunBase* Gun);
+
+	UFUNCTION()
+	void OnRep_EquippedWeapon();
+
+	UFUNCTION()
+	void OnRep_HolsteredWeapon();
 
 	UFUNCTION(BlueprintCallable)
-	virtual void DropWeapon();
+	virtual void DropEquippedWeapon();
+
+	UFUNCTION(BlueprintCallable)
+	void DropWeapon(AGunBase* Gun);
 
 	UFUNCTION()
 	void RagdollSettled(UPrimitiveComponent* Component, FName Name);
@@ -262,16 +271,16 @@ public:
 	virtual void Stun(float StunTime = 1);
 
 	UFUNCTION(NetMulticast, Unreliable)
-	void PlayStunAnimation(float StunTime);
+	void MulticastPlayStunAnimation(float StunTime);
 
 	UFUNCTION()
 	void Unstun();
 
 	UFUNCTION(Server, Reliable)
-	void SetCurrentInteractable();
+	void ServerSetCurrentInteractable();
 
 	UFUNCTION(NetMulticast, Unreliable)
-	void UpdateInteractInfo();
+	void MulticastUpdateInteractInfo();
 
 	UFUNCTION(BlueprintCallable)
 	void Interact();
@@ -330,7 +339,7 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnGrenadeTypeSwitched OnGrenadeTypeSwitched;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Replicated)
 	UHealthComponent* HealthComponent;
 	
 
@@ -347,10 +356,10 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true))
 	TSubclassOf<AActor> EquipmentClass;
 
-	UPROPERTY(BlueprintReadOnly, Replicated, ReplicatedUsing=EquipWeapon)
+	UPROPERTY(BlueprintReadOnly, Replicated, ReplicatedUsing=OnRep_EquippedWeapon)
 	AGunBase* EquippedWeapon;
 
-	UPROPERTY(BlueprintReadOnly, Replicated)
+	UPROPERTY(BlueprintReadOnly, Replicated, ReplicatedUsing=OnRep_HolsteredWeapon)
 	AGunBase* HolsteredWeapon;
 
 	UPROPERTY()

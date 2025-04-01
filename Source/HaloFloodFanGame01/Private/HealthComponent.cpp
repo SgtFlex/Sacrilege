@@ -64,7 +64,11 @@ void UHealthComponent::TakeDamage_Implementation(float Damage, FVector Force, FV
 	{
 		DamageLeft = Damage - Shields;
 		if (SetShields(Shields - Damage) <= 0) //After setting our new shields, check if our shields are now 0
+		{
 			BreakShields();
+			OnShieldBreak.Broadcast();
+		}
+			
 	}
 	if (DamageLeft > 0 && Shields <= 0)
 	{
@@ -127,6 +131,14 @@ bool UHealthComponent::IsAlive()
 	return (Health > 0);
 }
 
+void UHealthComponent::OnRep_Health()
+{
+}
+
+void UHealthComponent::OnRep_Shields()
+{
+}
+
 float UHealthComponent::GetHealth() const
 {
 	return Health;
@@ -134,7 +146,9 @@ float UHealthComponent::GetHealth() const
 
 float UHealthComponent::SetHealth(float NewHealth)
 {
-	return this->Health = FMath::Clamp(NewHealth, 0, MaxHealth);
+	Health = FMath::Clamp(NewHealth, 0, MaxHealth);
+	OnHealthDamaged.Broadcast(Health);
+	return Health;
 }
 
 float UHealthComponent::GetMaxHealth() const
@@ -174,7 +188,9 @@ float UHealthComponent::GetShields() const
 
 float UHealthComponent::SetShields(float NewShields)
 {
-	return this->Shields = FMath::Clamp(NewShields, 0, MaxShields);
+	Shields = FMath::Clamp(NewShields, 0, MaxShields);
+	OnShieldDamaged.Broadcast(Shields);
+	return Shields;
 }
 
 float UHealthComponent::GetMaxShields() const
