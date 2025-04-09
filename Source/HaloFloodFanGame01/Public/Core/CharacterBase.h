@@ -238,7 +238,7 @@ public:
 	virtual void DrawEquippedWeapon();
 
 	UFUNCTION(BlueprintCallable)
-	virtual void SetupViewmodel(bool FirstPerson);
+	virtual void SetupViewmodel(bool bFirstPerson);
 
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void MulticastHolsterEquippedWeapon();
@@ -288,8 +288,6 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_Interact();
 
-	UFUNCTION(NetMulticast, Reliable)
-	void Multi_Interact();
 
 protected:
 	// Called when the game starts or when spawned

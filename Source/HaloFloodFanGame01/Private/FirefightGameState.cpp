@@ -45,6 +45,11 @@ void AFirefightGameState::SetCurrentSet_Implementation(int NewSet)
 	OnSetChanged.Broadcast(curSet);
 }
 
+void AFirefightGameState::SetCurrentEnemyCount_Implementation(int EnemyCount)
+{
+	CurrentEnemyCount = EnemyCount;
+}
+
 int AFirefightGameState::GetCurrentEnemyCount()
 {
 	return CurrentEnemyCount;

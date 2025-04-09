@@ -98,7 +98,7 @@ public:
 	void CreateSpectator(ACharacterBase* Character, APlayerControllerBase* PlayerController, float TimeToSpawn);
 
 	UFUNCTION(BlueprintCallable)
-	bool FinishSpawning(APlayerControllerBase* PlayerController, uint8 Team = 0, TSubclassOf<AGunBase> PrimaryWeaponClass = nullptr, TSubclassOf<AGunBase> SecondaryWeaponClass = nullptr, TSubclassOf<ACharacterBase> CharacterClass = nullptr);
+	bool SpawnPlayer(APlayerControllerBase* PlayerController, uint8 Team = 0, TSubclassOf<AGunBase> PrimaryWeaponClass = nullptr, TSubclassOf<AGunBase> SecondaryWeaponClass = nullptr, TSubclassOf<ACharacterBase> CharacterClass = nullptr);
 
 	UFUNCTION(BlueprintCallable)
 	void RespawnPlayer(APlayerControllerBase* PlayerController);

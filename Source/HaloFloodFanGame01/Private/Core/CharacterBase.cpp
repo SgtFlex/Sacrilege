@@ -863,49 +863,50 @@ void ACharacterBase::DrawEquippedWeapon()
 {
 	if (!EquippedWeapon)
 	{
+		
 		#if WITH_EDITOR
 			UE_LOG(LogTemp, Warning, TEXT("No equipped weapon for: %s"), *EquippedWeapon->GetActorLabel());
 		#endif
 		return;
 	}
 	#if WITH_EDITOR
-		UE_LOG(LogTemp, Warning, TEXT("EquipWeapon called for: %s"), *EquippedWeapon->GetActorLabel());
+		UE_LOG(LogTemp, Warning, TEXT("EquipWeapon called for %s on %s"), *EquippedWeapon->GetActorLabel(), *UEnum::GetValueAsString(GetRemoteRole()));
 	#endif
+	//EquippedWeapon->SetReplicateMovement(false);
 	EquippedWeapon->Mesh->SetSimulatePhysics(false);
 	EquippedWeapon->SetActorEnableCollision(false);
 	EquippedWeapon->SetActorHiddenInGame(false);
-	EquippedWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
+	
 	EquippedWeapon->OnEquipped();
 
 	if (HolsteredWeapon)
 		HolsteredWeapon->SetActorHiddenInGame(true);
 
-	if (IsLocallyControlled())
+
+	SetupViewmodel(true);
+	
+
+	WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
+}
+
+void ACharacterBase::SetupViewmodel(const bool bFirstPerson)
+{
+	if (!EquippedWeapon) return;
+	EquippedWeapon->ForceNetUpdate();
+	if (bFirstPerson && IsLocallyViewed())
 	{
-		SetupViewmodel(true);
+		GetMesh1P()->bPauseAnims = false;
+		if (EquippedWeapon->DrawSFX) UGameplayStatics::PlaySoundAtLocation(GetWorld(), EquippedWeapon->DrawSFX, GetActorLocation());
+		EquippedWeapon->AttachToComponent(GetMesh1P(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
 		if (EquippedWeapon->DrawAnimation1P)
 		{
 			GetMesh1P()->GetAnimInstance()->Montage_Play(EquippedWeapon->DrawAnimation1P, EquippedWeapon->DrawAnimation1P->GetPlayLength() / EquippedWeapon->DrawSpeed);
 		}
 	}
-	WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
-}
-
-void ACharacterBase::SetupViewmodel(bool FirstPerson)
-{
-	if (EquippedWeapon)
+	else
 	{
-		if (FirstPerson && IsLocallyViewed())
-		{
-			GetMesh1P()->bPauseAnims = false;
-			if (EquippedWeapon->DrawSFX) UGameplayStatics::PlaySoundAtLocation(GetWorld(), EquippedWeapon->DrawSFX, GetActorLocation());
-			EquippedWeapon->AttachToComponent(Mesh1P, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
-		}
-		else
-		{
-			GetMesh1P()->bPauseAnims = true;
-			EquippedWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
-		}
+		GetMesh1P()->bPauseAnims = true;
+		EquippedWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
 	}
 }
 
@@ -940,7 +941,8 @@ void ACharacterBase::Server_PickupWeapon_Implementation(AGunBase* Gun)
 {
 	// Server_PickupWeapon(Gun);
 	Gun->SetOwner(this);
-	Gun->SetReplicateMovement(false);
+	Gun->ForceNetUpdate();
+	//Gun->SetReplicateMovement(false);
 	Gun->Mesh->SetSimulatePhysics(false);
 	Gun->SetActorEnableCollision(false);
 	
@@ -1004,7 +1006,7 @@ void ACharacterBase::OnRep_EquippedWeapon()
 void ACharacterBase::OnRep_HolsteredWeapon()
 {
 	HolsteredWeapon->SetOwner(this);
-	HolsteredWeapon->SetReplicateMovement(false);
+	//HolsteredWeapon->SetReplicateMovement(false);
 	HolsteredWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "Holster");
 	HolsteredWeapon->SetActorHiddenInGame(true);
 	HolsteredWeapon->Mesh->SetSimulatePhysics(false);
@@ -1019,7 +1021,8 @@ void ACharacterBase::DropEquippedWeapon()
 
 void ACharacterBase::DropWeapon(AGunBase* Gun)
 {
-	Gun->SetReplicateMovement(true);
+	//Gun->SetReplicateMovement(true);
+	if (!Gun) return;
 	Gun->ReleaseTrigger();
 	Gun->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	Gun->SetActorEnableCollision(true);
@@ -1136,11 +1139,6 @@ void ACharacterBase::Server_Interact_Implementation()
 	{
 		IInteractableInterface::Execute_OnInteract(InteractableActor, this);
 	}
-}
-
-void ACharacterBase::Multi_Interact_Implementation()
-{
-	
 }
 
 void ACharacterBase::NotifyRestarted()

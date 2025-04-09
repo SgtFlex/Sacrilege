@@ -33,6 +33,9 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void SetCurrentSet(int NewSet);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void SetCurrentEnemyCount(int EnemyCount);
 	
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)

@@ -148,6 +148,7 @@ float UHealthComponent::SetHealth(float NewHealth)
 {
 	Health = FMath::Clamp(NewHealth, 0, MaxHealth);
 	OnHealthDamaged.Broadcast(Health);
+	OnHealthUpdate.Broadcast(this);
 	return Health;
 }
 

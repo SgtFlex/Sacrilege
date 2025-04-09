@@ -57,7 +57,15 @@ public:
 
 	void NotifyRestarted() override;
 
+	virtual void PossessedBy(AController* NewController) override;
+
+	UFUNCTION(Client, Reliable)
+	void Client_PossessedBy(AController* NewController);
+
 	virtual void UnPossessed() override;
+
+	UFUNCTION(Client, Reliable)
+	void Client_Unpossessed();
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	void Enter(ACharacterBase* NewPilot);

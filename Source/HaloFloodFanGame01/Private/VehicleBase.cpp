@@ -99,6 +99,7 @@ void AVehicleBase::SetIsDestroyed(bool bNewIsDestroyed)
 	bIsDestroyed = bNewIsDestroyed;
 }
 
+//This is a multicast function
 void AVehicleBase::NotifyRestarted()
 {
 	Super::NotifyRestarted();
@@ -107,20 +108,45 @@ void AVehicleBase::NotifyRestarted()
 	// 	SpawnHUD();
 	// 	SpawnControls();
 	// }
+	Client_PossessedBy(nullptr);
+}
+
+//Server-only RPC
+void AVehicleBase::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	//Client_PossessedBy(NewController);
+}
+
+void AVehicleBase::Client_PossessedBy_Implementation(AController* NewController)
+{
+	if (IsLocallyViewed())
+	{
+		SpawnHUD();
+		SpawnControls();
+	}
 }
 
 void AVehicleBase::UnPossessed()
 {
 	//Bugs out all clients
-	// if (IsLocallyControlled())
-	// {
-	// 	RemoveHUD();
-	// 	RemoveControls();
-	// }
+	Client_Unpossessed();
+	if (IsLocallyViewed())
+	{
+		RemoveHUD();
+		RemoveControls();
+	}
 	Super::UnPossessed();
-	
 }
 
+void AVehicleBase::Client_Unpossessed_Implementation()
+{
+	if (IsLocallyViewed())
+	{
+		RemoveHUD();
+		RemoveControls();
+	}
+}
 
 
 void AVehicleBase::Enter_Implementation(ACharacterBase* NewPilot)
@@ -137,11 +163,11 @@ void AVehicleBase::Enter_Implementation(ACharacterBase* NewPilot)
 
 void AVehicleBase::CL_Enter_Implementation(ACharacterBase* NewPilot)
 {
-	if (IsLocallyControlled())
-	{
-		SpawnHUD();
-		SpawnControls();
-	}
+	// if (IsLocallyControlled())
+	// {
+	// 	SpawnHUD();
+	// 	SpawnControls();
+	// }
 }
 
 void AVehicleBase::SetPilotToPossess_Implementation(ACharacterBase* NewPilot)

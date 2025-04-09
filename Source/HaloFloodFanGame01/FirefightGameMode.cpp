@@ -48,6 +48,7 @@ void AFirefightGameMode::EnemyKilled_Implementation(ACharacterBase* Character, A
 		//OnScoreUpdated.Broadcast(PlayerController, HPS->GetPlayerScore(), HPS->GetPlayerResource());
 	}
 	CurrentEnemyCount--;
+	FirefightGameState->SetCurrentEnemyCount(CurrentEnemyCount);
 	
 
 	if (FirefightGameState->GetCurrentWave() != maxWave)
@@ -141,6 +142,7 @@ void AFirefightGameMode::StartWave()
 	FirefightGameState->SetCurrentWave(FirefightGameState->GetCurrentWave()+1);
 	SquadsToSpawn.Append(CalculateWave());
 	SpawnWave(SquadsToSpawn);
+	FirefightGameState->SetCurrentEnemyCount(CurrentEnemyCount);
 	//OnWaveStart.Broadcast(HaloGameState->GetCurrentWave(), HaloGameState->GetCurrentWave());
 }
 
@@ -288,7 +290,7 @@ void AFirefightGameMode::PlayerDied_Implementation(ACharacterBase* PlayerCharact
 	}
 }
 
-bool AFirefightGameMode::FinishSpawning(APlayerControllerBase* PlayerController, uint8 Team, TSubclassOf<AGunBase> PrimaryWeaponClass, TSubclassOf<AGunBase> SecondaryWeaponClass, TSubclassOf<ACharacterBase> CharacterClass)
+bool AFirefightGameMode::SpawnPlayer(APlayerControllerBase* PlayerController, uint8 Team, TSubclassOf<AGunBase> PrimaryWeaponClass, TSubclassOf<AGunBase> SecondaryWeaponClass, TSubclassOf<ACharacterBase> CharacterClass)
 {
 	AHaloPlayerState* HaloPlayerState = PlayerController->GetPlayerState<AHaloPlayerState>();
 	if (HaloPlayerState)
