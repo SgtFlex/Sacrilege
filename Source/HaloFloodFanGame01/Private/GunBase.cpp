@@ -178,7 +178,7 @@ void AGunBase::GetAim(FVector& AimLocation, FVector& AimDirection)
 	if (CharacterOwner)
 	{
 		FRotator Rot;
-		GetActorEyesViewPoint(AimLocation, Rot);
+		CharacterOwner->GetActorEyesViewPoint(AimLocation, Rot);
 		
 		AimDirection = CharacterOwner->GetBaseAimRotation().Vector();
 	} else
