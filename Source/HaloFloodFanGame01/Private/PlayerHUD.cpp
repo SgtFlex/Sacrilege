@@ -3,25 +3,16 @@
 
 #include "PlayerHUD.h"
 
-#include "AIControllerBase.h"
 #include "GrenadeWidget.h"
 #include "Blueprint/WidgetTree.h"
-#include "Components/CanvasPanelSlot.h"
 #include "Components/GridPanel.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/Image.h"
 #include "GunBase.h"
-#include "HealthComponent.h"
-#include "Camera/CameraComponent.h"
-#include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Components/UniformGridSlot.h"
-#include "Components/VerticalBox.h"
 #include "HaloFloodFanGame01/PlayerCharacter.h"
-#include "HaloFloodFanGame01/FirefightGamemode.h"
 #include "GrenadeBase.h"
-#include "PlayerControllerBase.h"
-#include "Kismet/GameplayStatics.h"
 
 void UPlayerHUD::NativeConstruct()
 {
@@ -33,125 +24,87 @@ void UPlayerHUD::NativeConstruct()
 	//PlayerCharacter->GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &UPlayerHUD::OnHealthUpdated);
 	PlayerCharacter->OnGrenadeInventoryUpdated.AddDynamic(this, &UPlayerHUD::UpdateGrenadeInventory);
 	PlayerCharacter->OnGrenadeTypeSwitched.AddDynamic(this, &UPlayerHUD::UPlayerHUD::UpdateSelectedGrenadeType);
-	UpdateGrenadeInventory();
+	UpdateGrenadeInventory(PlayerCharacter->GetGrenadeInventory());
+	UpdateSelectedGrenadeType(PlayerCharacter->GetSelectedGrenadeType());
 	UpdateHUDWeaponData(PlayerCharacter->EquippedWeapon, PlayerCharacter->HolsteredWeapon);
 }
 
-void UPlayerHUD::PostLoad()
-{
-	Super::PostLoad();
-
-	
-}
-
-void UPlayerHUD::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
-{
-	Super::NativeTick(MyGeometry, InDeltaTime);
-
-	//DetermineCrosshairColor();
-	
-
-	// SetCompassDirection(PlayerCharacter->GetFirstPersonCameraComponent()->GetComponentRotation().Yaw);
-
-	//if (PlayerCharacter && PlayerCharacter->EquippedWep && PlayerCharacter->EquippedWep->CrosshairTexture) Crosshair->SetBrushFromTexture(PlayerCharacter->EquippedWep->CrosshairTexture);
-	//SetFragCounter(PlayerCharacter->FragCount);
-	/*IInteractableInterface* IntActor = Cast<IInteractableInterface>(PlayerAim.GetActor());
-	if (PlayerAim.bBlockingHit && IsValid(PlayerAim.GetActor()) && IntActor)
-	{
-		FText IntText;
-		UTexture2D* IntIcon;
-		IntActor->Execute_GetInteractInfo(PlayerAim.GetActor(), IntText, IntIcon);
-		SetInteractInfo(IntText, IntIcon);
-		SetCanInteract(true);
-	}
-	else 
-		SetCanInteract(false);*/
-}
-
-// void UPlayerHUD::SetInteractInfo(FText InfoText, UTexture2D* Icon)
-// {
-// 	if (Icon)
-// 	{
-// 		//InteractIcon->SetVisibility(ESlateVisibility::Visible);
-// 		InteractIcon->SetBrushFromTexture(Icon);
-// 	}
-// 	else
-// 	{
-// 		//InteractIcon->SetVisibility(ESlateVisibility::Hidden);
-// 	}
-//
-// 	if (!InfoText.IsEmpty())
-// 	{
-// 		InteractActionWidget->SetText(InfoText);
-// 	} else
-// 	{
-// 		InteractActionWidget->SetText(FText::FromString("Interact"));
-// 	}
-// }
-
 void UPlayerHUD::UpdateSelectedGrenadeType(TSubclassOf<AGrenadeBase> GrenadeClass)
 {
-	if (SelectedGrenadeType) GrenadeWidgetMap[SelectedGrenadeType]->SelectionBorder->SetVisibility(ESlateVisibility::Hidden);
+	if (GrenadeWidgets.IsEmpty()) return;
+	if (SelectedGrenadeType)
+	{
+		GrenadeWidgetMap[SelectedGrenadeType]->SetIsSelected(false);
+	}
 	SelectedGrenadeType = GrenadeClass;
-	GrenadeWidgetMap[GrenadeClass]->SelectionBorder->SetVisibility(ESlateVisibility::Visible);
+	if (!GrenadeWidgetMap.IsEmpty() && GrenadeWidgetMap.Contains(PlayerCharacter->GetSelectedGrenadeType()))
+	{
+		GrenadeWidgetMap[GrenadeClass]->SetIsSelected(true);
+	}
 }
 
-void UPlayerHUD::UpdateGrenadeInventory()
+void UPlayerHUD::UpdateGrenadeInventory(TArray<FGrenadeStruct> GrenadeInventory)
 {
-	const TArray<FGrenadeStruct> GrenadeInventory = PlayerCharacter->GrenadeInventory;
-	// for (auto GrenadeWidget : GrenadeWidgetMap)
-	// {
-	// 	for (auto GrenadeType : GrenadeInventory) //Update the grenade amount
-	// 	{
-	// 		if (GrenadeType.GrenadeClass == GrenadeWidget.Key)
-	// 		{
-	// 			GrenadeWidget.Value->GrenadeCounter->SetText(FText::AsNumber(GrenadeType.GrenadeAmount));
-	// 		} else //Destroy the grenade widget
-	// 		{
-	// 			
-	// 		}
-	// 	}
-	// }
-	OldGrenadeInventory = GrenadeInventory;
-	for (FGrenadeStruct GrenadeStruct : GrenadeInventory)
+	//If old grenade inventory size doesn't match new inventory size, then reconstruct the widget array (NOT MAP). BUT FIRST CHECK IF SIZE IS THE SAME.
+	if (GrenadeInventory.Num() == OldGrenadeInventory.Num() && GrenadeInventory.Num() == GrenadeWidgets.Num())
 	{
-		if (!GrenadeWidgetMap.Contains(GrenadeStruct.GrenadeClass))
-		{
-			if (UGrenadeWidget* GrenadeWidget = Cast<UGrenadeWidget>(CreateWidget(FragHUD, GrenadeWidgetClass)))
-			{
-				GrenadeWidgetMap.Add(GrenadeStruct.GrenadeClass, GrenadeWidget);
-				GrenadeWidget->GrenadeImage->SetBrushFromTexture(GrenadeStruct.GrenadeClass.GetDefaultObject()->GrenadeIcon);
-				if (FragHUD)
-				{
-					UUniformGridSlot* GridSlot = Cast<UUniformGridSlot>(FragHUD->AddChildToUniformGrid(GrenadeWidget));
-					GridSlot->SetVerticalAlignment(EVerticalAlignment::VAlign_Fill);
-				}
-			}
-		}
-		GrenadeWidgetMap[GrenadeStruct.GrenadeClass]->GrenadeCounter->SetText(FText::AsNumber(GrenadeStruct.GrenadeAmount));
+		//Update the existing widgets
+		UpdateGrenadeWidgets();
+	} else
+	{
+		//Reconstruct the widgets
+		DestroyGrenadeWidgets();
+		
+		CreateGrenadeWidgets();
 	}
-	
-	//Reorder the widgets
-	for (int i = 0; i < FragHUD->GetChildrenCount(); i++)
+	OldGrenadeInventory = GrenadeInventory;
+}
+
+void UPlayerHUD::CreateGrenadeWidgets()
+{
+	const TArray<FGrenadeStruct> GrenadeInventory = PlayerCharacter->GetGrenadeInventory();
+	for (int i = 0; i < GrenadeInventory.Num(); i++)
 	{
-		if (UUniformGridSlot* GridSlot = Cast<UUniformGridSlot>(FragHUD->GetChildAt(i)->Slot))
+		UGrenadeWidget* GrenadeWidget = CreateWidget<UGrenadeWidget>(FragHUD, GrenadeWidgetClass);
+		UUniformGridSlot* GridSlot = FragHUD->AddChildToUniformGrid(GrenadeWidget);
+		GridSlot->SetVerticalAlignment(EVerticalAlignment::VAlign_Fill);
+		GridSlot->SetColumn(i);
+
+		GrenadeWidget->SetGrenadeClass(GrenadeInventory[i].GrenadeClass);
+		GrenadeWidget->SetGrenadeCount(GrenadeInventory[i].GrenadeAmount);
+		GrenadeWidgets.Add(GrenadeWidget);
+		GrenadeWidgetMap.Add(GrenadeInventory[i].GrenadeClass, GrenadeWidget);
+	}
+	SelectedGrenadeType = nullptr;
+	UpdateSelectedGrenadeType(PlayerCharacter->GetSelectedGrenadeType());
+}
+
+void UPlayerHUD::UpdateGrenadeWidgets()
+{
+	const TArray<FGrenadeStruct> GrenadeInventory = PlayerCharacter->GetGrenadeInventory();
+	for (int i = 0; i < GrenadeInventory.Num(); i++)
+	{
+		if (GrenadeInventory[i].GrenadeClass == OldGrenadeInventory[i].GrenadeClass)
 		{
-			GridSlot->SetColumn(i);
+			GrenadeWidgets[i]->SetGrenadeCount(GrenadeInventory[i].GrenadeAmount);
+		} else if (GrenadeInventory[i].GrenadeClass != OldGrenadeInventory[i].GrenadeClass)
+		{
+			GrenadeWidgets[i]->SetGrenadeClass(GrenadeInventory[i].GrenadeClass);
+			GrenadeWidgets[i]->SetGrenadeCount(GrenadeInventory[i].GrenadeAmount);
+			GrenadeWidgetMap[GrenadeInventory[i].GrenadeClass] = GrenadeWidgets[i];
 		}
 	}
 }
 
-
-// void UPlayerHUD::SetCompassDirection_Implementation(float PlayerYaw)
-// {
-// 	CompassDirection = (PlayerYaw+180);
-// 	float Offset = 45;
-// 	float x = ((PlayerYaw+Offset)*-10);
-// 	UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Compass->Slot);
-// 	CanvasSlot->SetPosition(FVector2d(x, 0));
-// 	CompassText->SetText(FText::AsNumber(CompassDirection));
-// }
-
+void UPlayerHUD::DestroyGrenadeWidgets()
+{
+	for (int i = 0; i < GrenadeWidgets.Num(); i++)
+	{
+		GrenadeWidgets[i]->RemoveFromParent();
+	}
+	GrenadeWidgets.Empty();
+	GrenadeWidgetMap.Empty();
+}
 
 void UPlayerHUD::ConstructAmmoGrid_Implementation(AGunBase* Gun)
 {
@@ -216,84 +169,6 @@ void UPlayerHUD::UpdateHUDMagazineElements()
 	SetAmmoGridBullets(PlayerCharacter->EquippedWeapon->CurMagazine, PlayerCharacter->EquippedWeapon->MaxMagazine);
 }
 
-// void UPlayerHUD::SetCrosshairType(int type)
-// {
-// 	switch (type)
-// 	{
-// 	default:
-// 	case 1:
-// 		Crosshair->SetColorAndOpacity(HUDColor);
-// 		break;
-// 	case 2:
-// 		Crosshair->SetColorAndOpacity(InteractableColor);
-// 		break;
-// 	case 3:
-// 		Crosshair->SetColorAndOpacity(AllyColor);
-// 		break;
-// 	case 4:
-// 		Crosshair->SetColorAndOpacity(EnemyColor);
-// 		break;
-// 	}
-// }
-
-// void UPlayerHUD::DetermineCrosshairColor()
-// {
-// 	FHitResult PlayerAim;
-// 	PlayerCharacter->GetPlayerAim(PlayerAim);
-// 	if (PlayerAim.GetActor())
-// 	{
-// 		if (ACharacterBase* Char = Cast<ACharacterBase>(PlayerAim.GetActor()))
-// 		{
-// 			if (Char->GetHealthComponent()->IsAlive())
-// 			{
-// 				if (Char->TeamId == PlayerCharacter->TeamId)
-// 				{
-// 					SetCrosshairType(3);
-// 					return;
-// 				} else
-// 				{
-// 					SetCrosshairType(4);
-// 					return;
-// 				}
-// 			}
-// 		}
-// 	}
-// 	SetCrosshairType(1);
-// }
-
-// void UPlayerHUD::SetCrosshairTexture(UTexture2D* NewTexture)
-// {
-// 	Crosshair->SetBrushFromTexture(NewTexture);
-// }
-
-void UPlayerHUD::SetFragHUDEnabled(bool bDisplay)
-{
-	if (bDisplay)
-	{
-		FragHUD->SetVisibility(ESlateVisibility::Visible);
-	} else
-	{
-		FragHUD->SetVisibility(ESlateVisibility::Hidden);
-	}
-}
-
-void UPlayerHUD::SetWeaponHUDEnabled(bool bDisplay)
-{
-	if (bDisplay)
-	{
-		WeaponHUD->SetVisibility(ESlateVisibility::Visible);
-	} else
-	{
-		WeaponHUD->SetVisibility(ESlateVisibility::Hidden);
-	}
-}
-
-// void UPlayerHUD::OnHealthUpdated_Implementation(UHealthComponent* HealthComp)
-// {
-// 	SetHealth(HealthComp->GetHealth(), HealthComp->GetMaxHealth());
-// 	SetShields(HealthComp->GetShields(), HealthComp->GetMaxShields());
-// }
-
 void UPlayerHUD::UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredGun)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Updated HUD Weapon data"));
@@ -326,58 +201,3 @@ void UPlayerHUD::UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredG
 		HolsteredGunWidget->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
-
-// void UPlayerHUD::UpdateInteractable(AActor* Actor)
-// {
-// 	if (Actor && Actor->Implements<UInteractableInterface>())
-// 	{
-// 		FText IntText;
-// 		UTexture2D* IntIcon;
-// 		SetCanInteract(true);
-// 		
-// 		IInteractableInterface::Execute_GetInteractInfo(Actor, IntText, IntIcon);
-// 		SetInteractInfo(IntText, IntIcon);
-// 		//InteractName->SetText(Actor->GetClass()->GetDisplayNameText());
-// 	} else
-// 	{
-// 		SetCanInteract(false);
-// 	}
-// }
-
-
-bool UPlayerHUD::Initialize()
-{
-	Super::Initialize();
-	
-	
-	return true;
-}
-
-// void UPlayerHUD::SetHealth_Implementation(float CurrentHealth, float MaxHealth)
-// {
-// 	if (HealthBar) {
-// 		FNumberFormattingOptions NumberFormattingOptions;
-// 		NumberFormattingOptions.RoundingMode = ERoundingMode::FromZero;
-// 		HealthBar->SetPercent(CurrentHealth / MaxHealth);
-// 		HealthNum->SetText(FText::AsNumber(CurrentHealth, &NumberFormattingOptions));
-// 	}
-// }
-//
-// void UPlayerHUD::SetShields_Implementation(float CurrentShields, float MaxShields)
-// {
-// 	if (ShieldBar) {
-// 		FNumberFormattingOptions NumberFormattingOptions;
-// 		NumberFormattingOptions.RoundingMode = ERoundingMode::FromZero;
-// 		ShieldBar->SetPercent(CurrentShields / MaxShields);
-// 		ShieldNum->SetText(FText::AsNumber(CurrentShields, &NumberFormattingOptions));
-// 	}
-// }
-
-// void UPlayerHUD::SetCanInteract_Implementation(bool CanInteract)
-// {
-// 	if (CanInteract)
-// 		InteractBoxWidget->SetVisibility(ESlateVisibility::Visible);
-// 	else
-// 		InteractBoxWidget->SetVisibility(ESlateVisibility::Hidden);
-// }
-

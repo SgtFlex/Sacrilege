@@ -58,7 +58,7 @@ struct FGrenadeStruct
 	
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGrenadeInvetoryUpdated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrenadeInvetoryUpdated, TArray<FGrenadeStruct>, GrenadeInventory);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrenadeTypeSwitched, TSubclassOf<AGrenadeBase>, GrenadeClass);
 
 UCLASS()
@@ -184,7 +184,22 @@ public:
 	void MulticastPlayThrowGrenadeAnimation();
 
 	UFUNCTION(BlueprintCallable)
-	void SwitchGrenadeType();
+	TArray<FGrenadeStruct> GetGrenadeInventory();
+
+	UFUNCTION(BlueprintCallable)
+	TSubclassOf<AGrenadeBase> GetSelectedGrenadeType();
+
+	UFUNCTION(BlueprintCallable)
+	bool SelectGrenadeType(TSubclassOf<AGrenadeBase> GrenadeType);
+
+	UFUNCTION(BlueprintCallable)
+	void SetGrenadeTypeIndex(int Index);
+
+	UFUNCTION(BlueprintCallable)
+	int GetGrenadeTypeIndex();
+
+	UFUNCTION(BlueprintCallable)
+	void CycleGrenadeType();
 
 	UFUNCTION(BlueprintCallable, Server, Unreliable)
 	void ServerSwitchToGrenadeType(int Index);

@@ -136,7 +136,7 @@ void AGrenadeBase::Pickup(ACharacterBase* Character)
 			if (Character->GrenadeInventory[i].GrenadeAmount < 4)
 			{
 				Character->GrenadeInventory[i].GrenadeAmount++;
-				Character->OnGrenadeInventoryUpdated.Broadcast();
+				Character->OnGrenadeInventoryUpdated.Broadcast(Character->GetGrenadeInventory());
 				Destroy();
 			}
 		}
@@ -150,7 +150,7 @@ void AGrenadeBase::Pickup(ACharacterBase* Character)
 		Character->GrenadeInventory.Add(GrenadeType);
 		Destroy();
 	}
-	Character->OnGrenadeInventoryUpdated.Broadcast();
+	Character->OnGrenadeInventoryUpdated.Broadcast(Character->GetGrenadeInventory());
 }
 
 float AGrenadeBase::CustomOnTakeAnyDamage(float DamageAmount, FVector Force,

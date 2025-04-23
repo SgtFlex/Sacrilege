@@ -8,7 +8,6 @@
 #include "EnhancedInputSubsystems.h"
 #include "GrenadeBase.h"
 #include "GunBase.h"
-#include "HaloGameState.h"
 #include "HealthComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/DamageEvents.h"
@@ -24,14 +23,10 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "Camera/CameraComponent.h"
-#include "Components/DecalComponent.h"
-#include "Components/SphereComponent.h"
 #include "GameFramework/InputDeviceSubsystem.h"
-#include "HaloFloodFanGame01/FirefightGamemode.h"
 #include "Net/UnrealNetwork.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISense_Damage.h"
-#include "Perception/AISense_Sight.h"
 #include "Perception/AISense_Touch.h"
 
 // Sets default values
@@ -263,7 +258,7 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		
 		EnhancedInputComponent->BindAction(MeleeAction, ETriggerEvent::Triggered, this, &ACharacterBase::Melee);
 
-		EnhancedInputComponent->BindAction(SwitchGrenadeAction, ETriggerEvent::Triggered, this, &ACharacterBase::SwitchGrenadeType);
+		EnhancedInputComponent->BindAction(SwitchGrenadeAction, ETriggerEvent::Triggered, this, &ACharacterBase::CycleGrenadeType);
 		
 		EnhancedInputComponent->BindAction(ThrowGrenadeAction, ETriggerEvent::Triggered, this, &ACharacterBase::ThrowEquippedGrenade);
 
@@ -707,7 +702,7 @@ void ACharacterBase::ServerThrowGrenade_Implementation(int GrenadeIndex)
 			GrenadeInventory.RemoveAt(GrenadeIndex);
 			ServerSwitchToGrenadeType(GrenadeIndex);
 		}
-		OnGrenadeInventoryUpdated.Broadcast();
+		OnGrenadeInventoryUpdated.Broadcast(GetGrenadeInventory());
 	}
 }
 
@@ -727,7 +722,41 @@ void ACharacterBase::MulticastPlayThrowGrenadeAnimation_Implementation()
 		GetMesh()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation);
 }
 
-void ACharacterBase::SwitchGrenadeType()
+TArray<FGrenadeStruct> ACharacterBase::GetGrenadeInventory()
+{
+	return GrenadeInventory;
+}
+
+TSubclassOf<AGrenadeBase> ACharacterBase::GetSelectedGrenadeType()
+{
+	if (GetGrenadeTypeIndex() > GrenadeInventory.Num() || GrenadeInventory.Num() <= 0) return nullptr;
+	return GrenadeInventory[CurGrenadeTypeI].GrenadeClass;
+}
+
+bool ACharacterBase::SelectGrenadeType(TSubclassOf<AGrenadeBase> GrenadeType) 
+{
+	for (int i = 0; i < GrenadeInventory.Num(); i++)
+	{
+		if (GrenadeInventory[i].GrenadeClass == GrenadeType)
+		{
+			CurGrenadeTypeI = i;
+			return true;
+		}
+	}
+	return false;
+}
+
+void ACharacterBase::SetGrenadeTypeIndex(int Index)
+{
+	CurGrenadeTypeI = FMath::Clamp(Index, 0, GrenadeInventory.Num() - 1);
+}
+
+int ACharacterBase::GetGrenadeTypeIndex()
+{
+	return CurGrenadeTypeI;
+}
+
+void ACharacterBase::CycleGrenadeType()
 {
 	if (GrenadeInventory.Num() <= 0) return;
 	

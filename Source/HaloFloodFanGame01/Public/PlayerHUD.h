@@ -26,47 +26,21 @@ class HALOFLOODFANGAME01_API UPlayerHUD : public UUserWidget
 
 	virtual void NativeConstruct() override;
 
-	virtual void PostLoad() override;
-	
-	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
-
 public:
-	// UFUNCTION(BlueprintNativeEvent)
-	// void SetHealth(float CurrentHealth, float MaxHealth);
-	//
-	// UFUNCTION(BlueprintNativeEvent)
-	// void SetShields(float CurrentShields, float MaxShields);
-
-	// UFUNCTION(BlueprintNativeEvent)
-	// void SetCanInteract(bool CanInteract);
-	//
-	// UFUNCTION()
-	// void SetInteractInfo(FText InfoText, UTexture2D* Icon = nullptr);
-
 	UFUNCTION() 
 	void UpdateSelectedGrenadeType(TSubclassOf<AGrenadeBase> GrenadeClass);
 
 	UFUNCTION()
-	void UpdateGrenadeInventory();
+	void UpdateGrenadeInventory(TArray<FGrenadeStruct> GrenadeInventory);
 
-	
+	UFUNCTION()
+	void CreateGrenadeWidgets();
 
-	// UFUNCTION(BlueprintNativeEvent)
-	// void SetFragCounter(int32 NewFragCount);
-	//
-	// UFUNCTION(BlueprintNativeEvent)
-	// void SetPlasmaCounter(int32 NewPlasmaCount);
-	//
-	// UFUNCTION(BlueprintNativeEvent)
-	// void SetSpikeCounter(int32 NewSpikeCount);
-	//
-	// UFUNCTION(BlueprintNativeEvent)
-	// void SetIncenCounter(int32 NewIncenCount);
+	UFUNCTION()
+	void UpdateGrenadeWidgets();
 
-	// UFUNCTION(BlueprintNativeEvent)
-	// void SetCompassDirection(float PlayerYaw);
-
-	
+	UFUNCTION()
+	void DestroyGrenadeWidgets();
 
 	UFUNCTION(BlueprintNativeEvent)
 	void ConstructAmmoGrid(AGunBase* Gun);
@@ -82,31 +56,9 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent)
 	void SetAmmoGridBullets(int32 CurMagazine, int32 MaxMagazine);
-	
-	//void SetCrosshairType(int type);
-
-	//void DetermineCrosshairColor();
-
-	//void SetCrosshairTexture(UTexture2D* NewTexture);
-
-	UFUNCTION(BlueprintCallable)
-	void SetFragHUDEnabled(bool bDisplay);
-
-	UFUNCTION(BlueprintCallable)
-	void SetWeaponHUDEnabled(bool bDisplay);
-	//
-	// UFUNCTION(BlueprintNativeEvent)
-	// void OnHealthUpdated(UHealthComponent* HealthComp);
 
 	UFUNCTION()
 	void UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredGun);
-	
-	// UFUNCTION()
-	// void UpdateInteractable(AActor* Actor);
-
-
-	virtual bool Initialize() override;
-	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UWidget* WeaponHUD;
@@ -119,33 +71,6 @@ public:
 
 	UPROPERTY()
 	TMap<TSubclassOf<AGrenadeBase>, UGrenadeWidget*> GrenadeWidgetMap;
-	
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	// UWidget* HealthHUD;
-
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	// UWidget* CompassHUD;
-
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	// class UImage* Crosshair;
-	
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	// class UProgressBar* HealthBar;
-	//
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	// class UTextBlock* HealthNum;
-
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	// class UProgressBar* ShieldBar;
-	//
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	// class UTextBlock* ShieldNum;
-	//
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	// class UVerticalBox* InteractBoxWidget;
-	//
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	// class UTextBlock* InteractActionWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UUniformGridPanel* AmmoGrid;
@@ -155,18 +80,6 @@ public:
 
 	UPROPERTY()
 	TSubclassOf<AGrenadeBase> SelectedGrenadeType;
-
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	// class UTextBlock* FragCounter;
-	//
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	// class UTextBlock* PlasmaCounter;
-	//
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	// class UTextBlock* SpikeCounter;
-	//
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	// class UTextBlock* IncenCounter;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UTextBlock* AmmoReserveCounter;
@@ -185,22 +98,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	class UImage* HolsteredGunWidget;
-	
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	// class UImage* Compass;
-	//
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	// class UTextBlock* CompassText;
-
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	// class UImage* InteractIcon;
-	//
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	// class UTextBlock* InteractName;
-
-	
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	// float CompassDirection;
 
 	UPROPERTY()
 	TArray<UUserWidget*> BulletIcons;
@@ -210,14 +107,14 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Colors")
 	FLinearColor AllyColor = FColor(25, 255, 25, 255);
-	//
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Colors")
-	// FLinearColor InteractableColor = FColor(25, 25, 255, 255);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Colors")
 	FLinearColor HUDColor = FColor(255, 150, 50, 255);
 
+protected:
 	UPROPERTY()
 	class ACharacterBase* PlayerCharacter;
-	 TArray<FGrenadeStruct> OldGrenadeInventory;
+
+	UPROPERTY()
+	TArray<FGrenadeStruct> OldGrenadeInventory;
 };

@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "GrenadeWidget.generated.h"
 
+class AGrenadeBase;
 class UTextBlock;
 class UImage;
 /**
@@ -17,6 +18,15 @@ class HALOFLOODFANGAME01_API UGrenadeWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	UFUNCTION()
+	void SetGrenadeClass(const TSubclassOf<AGrenadeBase>& NewGrenadeClass);
+
+	void SetGrenadeCount(int NewCount) const;
+
+	void SetIsSelected(bool NewIsSelected) const;
+public:
+
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UImage* SelectionBorder;
 	
@@ -25,4 +35,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UTextBlock* GrenadeCounter;
+	
+	UPROPERTY()
+	TSubclassOf<AGrenadeBase> GrenadeClass;
 };
