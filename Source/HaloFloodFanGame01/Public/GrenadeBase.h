@@ -58,6 +58,9 @@ public:
 	UPROPERTY(EditAnywhere)
 	USoundBase* ExplosionSFX;
 
+	UPROPERTY(EditAnywhere)
+	USoundBase* PickupSFX;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	USphereComponent* CollisionMesh;
 

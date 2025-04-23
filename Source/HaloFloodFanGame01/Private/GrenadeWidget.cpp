@@ -18,13 +18,16 @@ void UGrenadeWidget::SetGrenadeCount(int NewCount) const
 	GrenadeCounter->SetText(FText::AsNumber(NewCount));
 }
 
-void UGrenadeWidget::SetIsSelected(bool NewIsSelected) const
+void UGrenadeWidget::SetIsSelected(bool NewIsSelected)
 {
+	StopAllAnimations();
 	if (NewIsSelected)
 	{
-		SelectionBorder->SetVisibility(ESlateVisibility::Visible);
+		//SelectionBorder->SetVisibility(ESlateVisibility::Visible);
+		if (SelectAnimation) PlayAnimation(SelectAnimation);
 	} else
 	{
-		SelectionBorder->SetVisibility(ESlateVisibility::Hidden);
+		//SelectionBorder->SetVisibility(ESlateVisibility::Hidden);
+		if (DeselectAnimation) PlayAnimation(DeselectAnimation);
 	}
 }

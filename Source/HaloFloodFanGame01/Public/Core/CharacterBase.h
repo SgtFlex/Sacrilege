@@ -59,7 +59,7 @@ struct FGrenadeStruct
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrenadeInvetoryUpdated, TArray<FGrenadeStruct>, GrenadeInventory);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrenadeTypeSwitched, TSubclassOf<AGrenadeBase>, GrenadeClass);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGrenadeTypeSwitched, TSubclassOf<AGrenadeBase>, GrenadeClass, int, Index);
 
 UCLASS()
 class HALOFLOODFANGAME01_API ACharacterBase : public ACharacter, public IDamageableInterface
@@ -166,11 +166,14 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void EquipGrenadeType(TSubclassOf<AGrenadeBase> Grenade);
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	bool AddGrenade(TSubclassOf<AGrenadeBase> GrenadeType, int Amount);
+
 	UFUNCTION(BlueprintCallable)
 	void ThrowEquippedGrenade();
 
 	UFUNCTION(Server, Reliable)
-	void SV_ThrowEquippedGrenade();
+	void SV_ThrowEquippedGrenade(int GrenadeTypeIndex);
 
 	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void ServerThrowGrenade(int GrenadeIndex);

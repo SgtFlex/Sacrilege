@@ -23,7 +23,7 @@ public:
 
 	void SetGrenadeCount(int NewCount) const;
 
-	void SetIsSelected(bool NewIsSelected) const;
+	void SetIsSelected(bool NewIsSelected);
 public:
 
 	
@@ -38,4 +38,11 @@ public:
 	
 	UPROPERTY()
 	TSubclassOf<AGrenadeBase> GrenadeClass;
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidgetAnimOptional), Transient)
+	UWidgetAnimation* SelectAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidgetAnimOptional), Transient)
+	UWidgetAnimation* DeselectAnimation;
 };

@@ -22,7 +22,7 @@ class HALOFLOODFANGAME01_API UGrenadeInventoryHUD : public UUserWidget
 	
 protected:
 	UFUNCTION() 
-	void UpdateSelectedGrenadeType(TSubclassOf<AGrenadeBase> GrenadeClass);
+	void UpdateSelectedGrenadeType(TSubclassOf<AGrenadeBase> GrenadeClass, int GrenadeIndex);
 
 	UFUNCTION()
 	void UpdateGrenadeInventory(TArray<FGrenadeStruct> GrenadeInventory);
@@ -43,14 +43,16 @@ protected:
 	UPROPERTY()
 	TArray<UGrenadeWidget*> GrenadeWidgets;
 
-	UPROPERTY()
-	TMap<TSubclassOf<AGrenadeBase>, UGrenadeWidget*> GrenadeWidgetMap;
+	//UPROPERTY()
+	//TMap<TSubclassOf<AGrenadeBase>, UGrenadeWidget*> GrenadeWidgetMap;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<UUserWidget> GrenadeWidgetClass;
 
 	UPROPERTY()
 	TSubclassOf<AGrenadeBase> SelectedGrenadeType;
+
+	int SelectedGrenadeIndex = 0;
 	
 	UPROPERTY()
 	class ACharacterBase* PlayerCharacter;

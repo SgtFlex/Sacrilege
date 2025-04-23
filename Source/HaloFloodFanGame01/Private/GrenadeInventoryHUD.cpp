@@ -17,21 +17,19 @@ void UGrenadeInventoryHUD::NativeConstruct()
 	PlayerCharacter->OnGrenadeInventoryUpdated.AddDynamic(this, &UGrenadeInventoryHUD::UpdateGrenadeInventory);
 	PlayerCharacter->OnGrenadeTypeSwitched.AddDynamic(this, &UGrenadeInventoryHUD::UpdateSelectedGrenadeType);
 	UpdateGrenadeInventory(PlayerCharacter->GetGrenadeInventory());
-	UpdateSelectedGrenadeType(PlayerCharacter->GetSelectedGrenadeType());
+	UpdateSelectedGrenadeType(PlayerCharacter->GetSelectedGrenadeType(), PlayerCharacter->GetGrenadeTypeIndex());
 }
 
-void UGrenadeInventoryHUD::UpdateSelectedGrenadeType(TSubclassOf<AGrenadeBase> GrenadeClass)
+void UGrenadeInventoryHUD::UpdateSelectedGrenadeType(TSubclassOf<AGrenadeBase> GrenadeClass, int GrenadeIndex)
 {
 	if (GrenadeWidgets.IsEmpty()) return;
-	if (SelectedGrenadeType)
+	if (GrenadeWidgets[SelectedGrenadeIndex])
 	{
-		GrenadeWidgetMap[SelectedGrenadeType]->SetIsSelected(false);
+		GrenadeWidgets[SelectedGrenadeIndex]->SetIsSelected(false);
 	}
-	SelectedGrenadeType = GrenadeClass;
-	if (!GrenadeWidgetMap.IsEmpty() && GrenadeWidgetMap.Contains(PlayerCharacter->GetSelectedGrenadeType()))
-	{
-		GrenadeWidgetMap[GrenadeClass]->SetIsSelected(true);
-	}
+	
+	SelectedGrenadeIndex = GrenadeIndex;
+	GrenadeWidgets[GrenadeIndex]->SetIsSelected(true);
 }
 
 void UGrenadeInventoryHUD::UpdateGrenadeInventory(TArray<FGrenadeStruct> GrenadeInventory)
@@ -64,10 +62,10 @@ void UGrenadeInventoryHUD::CreateGrenadeWidgets()
 		GrenadeWidget->SetGrenadeClass(GrenadeInventory[i].GrenadeClass);
 		GrenadeWidget->SetGrenadeCount(GrenadeInventory[i].GrenadeAmount);
 		GrenadeWidgets.Add(GrenadeWidget);
-		GrenadeWidgetMap.Add(GrenadeInventory[i].GrenadeClass, GrenadeWidget);
+		//GrenadeWidgetMap.Add(GrenadeInventory[i].GrenadeClass, GrenadeWidget);
 	}
 	SelectedGrenadeType = nullptr;
-	UpdateSelectedGrenadeType(PlayerCharacter->GetSelectedGrenadeType());
+	UpdateSelectedGrenadeType(PlayerCharacter->GetSelectedGrenadeType(), PlayerCharacter->GetGrenadeTypeIndex());
 }
 
 void UGrenadeInventoryHUD::UpdateGrenadeWidgets()
@@ -82,7 +80,7 @@ void UGrenadeInventoryHUD::UpdateGrenadeWidgets()
 		{
 			GrenadeWidgets[i]->SetGrenadeClass(GrenadeInventory[i].GrenadeClass);
 			GrenadeWidgets[i]->SetGrenadeCount(GrenadeInventory[i].GrenadeAmount);
-			GrenadeWidgetMap[GrenadeInventory[i].GrenadeClass] = GrenadeWidgets[i];
+			//GrenadeWidgetMap[GrenadeInventory[i].GrenadeClass] = GrenadeWidgets[i];
 		}
 	}
 }
@@ -94,5 +92,5 @@ void UGrenadeInventoryHUD::DestroyGrenadeWidgets()
 		GrenadeWidgets[i]->RemoveFromParent();
 	}
 	GrenadeWidgets.Empty();
-	GrenadeWidgetMap.Empty();
+	//GrenadeWidgetMap.Empty();
 }

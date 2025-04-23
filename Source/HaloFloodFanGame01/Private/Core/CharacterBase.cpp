@@ -656,12 +656,45 @@ void ACharacterBase::MulticastPlayMeleeFX_Implementation()
 		GetMesh()->GetAnimInstance()->Montage_Play(MeleeAnim);
 }
 
-void ACharacterBase::ThrowEquippedGrenade()
+bool ACharacterBase::AddGrenade_Implementation(TSubclassOf<AGrenadeBase> GrenadeType, int Amount)
 {
-	SV_ThrowEquippedGrenade();
+	bool FoundGrenade = false;
+	
+	for (int i = 0; i < GrenadeInventory.Num(); i++)
+	{
+		if (GrenadeInventory[i].GrenadeClass == GrenadeType)
+		{
+			FoundGrenade = true;
+			if (GrenadeInventory[i].GrenadeAmount < 4)
+			{
+				GrenadeInventory[i].GrenadeAmount++;
+				if (GrenadeType.GetDefaultObject()->PickupSFX) UGameplayStatics::PlaySound2D(GetWorld(), GrenadeType.GetDefaultObject()->PickupSFX);
+			} else
+			{
+				return false;
+			}
+		}
+	}
+
+	if (!FoundGrenade)
+	{
+		FGrenadeStruct Grenade;
+		Grenade.GrenadeClass = GrenadeType;
+		Grenade.GrenadeAmount = 1;
+		GrenadeInventory.Add(Grenade);
+		if (GrenadeType.GetDefaultObject()->PickupSFX) UGameplayStatics::PlaySound2D(GetWorld(), GrenadeType.GetDefaultObject()->PickupSFX);
+	}
+	
+	OnGrenadeInventoryUpdated.Broadcast(GetGrenadeInventory());
+	return true;
 }
 
-void ACharacterBase::SV_ThrowEquippedGrenade_Implementation()
+void ACharacterBase::ThrowEquippedGrenade()
+{
+	SV_ThrowEquippedGrenade(GetGrenadeTypeIndex());
+}
+
+void ACharacterBase::SV_ThrowEquippedGrenade_Implementation(int GrenadeTypeIndex)
 {
 	if (!IsPlayerControlled() && ThrowGrenadeAnimation)
 	{
@@ -669,7 +702,7 @@ void ACharacterBase::SV_ThrowEquippedGrenade_Implementation()
 	} else
 	{
 		MulticastPlayThrowGrenadeAnimation();
-		ServerThrowGrenade(CurGrenadeTypeI);
+		ServerThrowGrenade(GrenadeTypeIndex);
 	}
 }
 
@@ -730,7 +763,7 @@ TArray<FGrenadeStruct> ACharacterBase::GetGrenadeInventory()
 TSubclassOf<AGrenadeBase> ACharacterBase::GetSelectedGrenadeType()
 {
 	if (GetGrenadeTypeIndex() > GrenadeInventory.Num() || GrenadeInventory.Num() <= 0) return nullptr;
-	return GrenadeInventory[CurGrenadeTypeI].GrenadeClass;
+	return GrenadeInventory[GetGrenadeTypeIndex()].GrenadeClass;
 }
 
 bool ACharacterBase::SelectGrenadeType(TSubclassOf<AGrenadeBase> GrenadeType) 
@@ -739,7 +772,7 @@ bool ACharacterBase::SelectGrenadeType(TSubclassOf<AGrenadeBase> GrenadeType)
 	{
 		if (GrenadeInventory[i].GrenadeClass == GrenadeType)
 		{
-			CurGrenadeTypeI = i;
+			SetGrenadeTypeIndex(i);
 			return true;
 		}
 	}
@@ -759,20 +792,21 @@ int ACharacterBase::GetGrenadeTypeIndex()
 void ACharacterBase::CycleGrenadeType()
 {
 	if (GrenadeInventory.Num() <= 0) return;
-	
-	CurGrenadeTypeI += 1;
-	CurGrenadeTypeI = CurGrenadeTypeI % (GrenadeInventory.Num());
-	OnGrenadeTypeSwitched.Broadcast(GrenadeInventory[CurGrenadeTypeI].GrenadeClass);
+
+	SetGrenadeTypeIndex((GetGrenadeTypeIndex() + 1) % GrenadeInventory.Num());
+	UGameplayStatics::PlaySound2D(GetWorld(), GetSelectedGrenadeType().GetDefaultObject()->PickupSFX);
+	OnGrenadeTypeSwitched.Broadcast(GetSelectedGrenadeType(), GetGrenadeTypeIndex());
 	//SwitchToGrenadeType(CurGrenadeTypeI+1);
 }
 
+//@TODO I think this doesnt need to be here. Client should just send an RPC that contains what grenade type to throw. No need to do RPCs for grenade type switching
 void ACharacterBase::ServerSwitchToGrenadeType_Implementation(int Index = 0)
 {
 	if (GrenadeInventory.Num() <= 0) return;
 	
 	CurGrenadeTypeI = Index;
 	CurGrenadeTypeI = CurGrenadeTypeI % (GrenadeInventory.Num());
-	OnGrenadeTypeSwitched.Broadcast(GrenadeInventory[CurGrenadeTypeI].GrenadeClass);
+	OnGrenadeTypeSwitched.Broadcast(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, GetGrenadeTypeIndex());
 }
 
 void ACharacterBase::UseEquipment_Implementation()
@@ -894,7 +928,7 @@ void ACharacterBase::DrawEquippedWeapon()
 	{
 		
 		#if WITH_EDITOR
-			UE_LOG(LogTemp, Warning, TEXT("No equipped weapon for: %s"), *EquippedWeapon->GetActorLabel());
+			UE_LOG(LogTemp, Warning, TEXT("No equipped weapon for: %s"), *GetActorLabel());
 		#endif
 		return;
 	}
