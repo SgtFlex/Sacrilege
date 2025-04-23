@@ -6,6 +6,10 @@
 #include "Blueprint/UserWidget.h"
 #include "GrenadeInventoryHUD.generated.h"
 
+struct FGrenadeStruct;
+class AGrenadeBase;
+class UGrenadeWidget;
+class UUniformGridPanel;
 /**
  * 
  */
@@ -14,8 +18,9 @@ class HALOFLOODFANGAME01_API UGrenadeInventoryHUD : public UUserWidget
 {
 	GENERATED_BODY()
 
-
-public:
+	virtual void NativeConstruct() override;
+	
+protected:
 	UFUNCTION() 
 	void UpdateSelectedGrenadeType(TSubclassOf<AGrenadeBase> GrenadeClass);
 
@@ -31,7 +36,10 @@ public:
 	UFUNCTION()
 	void DestroyGrenadeWidgets();
 
-public:
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	UUniformGridPanel* FragHUD;
+	
 	UPROPERTY()
 	TArray<UGrenadeWidget*> GrenadeWidgets;
 
@@ -43,8 +51,7 @@ public:
 
 	UPROPERTY()
 	TSubclassOf<AGrenadeBase> SelectedGrenadeType;
-
-protected:
+	
 	UPROPERTY()
 	class ACharacterBase* PlayerCharacter;
 

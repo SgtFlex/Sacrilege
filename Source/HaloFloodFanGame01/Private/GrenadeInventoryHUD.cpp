@@ -3,6 +3,23 @@
 
 #include "GrenadeInventoryHUD.h"
 
+#include "GrenadeBase.h"
+#include "GrenadeWidget.h"
+#include "Components/UniformGridPanel.h"
+#include "Components/UniformGridSlot.h"
+#include "Core/CharacterBase.h"
+
+void UGrenadeInventoryHUD::NativeConstruct()
+{
+	Super::NativeConstruct();
+	PlayerCharacter = Cast<ACharacterBase>(GetOwningPlayerPawn());
+	check(PlayerCharacter);
+	PlayerCharacter->OnGrenadeInventoryUpdated.AddDynamic(this, &UGrenadeInventoryHUD::UpdateGrenadeInventory);
+	PlayerCharacter->OnGrenadeTypeSwitched.AddDynamic(this, &UGrenadeInventoryHUD::UpdateSelectedGrenadeType);
+	UpdateGrenadeInventory(PlayerCharacter->GetGrenadeInventory());
+	UpdateSelectedGrenadeType(PlayerCharacter->GetSelectedGrenadeType());
+}
+
 void UGrenadeInventoryHUD::UpdateSelectedGrenadeType(TSubclassOf<AGrenadeBase> GrenadeClass)
 {
 	if (GrenadeWidgets.IsEmpty()) return;
@@ -40,7 +57,7 @@ void UGrenadeInventoryHUD::CreateGrenadeWidgets()
 	for (int i = 0; i < GrenadeInventory.Num(); i++)
 	{
 		UGrenadeWidget* GrenadeWidget = CreateWidget<UGrenadeWidget>(FragHUD, GrenadeWidgetClass);
-		UUniformGridSlot* GridSlot = FragHUD->AddChildToUniformGrid(GrenadeWidget);
+		UUniformGridSlot* GridSlot = FragHUD->AddChildToUniformGrid(GrenadeWidget); 
 		GridSlot->SetVerticalAlignment(EVerticalAlignment::VAlign_Fill);
 		GridSlot->SetColumn(i);
 
