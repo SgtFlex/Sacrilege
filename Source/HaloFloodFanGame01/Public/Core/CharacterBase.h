@@ -35,16 +35,6 @@ class UCameraComponent;
 class UAnimMontage;
 class USoundBase;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractableChanged, AActor*, Interactable);
-//
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPickupWeapon);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDropWeapon);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTakeCustomPointDamage, float, Damage);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponsUpdated, AGunBase*, NewGun, AGunBase*, OldGun);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnKilled, ACharacterBase*, Character, AController*, Instigator, AActor*, Causer);
-
-
-
 USTRUCT(BlueprintType)
 struct FGrenadeStruct
 {
@@ -58,7 +48,13 @@ struct FGrenadeStruct
 	
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrenadeInvetoryUpdated, TArray<FGrenadeStruct>, GrenadeInventory);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractableChanged, AActor*, Interactable);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPickupWeapon);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDropWeapon);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTakeCustomPointDamage, float, Damage);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponsUpdated, AGunBase*, NewGun, AGunBase*, OldGun);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnKilled, ACharacterBase*, Character, AController*, Instigator, AActor*, Causer);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrenadeInvetoryUpdated, TArray<FGrenadeStruct>&, UpdatedGrenadeInventory);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGrenadeTypeSwitched, TSubclassOf<AGrenadeBase>, GrenadeClass, int, Index);
 
 UCLASS()
@@ -128,7 +124,7 @@ public:
 	void MC_OnHealthDepleted(float Damage, FVector Force, FVector HitLocation = FVector(0,0,0), FName HitBoneName = "", AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
 	UFUNCTION()
-	void CreateRagdollCorpse();
+	void CreateRagdollCorpse() const;
 	
 	UFUNCTION(BlueprintNativeEvent)
 	void DropGrenades();
@@ -171,26 +167,33 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ThrowEquippedGrenade();
+	
+	UFUNCTION(BlueprintCallable)
+	void ThrowGrenade(int GrenadeTypeIndex);
+
+	UFUNCTION(BlueprintCallable)
+	void SubtractGrenade(int GrenadeTypeIndex);
+
+	UFUNCTION(BlueprintCallable)
+	void RemoveGrenadeStruct(int GrenadeTypeIndex);
 
 	UFUNCTION(Server, Reliable)
-	void SV_ThrowEquippedGrenade(int GrenadeTypeIndex);
+	void ServerThrowGrenade(int GrenadeTypeIndex);
 
-	UFUNCTION(BlueprintCallable, Server, Reliable)
-	void ServerThrowGrenade(int GrenadeIndex);
-
-	
+	UFUNCTION()
+	void SpawnGrenade(const TSubclassOf<AGrenadeBase>& GrenadeType);
 
 	UFUNCTION(BlueprintCallable, NetMulticast, Unreliable)
-	void MulticastPlayThrowGrenadeFX(AGrenadeBase* Grenade);
+	void MulticastThrowGrenade(TSubclassOf<AGrenadeBase> GrenadeType);
 
-	UFUNCTION(BlueprintCallable, NetMulticast, Unreliable)
-	void MulticastPlayThrowGrenadeAnimation();
-
-	UFUNCTION(BlueprintCallable)
-	TArray<FGrenadeStruct> GetGrenadeInventory();
+	UFUNCTION(BlueprintCallable, BlueprintCosmetic)
+	void ThrowGrenadeFX(TSubclassOf<AGrenadeBase> GrenadeType);
 
 	UFUNCTION(BlueprintCallable)
-	TSubclassOf<AGrenadeBase> GetSelectedGrenadeType();
+	TArray<FGrenadeStruct>& GetGrenadeInventory();
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	TSubclassOf<AGrenadeBase> GetSelectedGrenadeType() const;
 
 	UFUNCTION(BlueprintCallable)
 	bool SelectGrenadeType(TSubclassOf<AGrenadeBase> GrenadeType);
@@ -198,14 +201,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetGrenadeTypeIndex(int Index);
 
-	UFUNCTION(BlueprintCallable)
-	int GetGrenadeTypeIndex();
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	int GetGrenadeTypeIndex() const;
 
 	UFUNCTION(BlueprintCallable)
 	void CycleGrenadeType();
 
-	UFUNCTION(BlueprintCallable, Server, Unreliable)
-	void ServerSwitchToGrenadeType(int Index);
+	UFUNCTION(Client, Unreliable, BlueprintCosmetic)
+	void ClientCycleGrenadeType() const;
 	
 	UFUNCTION(BlueprintNativeEvent)
 	void UseEquipment();
@@ -292,7 +295,7 @@ public:
 	void MulticastPlayStunAnimation(float StunTime);
 
 	UFUNCTION()
-	void Unstun();
+	void Unstun() const;
 
 	UFUNCTION(Server, Reliable)
 	void ServerSetCurrentInteractable();
@@ -330,7 +333,7 @@ protected:
 	UFUNCTION(Client, Reliable)
 	virtual void CL_Unpossessed();
 
-	void SpawnDefaultController() override;
+	virtual void SpawnDefaultController() override;
 public:
 	//Delegates
 

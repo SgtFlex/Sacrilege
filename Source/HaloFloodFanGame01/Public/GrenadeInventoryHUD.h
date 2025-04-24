@@ -25,7 +25,7 @@ protected:
 	void UpdateSelectedGrenadeType(TSubclassOf<AGrenadeBase> GrenadeClass, int GrenadeIndex);
 
 	UFUNCTION()
-	void UpdateGrenadeInventory(TArray<FGrenadeStruct> GrenadeInventory);
+	void UpdateGrenadeInventory(TArray<FGrenadeStruct>& GrenadeInventory);
 
 	UFUNCTION()
 	void CreateGrenadeWidgets();

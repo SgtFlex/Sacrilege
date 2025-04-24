@@ -20,10 +20,10 @@ void UGrenadeInventoryHUD::NativeConstruct()
 	UpdateSelectedGrenadeType(PlayerCharacter->GetSelectedGrenadeType(), PlayerCharacter->GetGrenadeTypeIndex());
 }
 
-void UGrenadeInventoryHUD::UpdateSelectedGrenadeType(TSubclassOf<AGrenadeBase> GrenadeClass, int GrenadeIndex)
+void UGrenadeInventoryHUD::UpdateSelectedGrenadeType(TSubclassOf<AGrenadeBase> GrenadeClass, const int GrenadeIndex)
 {
 	if (GrenadeWidgets.IsEmpty()) return;
-	if (GrenadeWidgets[SelectedGrenadeIndex])
+	if (SelectedGrenadeIndex < GrenadeWidgets.Num())
 	{
 		GrenadeWidgets[SelectedGrenadeIndex]->SetIsSelected(false);
 	}
@@ -32,7 +32,7 @@ void UGrenadeInventoryHUD::UpdateSelectedGrenadeType(TSubclassOf<AGrenadeBase> G
 	GrenadeWidgets[GrenadeIndex]->SetIsSelected(true);
 }
 
-void UGrenadeInventoryHUD::UpdateGrenadeInventory(TArray<FGrenadeStruct> GrenadeInventory)
+void UGrenadeInventoryHUD::UpdateGrenadeInventory(TArray<FGrenadeStruct>& GrenadeInventory)
 {
 	//If old grenade inventory size doesn't match new inventory size, then reconstruct the widget array (NOT MAP). BUT FIRST CHECK IF SIZE IS THE SAME.
 	if (GrenadeInventory.Num() == OldGrenadeInventory.Num() && GrenadeInventory.Num() == GrenadeWidgets.Num())
@@ -62,7 +62,6 @@ void UGrenadeInventoryHUD::CreateGrenadeWidgets()
 		GrenadeWidget->SetGrenadeClass(GrenadeInventory[i].GrenadeClass);
 		GrenadeWidget->SetGrenadeCount(GrenadeInventory[i].GrenadeAmount);
 		GrenadeWidgets.Add(GrenadeWidget);
-		//GrenadeWidgetMap.Add(GrenadeInventory[i].GrenadeClass, GrenadeWidget);
 	}
 	SelectedGrenadeType = nullptr;
 	UpdateSelectedGrenadeType(PlayerCharacter->GetSelectedGrenadeType(), PlayerCharacter->GetGrenadeTypeIndex());
@@ -80,7 +79,6 @@ void UGrenadeInventoryHUD::UpdateGrenadeWidgets()
 		{
 			GrenadeWidgets[i]->SetGrenadeClass(GrenadeInventory[i].GrenadeClass);
 			GrenadeWidgets[i]->SetGrenadeCount(GrenadeInventory[i].GrenadeAmount);
-			//GrenadeWidgetMap[GrenadeInventory[i].GrenadeClass] = GrenadeWidgets[i];
 		}
 	}
 }
@@ -92,5 +90,4 @@ void UGrenadeInventoryHUD::DestroyGrenadeWidgets()
 		GrenadeWidgets[i]->RemoveFromParent();
 	}
 	GrenadeWidgets.Empty();
-	//GrenadeWidgetMap.Empty();
 }

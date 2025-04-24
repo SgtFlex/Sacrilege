@@ -455,7 +455,7 @@ void ACharacterBase::MC_OnHealthDepleted_Implementation(float Damage, FVector Fo
 	//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageRagdoll(this);
 }
 
-void ACharacterBase::CreateRagdollCorpse()
+void ACharacterBase::CreateRagdollCorpse() const
 {
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetMesh()->SetSimulatePhysics(true);
@@ -488,14 +488,13 @@ void ACharacterBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
                            FVector NormalImpulse, const FHitResult& Hit)
 {
 	LaunchCharacter(NormalImpulse/100, true, true);
-	float DamageCalculation;
-	
+
 	if (OtherComp)
 	{
 		UAISense_Touch::ReportTouchEvent(GetWorld(), this, OtherActor, Hit.Location);
 		const float VelocityDifference = FMath::Abs(OtherComp->GetComponentVelocity().Length() - this->GetVelocity().Length());
 		const float Mass = OtherComp->IsSimulatingPhysics() ? (OtherComp->GetMass()) : 1;
-		DamageCalculation = FMath::Pow(VelocityDifference, 1.0f/3.0f) * (Mass/300);
+		const float DamageCalculation = FMath::Pow(VelocityDifference, 1.0f / 3.0f) * (Mass / 300);
 		if (DamageCalculation > 5)
 		{
 			FDamageEvent DamageEvent = FDamageEvent(UDamageType::StaticClass());
@@ -656,7 +655,7 @@ void ACharacterBase::MulticastPlayMeleeFX_Implementation()
 		GetMesh()->GetAnimInstance()->Montage_Play(MeleeAnim);
 }
 
-bool ACharacterBase::AddGrenade_Implementation(TSubclassOf<AGrenadeBase> GrenadeType, int Amount)
+bool ACharacterBase::AddGrenade_Implementation(const TSubclassOf<AGrenadeBase> GrenadeType, int Amount)
 {
 	bool FoundGrenade = false;
 	
@@ -691,82 +690,103 @@ bool ACharacterBase::AddGrenade_Implementation(TSubclassOf<AGrenadeBase> Grenade
 
 void ACharacterBase::ThrowEquippedGrenade()
 {
-	SV_ThrowEquippedGrenade(GetGrenadeTypeIndex());
+	if (GetGrenadeInventory().IsEmpty()) return;
+	ThrowGrenade(GetGrenadeTypeIndex());
 }
 
-void ACharacterBase::SV_ThrowEquippedGrenade_Implementation(int GrenadeTypeIndex)
+void ACharacterBase::ThrowGrenade(const int GrenadeTypeIndex)
 {
-	if (!IsPlayerControlled() && ThrowGrenadeAnimation)
+	if (GetGrenadeInventory().IsEmpty()) return;
+	ThrowGrenadeFX(GetSelectedGrenadeType());
+	if (!HasAuthority())
 	{
-		MulticastPlayThrowGrenadeAnimation();
-	} else
-	{
-		MulticastPlayThrowGrenadeAnimation();
+		//If we are a client, play the throw grenade FX and animation and send an RPC to the server to throw the actual grenade
 		ServerThrowGrenade(GrenadeTypeIndex);
+		return;
 	}
+	SpawnGrenade(GrenadeInventory[GrenadeTypeIndex].GrenadeClass);
+	MulticastThrowGrenade(GrenadeInventory[GrenadeTypeIndex].GrenadeClass);
+	SubtractGrenade(GrenadeTypeIndex);
 }
 
-void ACharacterBase::ServerThrowGrenade_Implementation(int GrenadeIndex)
+void ACharacterBase::SubtractGrenade(const int GrenadeTypeIndex)
 {
-	
-	if (GrenadeInventory.Num() <= 0) return;
-	// if (ThrowGrenadeAnimation1P)
-	// 	GetMesh1P()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation1P);
-	GrenadeInventory[GrenadeIndex].GrenadeAmount -= 1;
+	GrenadeInventory[GrenadeTypeIndex].GrenadeAmount -= 1;
+	if (GrenadeInventory[GrenadeTypeIndex].GrenadeAmount <= 0)
+	{
+		RemoveGrenadeStruct(GrenadeTypeIndex);
+	}
+	OnGrenadeInventoryUpdated.Broadcast(GrenadeInventory);
+}
+
+void ACharacterBase::RemoveGrenadeStruct(int GrenadeTypeIndex)
+{
+	GrenadeInventory.RemoveAt(GrenadeTypeIndex);
+	if (!GrenadeInventory.IsEmpty())
+		SetGrenadeTypeIndex(GrenadeTypeIndex % GrenadeInventory.Num());
+}
+
+void ACharacterBase::SpawnGrenade(const TSubclassOf<AGrenadeBase>& GrenadeType)
+{
 	const FTransform SpawnTransform = FTransform(GetFirstPersonCameraComponent()->GetForwardVector().Rotation(), GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*300);
 	FActorSpawnParameters ActorSpawnParameters;
 	ActorSpawnParameters.Instigator = this;
 	ActorSpawnParameters.Owner = this;
 
-	if (AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActorDeferred<AGrenadeBase>(GrenadeInventory[GrenadeIndex].GrenadeClass, SpawnTransform, this, this, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn)))
+	if (AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActorDeferred<AGrenadeBase>(GrenadeType, SpawnTransform, this, this, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn)))
 	{
 		Grenade->SetInstigator(this);
 		Grenade->SetArmed(true);
 		Grenade->FinishSpawning(SpawnTransform);
-		MulticastPlayThrowGrenadeFX(Grenade);
 		//UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Grenade->ThrowSFX, Grenade->GetActorLocation());
 		FVector Direction = GetFirstPersonCameraComponent()->GetForwardVector() + FVector(0,0,0.15);
 		Direction.Normalize();
 		Grenade->Mesh->AddImpulse(Direction*2000.0f, NAME_None, true);
 		Grenade->Mesh->AddAngularImpulseInDegrees(Grenade->GetActorRightVector().GetSafeNormal()*1000 , NAME_None, true);
-
-		if (GrenadeInventory[GrenadeIndex].GrenadeAmount <= 0)
-		{
-			GrenadeInventory.RemoveAt(GrenadeIndex);
-			ServerSwitchToGrenadeType(GrenadeIndex);
-		}
-		OnGrenadeInventoryUpdated.Broadcast(GetGrenadeInventory());
 	}
 }
 
 
-void ACharacterBase::MulticastPlayThrowGrenadeFX_Implementation(AGrenadeBase* Grenade)
+void ACharacterBase::ServerThrowGrenade_Implementation(const int GrenadeTypeIndex)
 {
-	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Grenade->ThrowSFX, Grenade->GetActorLocation());
-	if (ThrowGrenadeAnimation1P)
-		GetMesh1P()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation1P);
-	// if (ThrowGrenadeAnimation && !IsPlayerControlled())
-	// 	GetMesh()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation);
+	ThrowGrenade(GrenadeTypeIndex);
 }
 
-void ACharacterBase::MulticastPlayThrowGrenadeAnimation_Implementation()
+void ACharacterBase::MulticastThrowGrenade_Implementation(const TSubclassOf<AGrenadeBase> GrenadeType)
 {
-	if (ThrowGrenadeAnimation)
-		GetMesh()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation);
+	//Ignore self from multicast, already called these locally in ThrowGrenade
+	if (!IsLocallyControlled())
+	{
+		ThrowGrenadeFX(GrenadeType);
+	}
 }
 
-TArray<FGrenadeStruct> ACharacterBase::GetGrenadeInventory()
+void ACharacterBase::ThrowGrenadeFX(const TSubclassOf<AGrenadeBase> GrenadeType)
+{
+	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), GrenadeType.GetDefaultObject()->ThrowSFX, GetActorLocation());
+	if (IsLocallyControlled())
+	{
+		if (ThrowGrenadeAnimation1P)
+			GetMesh1P()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation1P);
+	} else
+	{
+		if (ThrowGrenadeAnimation)
+			GetMesh()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation);
+	}
+}
+
+TArray<FGrenadeStruct>& ACharacterBase::GetGrenadeInventory()
 {
 	return GrenadeInventory;
 }
 
-TSubclassOf<AGrenadeBase> ACharacterBase::GetSelectedGrenadeType()
+TSubclassOf<AGrenadeBase> ACharacterBase::GetSelectedGrenadeType() const
 {
-	if (GetGrenadeTypeIndex() > GrenadeInventory.Num() || GrenadeInventory.Num() <= 0) return nullptr;
+	if (GrenadeInventory.IsEmpty()) return nullptr;
 	return GrenadeInventory[GetGrenadeTypeIndex()].GrenadeClass;
 }
 
-bool ACharacterBase::SelectGrenadeType(TSubclassOf<AGrenadeBase> GrenadeType) 
+bool ACharacterBase::SelectGrenadeType(const TSubclassOf<AGrenadeBase> GrenadeType) 
 {
 	for (int i = 0; i < GrenadeInventory.Num(); i++)
 	{
@@ -779,12 +799,12 @@ bool ACharacterBase::SelectGrenadeType(TSubclassOf<AGrenadeBase> GrenadeType)
 	return false;
 }
 
-void ACharacterBase::SetGrenadeTypeIndex(int Index)
+void ACharacterBase::SetGrenadeTypeIndex(const int Index)
 {
 	CurGrenadeTypeI = FMath::Clamp(Index, 0, GrenadeInventory.Num() - 1);
 }
 
-int ACharacterBase::GetGrenadeTypeIndex()
+int ACharacterBase::GetGrenadeTypeIndex() const
 {
 	return CurGrenadeTypeI;
 }
@@ -794,19 +814,14 @@ void ACharacterBase::CycleGrenadeType()
 	if (GrenadeInventory.Num() <= 0) return;
 
 	SetGrenadeTypeIndex((GetGrenadeTypeIndex() + 1) % GrenadeInventory.Num());
-	UGameplayStatics::PlaySound2D(GetWorld(), GetSelectedGrenadeType().GetDefaultObject()->PickupSFX);
+	ClientCycleGrenadeType();
 	OnGrenadeTypeSwitched.Broadcast(GetSelectedGrenadeType(), GetGrenadeTypeIndex());
 	//SwitchToGrenadeType(CurGrenadeTypeI+1);
 }
 
-//@TODO I think this doesnt need to be here. Client should just send an RPC that contains what grenade type to throw. No need to do RPCs for grenade type switching
-void ACharacterBase::ServerSwitchToGrenadeType_Implementation(int Index = 0)
+void ACharacterBase::ClientCycleGrenadeType_Implementation() const
 {
-	if (GrenadeInventory.Num() <= 0) return;
-	
-	CurGrenadeTypeI = Index;
-	CurGrenadeTypeI = CurGrenadeTypeI % (GrenadeInventory.Num());
-	OnGrenadeTypeSwitched.Broadcast(GrenadeInventory[CurGrenadeTypeI].GrenadeClass, GetGrenadeTypeIndex());
+	UGameplayStatics::PlaySound2D(GetWorld(), GetSelectedGrenadeType().GetDefaultObject()->PickupSFX);
 }
 
 void ACharacterBase::UseEquipment_Implementation()
@@ -1108,11 +1123,11 @@ void ACharacterBase::Stun(float StunTime)
 {
 	if (GetWorldTimerManager().TimerExists(StunTimer)) return;
 	CurrentStunBuildup = 0;
-	const float StunDuration = 1.5f;
-	
+
 	if (AAIControllerBase* AIC = Cast<AAIControllerBase>(GetController()))
 	{
-		
+		constexpr float StunDuration = 1.5f;
+
 		AIC->BehaviorTreeComp->PauseLogic(FString("Stunned"));
 		AIC->StopMovement();
 		AIC->BlackboardComp->SetValueAsBool("IsStunned", true);
@@ -1131,7 +1146,7 @@ void ACharacterBase::MulticastPlayStunAnimation_Implementation(float StunTime)
 		GetMesh()->GetAnimInstance()->Montage_Play(HurtAnim);
 }
 
-void ACharacterBase::Unstun()
+void ACharacterBase::Unstun() const
 {
 	if (AAIControllerBase* AIC = Cast<AAIControllerBase>(GetController()))
 	{
