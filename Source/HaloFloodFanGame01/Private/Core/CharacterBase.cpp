@@ -6,6 +6,7 @@
 #include "AIControllerBase.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "EnhancedInputSubsystemInterface.h"
 #include "GrenadeBase.h"
 #include "GunBase.h"
 #include "HealthComponent.h"
@@ -1230,6 +1231,7 @@ void ACharacterBase::NotifyRestarted()
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
+		UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
 		if (IsLocallyControlled())
 		{
 			if (PlayerHUDClass && !PlayerHUD) {
