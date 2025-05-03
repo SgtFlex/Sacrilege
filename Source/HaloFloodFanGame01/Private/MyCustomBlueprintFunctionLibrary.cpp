@@ -3,6 +3,7 @@
 
 #include "MyCustomBlueprintFunctionLibrary.h"
 
+#include "AudioDevice.h"
 #include "DamageableInterface.h"
 #include "NiagaraEmitterHandle.h"
 #include "NiagaraFunctionLibrary.h"
@@ -129,4 +130,15 @@ float UMyCustomBlueprintFunctionLibrary::SetGlobalGravity(AWorldSettings* WorldS
 	WorldSettings->GlobalGravityZ = GlobalGravity;
 
 	return WorldSettings->GlobalGravityZ;
+}
+
+TArray<USoundMix*> UMyCustomBlueprintFunctionLibrary::GetCurrentSoundMixModifiers()
+{
+	UWorld* World = GEngine->GameViewport->GetWorld();
+	FAudioDevice* AudioDevice = World->GetAudioDevice().GetAudioDevice();
+	TMap<USoundMix*, FSoundMixState> SoundMixes = AudioDevice->GetSoundMixModifiers();
+	TArray<USoundMix*> SoundMixModifiers;
+	SoundMixes.GenerateKeyArray(SoundMixModifiers);
+
+	return SoundMixModifiers;
 }

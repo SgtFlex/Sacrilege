@@ -47,43 +47,43 @@
 			"Enabled": true
 		},
 		{
-			"Name": "StreamlineDLSSG",
-			"Enabled": true,
-			"MarketplaceURL": "https://www.unrealengine.com/marketplace/en-US/product/nvidia-dlss"
-		},
-		{
-			"Name": "NIS",
-			"Enabled": true,
-			"MarketplaceURL": "https://www.unrealengine.com/marketplace/en-US/product/nvidia-dlss"
-		},
-		{
-			"Name": "StreamlineReflex",
-			"Enabled": true,
-			"MarketplaceURL": "https://www.unrealengine.com/marketplace/en-US/product/nvidia-dlss"
-		},
-		{
-			"Name": "DLSS",
-			"Enabled": true,
-			"MarketplaceURL": "https://www.unrealengine.com/marketplace/en-US/product/nvidia-dlss"
-		},
-		{
 			"Name": "Streamline",
-			"Enabled": true,
+			"Enabled": false,
 			"MarketplaceURL": "https://www.unrealengine.com/marketplace/en-US/product/nvidia-dlss"
 		},
 		{
 			"Name": "DLSSMoviePipelineSupport",
-			"Enabled": true,
-			"MarketplaceURL": "https://www.unrealengine.com/marketplace/en-US/product/nvidia-dlss"
-		},
-		{
-			"Name": "StreamlineDeepDVC",
-			"Enabled": true,
+			"Enabled": false,
 			"MarketplaceURL": "https://www.unrealengine.com/marketplace/en-US/product/nvidia-dlss"
 		},
 		{
 			"Name": "StreamlineCore",
-			"Enabled": true,
+			"Enabled": false,
+			"MarketplaceURL": "https://www.unrealengine.com/marketplace/en-US/product/nvidia-dlss"
+		},
+		{
+			"Name": "NIS",
+			"Enabled": false,
+			"MarketplaceURL": "https://www.unrealengine.com/marketplace/en-US/product/nvidia-dlss"
+		},
+		{
+			"Name": "StreamlineDLSSG",
+			"Enabled": false,
+			"MarketplaceURL": "https://www.unrealengine.com/marketplace/en-US/product/nvidia-dlss"
+		},
+		{
+			"Name": "DLSS",
+			"Enabled": false,
+			"MarketplaceURL": "https://www.unrealengine.com/marketplace/en-US/product/nvidia-dlss"
+		},
+		{
+			"Name": "StreamlineReflex",
+			"Enabled": false,
+			"MarketplaceURL": "https://www.unrealengine.com/marketplace/en-US/product/nvidia-dlss"
+		},
+		{
+			"Name": "StreamlineDeepDVC",
+			"Enabled": false,
 			"MarketplaceURL": "https://www.unrealengine.com/marketplace/en-US/product/nvidia-dlss"
 		}
 	]

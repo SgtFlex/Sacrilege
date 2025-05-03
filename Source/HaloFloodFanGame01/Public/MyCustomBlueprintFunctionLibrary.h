@@ -32,4 +32,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	static float SetGlobalGravity(AWorldSettings* WorldSettings, float GlobalGravity);
+
+	UFUNCTION(BlueprintCallable)
+	static TArray<USoundMix*> GetCurrentSoundMixModifiers();
 };
