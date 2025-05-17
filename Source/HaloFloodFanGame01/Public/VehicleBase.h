@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "DamageableInterface.h"
+#include "GameplayTagAssetInterface.h"
 #include "InteractableInterface.h"
 #include "GameFramework/Pawn.h"
 #include "VehicleBase.generated.h"
@@ -24,7 +25,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEntered);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnExited);
 
 UCLASS()
-class HALOFLOODFANGAME01_API AVehicleBase : public APawn, public IDamageableInterface, public IInteractableInterface
+class HALOFLOODFANGAME01_API AVehicleBase : public APawn, public IDamageableInterface, public IInteractableInterface, public IGameplayTagAssetInterface
 {
 	GENERATED_BODY()
 
@@ -137,6 +138,9 @@ public:
 	//IInteractableInterface
 
 	virtual void OnInteract_Implementation(ACharacterBase* Character) override;
+
+	virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; return; }
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<UUserWidget> VehicleHUDClass;
@@ -178,5 +182,8 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnExited	OnExited;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
+	FGameplayTagContainer GameplayTags;
 
 };

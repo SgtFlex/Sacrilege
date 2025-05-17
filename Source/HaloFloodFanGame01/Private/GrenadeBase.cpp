@@ -41,7 +41,7 @@ void AGrenadeBase::BeginPlay()
 	Super::BeginPlay();
 	Mesh->OnComponentHit.AddDynamic(this, &AGrenadeBase::OnCollide);
 
-	GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageWeapon(this);
+	//GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageWeapon(this);
 	//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageWeapon(this);
 }
 
@@ -72,7 +72,7 @@ void AGrenadeBase::SV_Explode_Implementation()
 {
 	
 	TArray<AActor*> ActorsToIgnore;
-	UMyCustomBlueprintFunctionLibrary::FireExplosion(GetWorld(), ActorsToIgnore, GetActorLocation(), MaxExplosionDamage, MinExplosionDamage, OuterExplosionRadius, InnerExplosionRadius, ExplosionDamageFalloff, ExplosionForce, this, GetInstigatorController());
+	UMyCustomBlueprintFunctionLibrary::FireExplosion(ActorsToIgnore, GetActorLocation(), MaxExplosionDamage, MinExplosionDamage, OuterExplosionRadius, InnerExplosionRadius, ExplosionDamageFalloff, ExplosionForce, this, GetInstigatorController());
 	MC_Explode();
 }
 
@@ -82,7 +82,6 @@ void AGrenadeBase::MC_Explode_Implementation()
 	if (ExplosionPFX) UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ExplosionPFX, GetActorLocation());
 	UGameplayStatics::SpawnForceFeedbackAtLocation(GetWorld(), ExplosionFeedback, GetActorLocation(), FRotator::ZeroRotator, false, 1, 0, ExplosionFeedbackAttenuation);
 	GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageDecal(UGameplayStatics::SpawnDecalAtLocation(GetWorld(), ExplosionDecal, FVector(512, 512, 512), GetActorLocation()));
-	//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAtLocation(GetWorld(), ExplosionDecal, FVector(512, 512, 512), GetActorLocation()));
 	Destroy();
 }
 
@@ -120,7 +119,6 @@ void AGrenadeBase::OnCollide_Implementation(UPrimitiveComponent* HitComponent, A
 {
 	if (!bArmed) return;
 	StartFuse(FuseTime);
-	UE_LOG(LogTemp, Warning, TEXT("Called oncollide"));
 }
 
 void AGrenadeBase::Pickup(ACharacterBase* Character)
@@ -129,7 +127,6 @@ void AGrenadeBase::Pickup(ACharacterBase* Character)
 	
 	if (Character->AddGrenade(GetClass(), 1))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Picked up grenade"));
 		Destroy();
 	}
 }

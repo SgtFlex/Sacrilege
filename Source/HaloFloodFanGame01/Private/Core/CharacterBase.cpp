@@ -24,6 +24,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "Camera/CameraComponent.h"
+#include "Engine/DecalActor.h"
 #include "GameFramework/InputDeviceSubsystem.h"
 #include "Net/UnrealNetwork.h"
 #include "Perception/AIPerceptionComponent.h"
@@ -67,12 +68,13 @@ ACharacterBase::ACharacterBase()
 void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
+	
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ACharacterBase::OnHit);
 
 	GetMesh()->OnComponentSleep.AddDynamic(this, &ACharacterBase::RagdollSettled);
 	SpawnWeapons();
-	//UE_LOG(LogTemp, Warning, TEXT("Char: %s %f"), *GetActorLabel(), GetHealthComponent()->GetHealth());
-	//if (GetHealthComponent()) UE_LOG(LogTemp, Warning, TEXT("%s's Health component is owned by %s (Should be %s)"), *GetActorLabel(), *GetHealthComponent()->GetOwner()->GetActorLabel(), *GetActorLabel());
+
+	
 	if (GetHealthComponent()) GetHealthComponent()->OnHealthDepleted.AddDynamic(this, &ACharacterBase::OnHealthDepleted);
 
 	InputDeviceSubsystem = GetGameInstance()->GetEngine()->GetEngineSubsystem<UInputDeviceSubsystem>();
@@ -80,17 +82,16 @@ void ACharacterBase::BeginPlay()
 
 void ACharacterBase::Restart()
 {
-	Super::Restart();
-
-	// SpawnWeapons();
 	Cast<IGenericTeamAgentInterface>(GetController())->SetGenericTeamId(FGenericTeamId(TeamId));
 	if (AAIControllerBase* AIC = Cast<AAIControllerBase>(GetController()))
 		AIC->TeamNumber = TeamId;
+
+	Super::Restart();
 }
 
 void ACharacterBase::SpawnWeapons()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Running spawnweapons()"));
+	UE_LOG(LogTemp, Warning, TEXT("Spawning weapons for %s"), *GetName());
 	if (!HasAuthority())
 		return;
 	else
@@ -98,14 +99,12 @@ void ACharacterBase::SpawnWeapons()
 		if (EquippedWeaponClass)
 		{
 			AGunBase* Gun = GetWorld()->SpawnActor<AGunBase>(EquippedWeaponClass);
-			if (Gun) UE_LOG(LogTemp, Warning, TEXT("Sucessfully spawned equipped weapon"));
 			PickupWeapon(Gun);
 		
 		}
 		if (HolsteredWeaponClass)
 		{
 			AGunBase* Gun = GetWorld()->SpawnActor<AGunBase>(HolsteredWeaponClass);
-			if (Gun) UE_LOG(LogTemp, Warning, TEXT("Sucessfully spawned holstered weapon"));
 			PickupWeapon(Gun);
 		}
 	}
@@ -114,7 +113,6 @@ void ACharacterBase::SpawnWeapons()
 void ACharacterBase::Server_SpawnWeapons_Implementation()
 {
 	
-	UE_LOG(LogTemp, Warning, TEXT("Running server_spawnweapons()"));
 	SpawnWeapons();
 }
 
@@ -159,19 +157,12 @@ void ACharacterBase::Look(const FInputActionValue& Value)
 	//Server_Look(LookAxisVector.Y);
 
 
-	const float AimAssistMultiplier = AimAssist();
-	float ScopeSenseMultiplier;
-	if (EquippedWeapon && EquippedWeapon->ScopeActive)
-	{
-		ScopeSenseMultiplier = (EquippedWeapon->ZoomFOV/90);
-	} else
-	{
-		ScopeSenseMultiplier = 1;
-	}
+	//const float AimAssistMultiplier = AimAssist();
+	const float AimAssistMultiplier = 1;
 	
 	// add yaw and pitch input to controller
-	AddControllerYawInput(LookAxisVector.X * AimAssistMultiplier * ScopeSenseMultiplier);
-	AddControllerPitchInput(LookAxisVector.Y * AimAssistMultiplier * ScopeSenseMultiplier);
+	AddControllerYawInput(LookAxisVector.X * AimAssistMultiplier * ScopeSensitivityMultiplier);
+	AddControllerPitchInput(LookAxisVector.Y * AimAssistMultiplier * ScopeSensitivityMultiplier);
 	//Mesh1P->AddLocalRotation(FRotator(0, 0, -LookAxisVector.Y));
 }
 
@@ -345,9 +336,11 @@ float ACharacterBase::CustomTakePointDamage_Implementation(float Damage, FVector
 		{
 			
 			CurrentStunBuildup = CurrentStunBuildup + (Force/50);
-			UE_LOG(LogTemp, Warning, TEXT("Stun amount: %f"), CurrentStunBuildup);
 			if (CurrentStunBuildup >= StunThreshold)
+			{
 				Stun();
+			}
+				
 			MulticastSpawnBloodFX(Direction, HitInfo);
 		}
 	}
@@ -365,6 +358,8 @@ UHealthComponent* ACharacterBase::GetHealthComponent_Implementation()
 void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector DamageForce, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
 	OnKilled.Broadcast(this, EventInstigator, DamageCauser);
+	if (EventInstigator)
+		UE_LOG(LogTemp, Warning, TEXT("%s killed %s"), *EventInstigator->GetName(), *GetName())
 	SV_OnHealthDepleted(Damage, DamageForce, HitLocation, HitBoneName, EventInstigator, DamageCauser);
 	// if (!HasAuthority()) return;
 	//GetHealthComponent()->Deactivate();
@@ -413,8 +408,7 @@ void ACharacterBase::SV_OnHealthDepleted_Implementation(float Damage, FVector Fo
 			PlayerController->UnPossess();
 			//PlayerController->OnPlayerDeath.Broadcast(this, PC);
 			//@TODO Hard reference to game mode, needs to be removed
-			// if (AFirefightGameMode* FirefightGameMode = Cast<AFirefightGameMode>(GetWorld()->GetAuthGameMode()))
-			// 	FirefightGameMode->OnPlayerCharDied.Broadcast(this, Cast<APlayerControllerBase>(PC));
+
 		}
 	}
 	MC_OnHealthDepleted(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
@@ -426,6 +420,9 @@ void ACharacterBase::MC_OnHealthDepleted_Implementation(float Damage, FVector Fo
 	
 	if (EquippedWeapon)
 		DropEquippedWeapon();
+	//TODO Holsterd weapon is destroyed, but should we drop it perhaps? Something to think about
+	if (HolsteredWeapon)
+		HolsteredWeapon->Destroy();
 	if (BloodDecalMaterial)
 		GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageDecal(UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(100, 100, 100), GetActorLocation(), FRotator(-90,0,0)));
 		//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(100, 100, 100), GetActorLocation(), FRotator(-90,0,0)));
@@ -452,7 +449,7 @@ void ACharacterBase::MC_OnHealthDepleted_Implementation(float Damage, FVector Fo
 	
 	//OnKilled.Broadcast(this, EventInstigator, DamageCauser);
 	DropGrenades();
-	GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageRagdoll(this);
+	GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageCorpse(this);
 	//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageRagdoll(this);
 }
 
@@ -474,6 +471,7 @@ void ACharacterBase::DropGrenades_Implementation()
 			FVector Loc = GetActorLocation();
 			if (AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActor(GrenadeStruct.GrenadeClass, &Loc)))
 			{
+				GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageWeapon(Grenade);
 				Grenade->Mesh->SetSimulatePhysics(true);
 				//Grenade->Mesh->AddImpulse(Get * 0.025);
 			}
@@ -481,9 +479,6 @@ void ACharacterBase::DropGrenades_Implementation()
 		}
 	}
 }
-
-
-
 
 void ACharacterBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
                            FVector NormalImpulse, const FHitResult& Hit)
@@ -516,27 +511,36 @@ void ACharacterBase::SetSmartObject(ASmartObject* NewSmartObject)
 	}
 }
 
-
-
-void ACharacterBase::MeleeDamageCode()
+void ACharacterBase::MeleeActor(AActor* Actor)
 {
-	FPointDamageEvent PointDamageEvent;
-	PointDamageEvent.Damage = MeleeDamage;
-	PointDamageEvent.HitInfo = MeleeHit;
-	FVector Dir = MeleeHit.Location - MeleeHit.TraceStart;
-	Dir.Normalize();
-	IDamageableInterface::Execute_CustomTakePointDamage(MeleeHit.GetActor(), MeleeDamage, Dir, MeleeHit, MeleeForce, GetInstigatorController(), this);
-	//HitActor->CustomTakePointDamage(PointDamageEvent, MeleeForce);
+	if (Actor->Implements<UDamageableInterface>())
+	{
+		const FVector Dir = (Actor->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+		IDamageableInterface::Execute_CustomTakePointDamage(Actor, MeleeDamage, Dir, MeleeHit, MeleeForce, GetInstigatorController(), this);
+	}
+	UPrimitiveComponent* HitComp = MeleeHit.GetComponent();
+	if (HitComp && HitComp->IsSimulatingPhysics())
+	{
+		FVector ForceVector = (HitComp->GetComponentLocation() - GetActorLocation());
+		ForceVector.Normalize();
+		HitComp->AddImpulse(ForceVector*MeleeForce);
+	}
+	
+	if (TSubclassOf<ADecalActor> MeleeImpactClass = *MeleeImpactFX.Find(MeleeHit.PhysMaterial->SurfaceType))
+	{
+		const FVector Loc = MeleeHit.Location;
+		const FRotator Rot =  MeleeHit.ImpactNormal.Rotation() + FRotator(-90,0,0);
+		GetWorld()->SpawnActor(MeleeImpactClass, &Loc, &Rot);
+	}
 }
 
 void ACharacterBase::MeleeUpdate(float Alpha)
 {
-	SetActorLocation(FMath::Lerp(StartMeleeLoc, EndMeleeLoc, Alpha));
+	SetActorLocation(FMath::Lerp(StartMeleeLocation, EndMeleeLocation, Alpha));
 	if (Controller)
 	{
-		Controller->SetControlRotation(FMath::Lerp(StartMeleeRotation, (EndMeleeLoc - StartMeleeLoc).Rotation(), Alpha));
+		Controller->SetControlRotation(FMath::Lerp(StartMeleeRotation, (EndMeleeLocation - StartMeleeLocation).Rotation(), Alpha));
 	}
-	
 }
 
 
@@ -577,40 +581,22 @@ void ACharacterBase::PlayerMelee_Implementation()
 	FCollisionQueryParams CollisionParameters;
 	CollisionParameters.AddIgnoredActor(this);
 	CollisionParameters.AddIgnoredActor(GetAttachParentActor());
+	CollisionParameters.bReturnPhysicalMaterial = true;
 	GetWorld()->LineTraceSingleByChannel(MeleeHit, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParameters);
-	DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor(255, 0, 0), false, 3);
-	
+	//DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor(255, 0, 0), false, 3);
+
 	if (MeleeHit.GetActor())
 	{
-		if (MeleeHit.GetActor()->Implements<UDamageableInterface>())
+		ACharacterBase* MeleeChar = Cast<ACharacterBase>(MeleeHit.GetActor());
+		if (MeleeChar && MeleeChar->GetHealthComponent()->IsAlive())
 		{
-			if (IDamageableInterface::Execute_GetHealthComponent(MeleeHit.GetActor())->GetHealth() > 0) {
-				if (MeleeCurve)
-				{
-					StartMeleeLoc = GetActorLocation();
-					StartMeleeRotation = GetController()->GetControlRotation();
-					EndMeleeLoc = MeleeHit.GetActor()->GetActorLocation();
-					
-					FOnTimelineFloat TimelineCallback;
-					FOnTimelineEventStatic TimelineFinishedCallback;
-					
-					TimelineCallback.BindUFunction(this, FName("MeleeUpdate"));
-					TimelineFinishedCallback.BindUFunction(this, FName("MeleeDamageCode"));
-					
-					MeleeTimeline.AddInterpFloat(MeleeCurve, TimelineCallback);
-					MeleeTimeline.SetTimelineFinishedFunc(TimelineFinishedCallback);
-					MeleeTimeline.SetPlayRate(10);
-					MeleeTimeline.PlayFromStart();
-				}
-			}
-		}
-		UPrimitiveComponent* HitComp = MeleeHit.GetComponent();
-		
-		if (HitComp && HitComp->IsSimulatingPhysics())
+			StartMeleeLocation = GetActorLocation();
+			StartMeleeRotation = GetController()->GetControlRotation();
+			EndMeleeLocation = MeleeHit.GetActor()->GetActorLocation();
+			SlideMelee(MeleeChar);
+		} else
 		{
-			FVector ForceVector = (HitComp->GetComponentLocation() - GetActorLocation());
-			ForceVector.Normalize();
-			HitComp->AddImpulse(ForceVector*MeleeForce);
+			MeleeActor(MeleeHit.GetActor());
 		}
 	}
 }
@@ -621,24 +607,19 @@ void ACharacterBase::NPCMelee_Implementation()
 	if (!CanMelee()) return;
 	MulticastPlayMeleeFX();
 	GetWorld()->GetTimerManager().SetTimer(MeleeTimer, 1, false);
-	UE_LOG(LogTemp, Warning, TEXT("Melee"));
 	FCollisionShape BoxShape = FCollisionShape::MakeBox(FVector(250, 250, 50));
 	TArray<FHitResult> SweepResult;
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(this);
-	//GetWorld()->SweepMultiByChannel(SweepResult, GetActorLocation(), GetActorLocation() + GetActorForwardVector()*100, FQuat(0,0,0,0), ECollisionChannel::ECC_Pawn, BoxShape, CollisionParams);
 	GetWorld()->SweepMultiByChannel(SweepResult, GetActorLocation(), GetActorLocation() + GetActorForwardVector()*100, FQuat(0,0,0,0), ECollisionChannel::ECC_Pawn, BoxShape, CollisionParams);
-	//GetWorld()->SweepMultiByObjectType(SweepResult, GetActorLocation(), GetActorLocation() + GetActorForwardVector()*100, FQuat(0,0,0,0), ECollisionChannel::ECC_Pawn, BoxShape, CollisionParams);
 	for (auto Result : SweepResult)
 	{
 		if (Result.GetActor() && Result.GetActor()->Implements<UDamageableInterface>() && Result.GetActor()!=this)
 		{
 			FDamageEvent DamageEvent;
 			IDamageableInterface::Execute_CustomTakeDamage(Result.GetActor(), MeleeDamage, FVector(0,0,0), nullptr, this);
-			//Cast<IDamageableInterface>(Result.GetActor())->CustomTakeDamage(MeleeDamage, FVector(0,0,0), DamageEvent, nullptr, this);
-			//Result.GetActor()->TakeDamage(MeleeDamage, DamageEvent, nullptr, this);
+
 		}
-		
 		UPrimitiveComponent* HitComp = Result.GetComponent();
 		
 		if (HitComp && HitComp->IsSimulatingPhysics())	
@@ -827,7 +808,6 @@ void ACharacterBase::ClientCycleGrenadeType_Implementation() const
 
 void ACharacterBase::UseEquipment_Implementation()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Used Equipment"));
 }
 
 void ACharacterBase::PrimaryAttack_Pull()
@@ -931,9 +911,11 @@ void ACharacterBase::ScopeWeapon()
 		if (EquippedWeapon->ScopeActive)
 		{
 			EquippedWeapon->ScopeOut();
+			ScopeSensitivityMultiplier = 1;
 		} else
 		{
 			EquippedWeapon->ScopeIn();
+			ScopeSensitivityMultiplier = (EquippedWeapon->ZoomFOV/90);
 		}
 	}
 }
@@ -942,15 +924,9 @@ void ACharacterBase::DrawEquippedWeapon()
 {
 	if (!EquippedWeapon)
 	{
-		
-		#if WITH_EDITOR
-			UE_LOG(LogTemp, Warning, TEXT("No equipped weapon for: %s"), *GetActorLabel());
-		#endif
+		UE_LOG(LogTemp, Warning, TEXT("No equipped weapon for: %s"), *GetName());
 		return;
 	}
-	#if WITH_EDITOR
-		UE_LOG(LogTemp, Warning, TEXT("EquipWeapon called for %s on %s"), *EquippedWeapon->GetActorLabel(), *UEnum::GetValueAsString(GetRemoteRole()));
-	#endif
 	//EquippedWeapon->SetReplicateMovement(false);
 	EquippedWeapon->Mesh->SetSimulatePhysics(false);
 	EquippedWeapon->SetActorEnableCollision(false);
@@ -992,9 +968,7 @@ void ACharacterBase::SetupViewmodel(const bool bFirstPerson)
 void ACharacterBase::MulticastHolsterEquippedWeapon_Implementation()
 {
 	if (!EquippedWeapon) return;
-	#if WITH_EDITOR
-		UE_LOG(LogTemp, Warning, TEXT("Holstered %s"), *EquippedWeapon->GetActorLabel());
-	#endif
+	UE_LOG(LogTemp, Warning, TEXT("%s holstered %s"), *GetName(), *EquippedWeapon->GetName());
 	if (EquippedWeapon->ScopeActive) EquippedWeapon->ScopeOut();
 	EquippedWeapon->ReleaseTrigger();
 	GetWorldTimerManager().ClearTimer(EquippedWeapon->ReloadTimer);
@@ -1025,9 +999,7 @@ void ACharacterBase::Server_PickupWeapon_Implementation(AGunBase* Gun)
 	Gun->Mesh->SetSimulatePhysics(false);
 	Gun->SetActorEnableCollision(false);
 	
-	#if WITH_EDITOR
-		UE_LOG(LogTemp, Warning, TEXT("%s picked up %s"), *GetActorLabel(), *Gun->GetActorLabel());
-	#endif
+	UE_LOG(LogTemp, Warning, TEXT("%s picked up %s"), *GetName(), *Gun->GetName());
 
 	Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
 	Gun->OnPickup(this);
@@ -1134,7 +1106,6 @@ void ACharacterBase::Stun(float StunTime)
 		AIC->BlackboardComp->SetValueAsBool("IsStunned", true);
 		AIC->ClearFocus(EAIFocusPriority::Gameplay);
 		MulticastPlayStunAnimation(StunDuration);
-		UE_LOG(LogTemp, Warning, TEXT("Stunned"));
 		FTimerDelegate UnstunDelegate = FTimerDelegate::CreateUObject(this, &ACharacterBase::Unstun);
 		// GetWorld()->GetTimerManager().SetTimer(StunTimer, UnstunDelegate, StunDuration, false);
 		GetWorld()->GetTimerManager().SetTimer(StunTimer, this, &ACharacterBase::Unstun, StunDuration, false);
@@ -1151,7 +1122,6 @@ void ACharacterBase::Unstun() const
 {
 	if (AAIControllerBase* AIC = Cast<AAIControllerBase>(GetController()))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Unstunned"));
 		AIC->BehaviorTreeComp->ResumeLogic(FString("Unstunned"));
 		AIC->BlackboardComp->SetValueAsBool("IsStunned", false);
 	}

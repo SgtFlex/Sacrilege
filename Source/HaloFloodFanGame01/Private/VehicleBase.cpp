@@ -131,11 +131,8 @@ void AVehicleBase::UnPossessed()
 {
 	//Bugs out all clients
 	Client_Unpossessed();
-	if (IsLocallyViewed())
-	{
-		RemoveHUD();
-		RemoveControls();
-	}
+	RemoveHUD();
+	RemoveControls();
 	Super::UnPossessed();
 }
 
@@ -244,7 +241,7 @@ void AVehicleBase::DetachPilot_Implementation()
 		Pilot->SetActorTransform(ExitPoint->GetComponentTransform());
 	} else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Invalid pilot"));
+		UE_LOG(LogTemp, Warning, TEXT("Invalid pilot for %s"), *GetName());
 	}
 }
 

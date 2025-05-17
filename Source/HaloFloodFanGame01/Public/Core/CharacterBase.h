@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "DamageableInterface.h"
+#include "GameplayTagAssetInterface.h"
 #include "Components/TimelineComponent.h"
 #include "GameFramework/Character.h"
 #include "CharacterBase.generated.h"
@@ -58,7 +59,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrenadeInvetoryUpdated, TArray<FG
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGrenadeTypeSwitched, TSubclassOf<AGrenadeBase>, GrenadeClass, int, Index);
 
 UCLASS()
-class HALOFLOODFANGAME01_API ACharacterBase : public ACharacter, public IDamageableInterface
+class HALOFLOODFANGAME01_API ACharacterBase : public ACharacter, public IDamageableInterface, public IGameplayTagAssetInterface
 {
 	GENERATED_BODY()
 
@@ -141,14 +142,19 @@ public:
 	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void SV_Melee();
 
-	UFUNCTION()
-	virtual void MeleeDamageCode();
+	UFUNCTION(BlueprintImplementableEvent)
+	void SlideMelee(AActor* Actor);
+
+	UFUNCTION(BlueprintCallable)
+	virtual void MeleeActor(AActor* Actor);
 	
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void MeleeUpdate(float Alpha);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void PlayerMelee();
+
+
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void NPCMelee();
@@ -334,6 +340,9 @@ protected:
 	virtual void CL_Unpossessed();
 
 	virtual void SpawnDefaultController() override;
+
+	virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; return; }
+
 public:
 	//Delegates
 
@@ -491,6 +500,9 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	UCurveFloat* MeleeCurve;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
+	FGameplayTagContainer GameplayTags;
+
 private:
 	UPROPERTY(Replicated)
 	AActor* InteractableActor;
@@ -508,6 +520,8 @@ private:
 	UInputDeviceSubsystem* InputDeviceSubsystem;
 	
 protected:
+	float ScopeSensitivityMultiplier = 1;
+	
 	UPROPERTY(BlueprintReadWrite)
 	FTimerHandle MeleeTimer;
 
@@ -586,16 +600,19 @@ protected:
 	UPROPERTY()
 	FTimerHandle PossessionDelay;
 
-	UPROPERTY()
-	FVector StartMeleeLoc;
+	UPROPERTY(BlueprintReadOnly)
+	FVector StartMeleeLocation;
 
-	UPROPERTY()
-	FVector EndMeleeLoc;
+	UPROPERTY(BlueprintReadOnly)
+	FVector EndMeleeLocation;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	FRotator StartMeleeRotation;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	FHitResult MeleeHit;
+
+	UPROPERTY(EditDefaultsOnly)
+	TMap<TEnumAsByte<EPhysicalSurface>, TSubclassOf<ADecalActor>> MeleeImpactFX;
 
 };

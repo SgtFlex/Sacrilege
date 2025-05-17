@@ -2,19 +2,40 @@
 
 
 #include "WorldCleanupManager.h"
-
 #include "Components/DecalComponent.h"
 
-void UWorldCleanupManager::ManageRagdoll_Implementation(AActor* Actor)
+UWorldCleanupManager::UWorldCleanupManager()
+{
+	AddCleanupCategory("Weapons", MaxWeapons);
+	AddCleanupCategory("Characters", MaxCorpses);
+	AddCleanupCategory("Decals", MaxDecals);
+}
+
+void UWorldCleanupManager::ManageCorpse_Implementation(AActor* Actor)
 {
 	Ragdolls.Add(Actor);
-	if (Ragdolls.Num() > MaxRagdolls)
+	Actor->OnDestroyed.AddDynamic(this, &UWorldCleanupManager::StopManagingCorpse);
+	if (Ragdolls.Num() > MaxCorpses)
 	{
 		if (IsValid(Ragdolls[0]))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Cleaning up ragdoll %s"), *Ragdolls[0]->GetName());
+			Ragdolls[0]->OnDestroyed.RemoveDynamic(this, &UWorldCleanupManager::StopManagingCorpse);
 			Ragdolls[0]->Destroy();
+		}
 		Ragdolls.RemoveAt(0);
 	}
 }
+
+void UWorldCleanupManager::StopManagingCorpse_Implementation(AActor* Ragdoll)
+{
+	Ragdoll->OnDestroyed.RemoveDynamic(this, &UWorldCleanupManager::StopManagingCorpse);
+	if (Ragdolls.Contains(Ragdoll))
+	{
+		Ragdolls.Remove(Ragdoll);
+	}
+}
+
 
 void UWorldCleanupManager::ManageDecal_Implementation(UDecalComponent* Decal)
 {
@@ -22,31 +43,84 @@ void UWorldCleanupManager::ManageDecal_Implementation(UDecalComponent* Decal)
 	if (Decals.Num() > MaxDecals)
 	{
 		if (IsValid(Decals[0]))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Cleaning up decal %s"), *Decals[0]->GetName());
 			Decals[0]->DestroyComponent();
+		}
 		Decals.RemoveAt(0);
 	}
 }
 
-void UWorldCleanupManager::ManageActor_Implementation(AActor* Actor)
+void UWorldCleanupManager::StopManagingDecal_Implementation(UDecalComponent* Decal)
 {
-	
+
 }
+
+void UWorldCleanupManager::AddCleanupCategory_Implementation(const FString& Category, uint8 ActorLimit)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Created new cleanup category %s"), *Category);
+	FManagedActorStruct ManagedActorStruct;
+	ManagedActorStruct.Name = Category;
+	ManagedActorStruct.ActorLimit = ActorLimit;
+	CleanupStructs.Add(ManagedActorStruct);
+}
+
+void UWorldCleanupManager::ManageActor_Implementation(const FString& Category, AActor* Actor)
+{
+	for (FManagedActorStruct ActorCategoryStruct : CleanupStructs)
+	{
+		if (ActorCategoryStruct.Name.Equals(Category))
+		{
+			ActorCategoryStruct.ManagedActors.Add(Actor);
+			if (ActorCategoryStruct.ManagedActors.Num() > ActorCategoryStruct.ActorLimit)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Cleaning up %s from category %s"), *ActorCategoryStruct.ManagedActors[0]->GetName(), *Category);
+				ActorCategoryStruct.ManagedActors[0]->Destroy();
+				ActorCategoryStruct.ManagedActors.RemoveAt(0);
+			}
+		}
+	}	
+}
+
+void UWorldCleanupManager::StopManagingActor_Implementation(const FString& Category, AActor* Actor)
+{
+	for (FManagedActorStruct ActorCategoryStruct : CleanupStructs)
+	{
+		if (ActorCategoryStruct.Name.Equals(Category))
+		{
+			if (ActorCategoryStruct.ManagedActors.Contains(Actor))
+			{
+				ActorCategoryStruct.ManagedActors.Remove(Actor);
+			}
+		}
+	}
+}
+
 
 void UWorldCleanupManager::ManageWeapon_Implementation(AActor* Weapon)
 {
 	Weapons.Add(Weapon);
+	UE_LOG(LogTemp, Warning, TEXT("Managing weapon %s"), *Weapon->GetName());
+	Weapon->OnDestroyed.AddDynamic(this, &UWorldCleanupManager::StopManagingWeapon);
 	if (Weapons.Num() > MaxWeapons)
 	{
 		if (IsValid(Weapons[0]))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Cleaning up weapon %s"), *Weapons[0]->GetName());
+			Weapons[0]->OnDestroyed.RemoveDynamic(this, &UWorldCleanupManager::StopManagingWeapon);
 			Weapons[0]->Destroy();
+		}
 		Weapons.RemoveAt(0);
 	}
 }
 
 void UWorldCleanupManager::StopManagingWeapon_Implementation(AActor* Weapon)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Stopping Management for weapon %s"), *Weapon->GetName());
+	Weapon->OnDestroyed.RemoveDynamic(this, &UWorldCleanupManager::StopManagingWeapon);
 	if (Weapons.Contains(Weapon))
 	{
 		Weapons.Remove(Weapon);
 	}
 }
+

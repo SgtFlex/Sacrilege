@@ -9,35 +9,41 @@
 /**
  * 
  */
+
+//TODO Perhaps utilize this struct to dynamically add more types of managed actors. Maybe use Tags or Strings or something instead of a class.
 USTRUCT()
 struct FManagedActorStruct
 {
 	GENERATED_BODY()
 
 	UPROPERTY()
-	TSubclassOf<AActor> ActorClass;
+	FString Name = "";
 
-	uint8 ActorLimit;
+	UPROPERTY()
+	uint8 ActorLimit = 100;
 
 	UPROPERTY()
 	TArray<AActor*> ManagedActors;
-
-	bool operator==(const FManagedActorStruct& other) const
-	{
-		return other.ActorClass == ActorClass;
-	}
 };
 
 UCLASS()
 class HALOFLOODFANGAME01_API UWorldCleanupManager : public UWorldSubsystem
 {
 	GENERATED_BODY()
+
+	UWorldCleanupManager();
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void ManageRagdoll(AActor* Actor);
+	void ManageCorpse(AActor* Actor);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void StopManagingCorpse(AActor* Ragdoll);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void ManageDecal(UDecalComponent* Decal);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void StopManagingDecal(UDecalComponent* Decal);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void ManageWeapon(AActor* Weapon);
@@ -46,8 +52,14 @@ public:
 	void StopManagingWeapon(AActor* Weapon);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void ManageActor(AActor* Actor);
+	void ManageActor(const FString& Category, AActor* Actor);
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void StopManagingActor(const FString& Category, AActor* Actor);
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void AddCleanupCategory(const FString& Category, uint8 ActorLimit);
+	
 public:
 	UPROPERTY()
 	TArray<AActor*> Ragdolls;
@@ -59,10 +71,10 @@ public:
 	TArray<AActor*> Weapons;
 
 	UPROPERTY()
-	TArray<FManagedActorStruct> ManagedActors;
+	TArray<FManagedActorStruct> CleanupStructs;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	uint8 MaxRagdolls = 10;
+	uint8 MaxCorpses = 10;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	uint8 MaxWeapons = 20;

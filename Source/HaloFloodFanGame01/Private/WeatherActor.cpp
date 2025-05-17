@@ -46,8 +46,8 @@ void AWeatherActor::Tick(float DeltaTime)
 		}
 	}
 	
-	SetActorRotation(FRotator(CurrentPitch,0, 0));
-	DirectionalLight->SetLightColor(DirectionalLightColorCurve->GetLinearColorValue(CurrentPitch));
+	//SetActorRotation(FRotator(CurrentPitch,0, 0));
+	//DirectionalLight->SetLightColor(DirectionalLightColorCurve->GetLinearColorValue(CurrentPitch));
 }
 
 void AWeatherActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

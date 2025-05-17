@@ -42,6 +42,7 @@ void AFirefightGameState::SetCurrentSet_Implementation(int NewSet)
 	{
 		curSet = NewSet;
 	}
+	UE_LOG(LogTemp, Warning, TEXT("Set Start: %d"), curSet);
 	OnSetChanged.Broadcast(curSet);
 }
 

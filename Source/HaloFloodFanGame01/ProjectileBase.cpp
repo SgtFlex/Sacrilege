@@ -91,21 +91,22 @@ void AProjectileBase::OnProjectileOverlapped_Implementation(UPrimitiveComponent*
 	if (ImpactDecalMaterial)
 	{
 		FTransform SpawnTransform = FTransform(SweepResult.Normal.Rotation() + FRotator(-90, FMath::RandRange(-180, 180), 0), SweepResult.ImpactPoint, FVector(1,1,1) * FMath::RandRange(0.1f, 1.0f));
-		ADecalActor* ImpactDecal = GetWorld()->SpawnActor<ADecalActor>(ImpactDecalClass, SpawnTransform);
-		ImpactDecal->AttachToComponent(OtherComp, FAttachmentTransformRules::KeepWorldTransform);
-		GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageDecal(UGameplayStatics::SpawnDecalAttached(ImpactDecalMaterial, FVector(1,1,1) * FMath::RandRange(0.1f, 1.0f), OtherComp, NAME_None, SweepResult.ImpactPoint, SweepResult.Normal.Rotation() + FRotator(-90, FMath::RandRange(-180, 180), 0), EAttachLocation::KeepWorldPosition));
-		//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAttached(ImpactDecalMaterial, FVector(1,1,1) * FMath::RandRange(0.1f, 1.0f), OtherComp, NAME_None, SweepResult.ImpactPoint, SweepResult.Normal.Rotation() + FRotator(-90, FMath::RandRange(-180, 180), 0), EAttachLocation::KeepWorldPosition));
+		//@TODO Perhaps keep decals separate from actors and have them managed by the cleanup system
+		//ADecalActor* ImpactDecal = GetWorld()->SpawnActor<ADecalActor>(ImpactDecalClass, SpawnTransform);
+		//ImpactDecal->AttachToComponent(OtherComp, FAttachmentTransformRules::KeepWorldTransform);
+		GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageDecal(UGameplayStatics::SpawnDecalAttached(ImpactDecalMaterial, FVector(100,100,100) * FMath::RandRange(0.1f, 1.0f), OtherComp, NAME_None, SweepResult.ImpactPoint, SweepResult.Normal.Rotation() + FRotator(-90, FMath::RandRange(-180, 180), 0), EAttachLocation::KeepWorldPosition));
 	}
 	IdleSoundComponent->Stop();
-	FTimerDelegate TimerDelegate;
-	TimerDelegate.BindLambda([&]()
-	{
-		Destroy();
-	});
-	if (!GetWorldTimerManager().TimerExists(DespawnTimerHandle))
-	{
-		GetWorldTimerManager().SetTimer(DespawnTimerHandle, TimerDelegate, 5.0f, false);
-	}
+	//Below commented code could be cause of EXCEPTION_ACCESS_VIOLATION errors I've been getting for years...
+	// FTimerDelegate TimerDelegate;
+	// TimerDelegate.BindLambda([&]()
+	// {
+	// 	Destroy();
+	// });
+	// if (!GetWorldTimerManager().TimerExists(DespawnTimerHandle))
+	// {
+	// 	GetWorldTimerManager().SetTimer(DespawnTimerHandle, TimerDelegate, 5.0f, false);
+	// }
 	
 	CollisionComp->Deactivate();
 	CollisionComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
