@@ -131,8 +131,11 @@ void AVehicleBase::UnPossessed()
 {
 	//Bugs out all clients
 	Client_Unpossessed();
-	RemoveHUD();
-	RemoveControls();
+	if (IsLocallyViewed())
+	{
+		RemoveHUD();
+		RemoveControls();
+	}
 	Super::UnPossessed();
 }
 
@@ -297,8 +300,7 @@ float AVehicleBase::CustomTakePointDamage_Implementation(float Damage, FVector D
 	return Damage;
 }
 
-float AVehicleBase::CustomTakeRadialDamage_Implementation(float Force, FRadialDamageEvent const& RadialDamageEvent,
-	AController* EventInstigator, AActor* DamageCauser)
+float AVehicleBase::CustomTakeRadialDamage_Implementation(FVector Origin, float Radius, float Force, const FHitResult& HitInfo, FRadialDamageEvent const& RadialDamageEvent, float MinimumRadius, AController* EventInstigator, AActor* DamageCauser)
 {
 
 	HealthComponent->TakeDamage(RadialDamageEvent.Params.BaseDamage, (GetActorLocation() - RadialDamageEvent.Origin).GetSafeNormal()*Force, this->GetActorLocation(), NAME_None, EventInstigator, DamageCauser);

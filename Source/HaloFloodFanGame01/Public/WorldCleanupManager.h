@@ -50,6 +50,12 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void StopManagingWeapon(AActor* Weapon);
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void ManageGrenade(AActor* Grenade);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void StopManagingGrenade(AActor* Grenade);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void ManageActor(const FString& Category, AActor* Actor);
@@ -71,15 +77,21 @@ public:
 	TArray<AActor*> Weapons;
 
 	UPROPERTY()
+	TArray<AActor*> Grenades;
+
+	UPROPERTY()
 	TArray<FManagedActorStruct> CleanupStructs;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	uint8 MaxCorpses = 10;
+	uint8 MaxCorpses = 25;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	uint8 MaxWeapons = 20;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	uint8 MaxDecals = 20;
+	uint8 MaxDecals = 50;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	uint8 MaxGrenades = 25;
 	
 };

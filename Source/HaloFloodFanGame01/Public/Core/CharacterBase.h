@@ -107,7 +107,7 @@ public:
 	float CustomTakePointDamage(float Damage, FVector Direction, const FHitResult& HitInfo, float Force, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-	float CustomTakeRadialDamage(float Force, FRadialDamageEvent const& RadialDamageEvent, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
+	float CustomTakeRadialDamage(FVector Origin, float Radius, float Force, const FHitResult& HitInfo, FRadialDamageEvent const& RadialDamageEvent, float MinimumRadius, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
 	UFUNCTION(NetMulticast, Unreliable)
 	void MulticastSpawnBloodFX(FVector Direction, const FHitResult& HitInfo);
@@ -503,6 +503,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
 	FGameplayTagContainer GameplayTags;
 
+	float ScopeSensitivityMultiplier = 1;
 private:
 	UPROPERTY(Replicated)
 	AActor* InteractableActor;
@@ -520,8 +521,6 @@ private:
 	UInputDeviceSubsystem* InputDeviceSubsystem;
 	
 protected:
-	float ScopeSensitivityMultiplier = 1;
-	
 	UPROPERTY(BlueprintReadWrite)
 	FTimerHandle MeleeTimer;
 

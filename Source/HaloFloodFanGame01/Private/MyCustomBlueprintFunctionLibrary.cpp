@@ -7,6 +7,7 @@
 #include "DamageableInterface.h"
 #include "NiagaraEmitterHandle.h"
 #include "NiagaraFunctionLibrary.h"
+#include "PhysicsInterface.h"
 #include "AI/NavigationSystemBase.h"
 #include "Camera/CameraComponent.h"
 #include "Engine/DamageEvents.h"
@@ -91,34 +92,43 @@ void UMyCustomBlueprintFunctionLibrary::FireExplosion(TArray<AActor*>& ActorsToI
 	RadialDamageEvent.Origin = Location;
 	TArray<TEnumAsByte<EObjectTypeQuery>> Objects;
 	TArray<AActor*> HitActors;
-	UKismetSystemLibrary::SphereOverlapActors(World, Location, OuterRadius, Objects, AActor::StaticClass(), ActorsToIgnore, HitActors);
-	for (auto HitActor : HitActors)
-	{
-		if (!ActorsToIgnore.Contains(HitActor))
-		{
-			if (HitActor->Implements<UDamageableInterface>())
-			{
-				IDamageableInterface::Execute_CustomTakeRadialDamage(HitActor, Force, RadialDamageEvent, EventInstigator, DamageCauser);
-				//HitDamageable->CustomTakeRadialDamage(Force, RadialDamageEvent, EventInstigator, DamageCauser);
-			}
-			if (UPrimitiveComponent* PrimComponent = Cast<UPrimitiveComponent>(HitActor->GetRootComponent()))
-			{
-				if (PrimComponent->IsSimulatingPhysics() && PrimComponent->GetCollisionEnabled() == ECollisionEnabled::QueryAndPhysics)
-				{
-					PrimComponent->AddImpulse((HitActor->GetActorLocation() - Location).GetSafeNormal() * Force);
-					//PrimComponent->AddImpulse((HitActor->GetActorLocation() - Location).GetSafeNormal() * FMath::Lerp(0, Force, (FVector::Distance(HitActor->GetActorLocation(), Location)) + InnerRadius));
 
+	TArray<FHitResult> OutHits;
+	UKismetSystemLibrary::SphereTraceMultiByProfile(World, Location, Location, OuterRadius, FName("Projectile"), false, ActorsToIgnore, EDrawDebugTrace::None, OutHits, true);
+	//UKismetSystemLibrary::SphereTraceMulti(World, Location, Location, OuterRadius, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, OutHits, true);
+	//UKismetSystemLibrary::SphereTraceMultiByProfile(World, Location, Location, OuterRadius, FName("Hi"), false, ActorsToIgnore, )
+	//UKismetSystemLibrary::SphereOverlapActors(World, Location, OuterRadius, Objects, AActor::StaticClass(), ActorsToIgnore, HitActors);
+	for (FHitResult Hit : OutHits)
+	{
+		if (AActor* HitActor = Hit.GetActor())
+		{
+			if (!ActorsToIgnore.Contains(HitActor))
+			{
+				//We only want to hit once per object
+				ActorsToIgnore.AddUnique(Hit.GetActor());
+				//TODO - Maybe use a "ForceInterface" for characters, projectiles, and others instead of casting?
+				if (HitActor->Implements<UDamageableInterface>())
+				{
+					//IDamageableInterface::Execute_CustomTakeRadialDamage(HitActor, Force, RadialDamageEvent, EventInstigator, DamageCauser);
+					IDamageableInterface::Execute_CustomTakeRadialDamage(HitActor, Location, OuterRadius, Force, Hit,
+																		 RadialDamageEvent, InnerRadius, EventInstigator,
+																		 DamageCauser);
+				} else if (HitActor->Implements<UPhysicsInterface>())
+				{
+					IPhysicsInterface::Execute_ApplyPhysicsImpulse(HitActor, (Hit.ImpactPoint - Location).GetSafeNormal() * Force);
+					
+				} else if (UPrimitiveComponent* PrimComponent = Cast<UPrimitiveComponent>(HitActor->GetRootComponent()))
+				{
+					if (PrimComponent->IsSimulatingPhysics() && PrimComponent->GetCollisionEnabled() ==
+						ECollisionEnabled::QueryAndPhysics)
+					{
+						PrimComponent->AddImpulse((Hit.ImpactPoint - Location).GetSafeNormal() * Force);
+						//PrimComponent->AddImpulse((HitActor->GetActorLocation() - Location).GetSafeNormal() * FMath::Lerp(0, Force, (FVector::Distance(HitActor->GetActorLocation(), Location)) + InnerRadius));
+					}
 				}
 			}
-			//TODO - Maybe use a "ForceInterface" for characters, projectiles, and others instead of casting?
-			if (ACharacterBase* Character = Cast<ACharacterBase>(HitActor))
-			{
-				Character->LaunchCharacter((Character->GetActorLocation() - Location).GetSafeNormal() * Force * 0.01, false, false);
-			}
 		}
-		
 	}
-	
 }
 
 void UMyCustomBlueprintFunctionLibrary::FireExplosionWithCosmetics(

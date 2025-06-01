@@ -324,6 +324,7 @@ bool AGunBase::ScopeIn_Implementation()
 		ScopeActive = true;
 		ScopeOverlay = CreateWidget<UUserWidget>(CharacterOwner->PlayerController, ScopeWidget);
 		ScopeOverlay->AddToPlayerScreen();
+		CharacterOwner->ScopeSensitivityMultiplier = (ZoomFOV/90);
 		//PlayerChar->GetFirstPersonCameraComponent()->SetFieldOfView(10);
 		if (ScopeInSFX) UGameplayStatics::PlaySound2D(GetWorld(), ScopeInSFX);
 	}
@@ -338,6 +339,7 @@ void AGunBase::ScopeOut_Implementation()
 		ScopeOverlay->RemoveFromParent();
 		//PlayerChar->GetFirstPersonCameraComponent()->SetFieldOfView(90);
 		ScopeActive = false;
+		CharacterOwner->ScopeSensitivityMultiplier = 1;
 		if (ScopeOutSFX) UGameplayStatics::PlaySound2D(GetWorld(), ScopeOutSFX);
 	}
 }

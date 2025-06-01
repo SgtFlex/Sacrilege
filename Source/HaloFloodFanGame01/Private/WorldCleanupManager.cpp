@@ -9,6 +9,7 @@ UWorldCleanupManager::UWorldCleanupManager()
 	AddCleanupCategory("Weapons", MaxWeapons);
 	AddCleanupCategory("Characters", MaxCorpses);
 	AddCleanupCategory("Decals", MaxDecals);
+	AddCleanupCategory("Grenades", MaxGrenades);
 }
 
 void UWorldCleanupManager::ManageCorpse_Implementation(AActor* Actor)
@@ -69,7 +70,7 @@ void UWorldCleanupManager::ManageActor_Implementation(const FString& Category, A
 {
 	for (FManagedActorStruct ActorCategoryStruct : CleanupStructs)
 	{
-		if (ActorCategoryStruct.Name.Equals(Category))
+		if (ActorCategoryStruct.Name.Equals(Category, ESearchCase::IgnoreCase))
 		{
 			ActorCategoryStruct.ManagedActors.Add(Actor);
 			if (ActorCategoryStruct.ManagedActors.Num() > ActorCategoryStruct.ActorLimit)
@@ -124,3 +125,29 @@ void UWorldCleanupManager::StopManagingWeapon_Implementation(AActor* Weapon)
 	}
 }
 
+void UWorldCleanupManager::ManageGrenade_Implementation(AActor* Grenade)
+{
+	Grenades.Add(Grenade);
+	UE_LOG(LogTemp, Warning, TEXT("Managing grenade %s"), *Grenade->GetName());
+	Grenade->OnDestroyed.AddDynamic(this, &UWorldCleanupManager::StopManagingGrenade);
+	if (Grenades.Num() > MaxGrenades)
+	{
+		if (IsValid(Grenades[0]))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Cleaning up grenade %s"), *Grenades[0]->GetName());
+			Grenades[0]->OnDestroyed.RemoveDynamic(this, &UWorldCleanupManager::StopManagingGrenade);
+			Grenades[0]->Destroy();
+		}
+		Grenades.RemoveAt(0);
+	}
+}
+
+void UWorldCleanupManager::StopManagingGrenade_Implementation(AActor* Grenade)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Stopping Management for grenade %s"), *Grenade->GetName());
+	Grenade->OnDestroyed.RemoveDynamic(this, &UWorldCleanupManager::StopManagingGrenade);
+	if (Grenades.Contains(Grenade))
+	{
+		Grenades.Remove(Grenade);
+	}
+}

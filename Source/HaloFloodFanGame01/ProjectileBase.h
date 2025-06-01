@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PhysicsInterface.h"
 #include "GameFramework/Actor.h"
 #include "ProjectileBase.generated.h"
 
@@ -12,7 +13,7 @@ class USphereComponent;
 class UProjectileMovementComponent;
 
 UCLASS(config=Game)
-class AProjectileBase : public AActor
+class AProjectileBase : public AActor, public IPhysicsInterface
 {
 	GENERATED_BODY()
 

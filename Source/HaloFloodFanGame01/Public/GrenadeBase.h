@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "DamageableInterface.h"
+#include "GameplayTagAssetInterface.h"
 #include "PickupInterface.h"
 #include "GameFramework/Actor.h"
 #include "GrenadeBase.generated.h"
@@ -15,7 +16,7 @@ class UProjectileMovementComponent;
 class UPickupComponent;
 class UNiagaraSystem;
 UCLASS()
-class HALOFLOODFANGAME01_API AGrenadeBase : public AActor, public IPickupInterface, public IDamageableInterface
+class HALOFLOODFANGAME01_API AGrenadeBase : public AActor, public IPickupInterface, public IDamageableInterface, public IGameplayTagAssetInterface
 {
 	GENERATED_BODY()
 	
@@ -86,6 +87,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	UForceFeedbackAttenuation* ExplosionFeedbackAttenuation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
+	FGameplayTagContainer GameplayTags;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -125,5 +129,7 @@ public:
 	float CustomTakePointDamage(float Damage, FVector Direction, const FHitResult& HitInfo, float Force, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-	float CustomTakeRadialDamage(float Force, FRadialDamageEvent const& RadialDamageEvent, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
+	float CustomTakeRadialDamage(FVector Origin, float Radius, float Force, const FHitResult& HitInfo, FRadialDamageEvent const& RadialDamageEvent, float MinimumRadius, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
+
+	virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; return; }
 };

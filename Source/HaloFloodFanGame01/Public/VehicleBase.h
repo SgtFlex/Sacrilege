@@ -130,7 +130,7 @@ public:
 	float CustomTakePointDamage(float Damage, FVector Direction, const FHitResult& HitInfo, float Force, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 	
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-	float CustomTakeRadialDamage(float Force, FRadialDamageEvent const& RadialDamageEvent, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
+	float CustomTakeRadialDamage(FVector Origin, float Radius, float Force, const FHitResult& HitInfo, FRadialDamageEvent const& RadialDamageEvent, float MinimumRadius, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	UHealthComponent* GetHealthComponent();

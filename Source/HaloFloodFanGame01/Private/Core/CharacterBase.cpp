@@ -303,8 +303,7 @@ void ACharacterBase::MulticastSpawnBloodFX_Implementation(FVector Direction, con
 	
 }
 
-float ACharacterBase::CustomTakeRadialDamage_Implementation(float Force, FRadialDamageEvent const& RadialDamageEvent,
-                                                            AController* EventInstigator, AActor* DamageCauser)
+float ACharacterBase::CustomTakeRadialDamage_Implementation(FVector Origin, float Radius, float Force, const FHitResult& HitInfo, FRadialDamageEvent const& RadialDamageEvent, float MinimumRadius, AController* EventInstigator, AActor* DamageCauser)
 {
 	return ChangeHealth(this, RadialDamageEvent.Params.BaseDamage, (Cast<AActor>(this)->GetActorLocation() - RadialDamageEvent.Origin).GetSafeNormal() * Force, FVector(0,0,0), FName(""), EventInstigator, DamageCauser);
 }
@@ -471,7 +470,8 @@ void ACharacterBase::DropGrenades_Implementation()
 			FVector Loc = GetActorLocation();
 			if (AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActor(GrenadeStruct.GrenadeClass, &Loc)))
 			{
-				GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageWeapon(Grenade);
+				GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageGrenade(Grenade);
+				//GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageActor("Grenades", Grenade);
 				Grenade->Mesh->SetSimulatePhysics(true);
 				//Grenade->Mesh->AddImpulse(Get * 0.025);
 			}
@@ -911,11 +911,9 @@ void ACharacterBase::ScopeWeapon()
 		if (EquippedWeapon->ScopeActive)
 		{
 			EquippedWeapon->ScopeOut();
-			ScopeSensitivityMultiplier = 1;
-		} else
+		} else if (!EquippedWeapon->ScopeActive && EquippedWeapon->ZoomFOV != 0.0f)
 		{
 			EquippedWeapon->ScopeIn();
-			ScopeSensitivityMultiplier = (EquippedWeapon->ZoomFOV/90);
 		}
 	}
 }
