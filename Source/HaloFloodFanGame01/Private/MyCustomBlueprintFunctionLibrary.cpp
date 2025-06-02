@@ -94,9 +94,9 @@ void UMyCustomBlueprintFunctionLibrary::FireExplosion(TArray<AActor*>& ActorsToI
 	TArray<AActor*> HitActors;
 
 	TArray<FHitResult> OutHits;
-	UKismetSystemLibrary::SphereTraceMultiByProfile(World, Location, Location, OuterRadius, FName("Projectile"), false, ActorsToIgnore, EDrawDebugTrace::None, OutHits, true);
+	UKismetSystemLibrary::SphereTraceMulti(World, Location, Location, OuterRadius, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::None, OutHits, true);
+	//UKismetSystemLibrary::SphereTraceMultiByProfile(World, Location, Location, OuterRadius, FName("Projectile"), false, ActorsToIgnore, EDrawDebugTrace::None, OutHits, true);
 	//UKismetSystemLibrary::SphereTraceMulti(World, Location, Location, OuterRadius, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, OutHits, true);
-	//UKismetSystemLibrary::SphereTraceMultiByProfile(World, Location, Location, OuterRadius, FName("Hi"), false, ActorsToIgnore, )
 	//UKismetSystemLibrary::SphereOverlapActors(World, Location, OuterRadius, Objects, AActor::StaticClass(), ActorsToIgnore, HitActors);
 	for (FHitResult Hit : OutHits)
 	{
@@ -115,7 +115,7 @@ void UMyCustomBlueprintFunctionLibrary::FireExplosion(TArray<AActor*>& ActorsToI
 																		 DamageCauser);
 				} else if (HitActor->Implements<UPhysicsInterface>())
 				{
-					IPhysicsInterface::Execute_ApplyPhysicsImpulse(HitActor, (Hit.ImpactPoint - Location).GetSafeNormal() * Force);
+					IPhysicsInterface::Execute_ApplyPhysicsImpulse(HitActor, (Hit.ImpactPoint - Location).GetSafeNormal() * Force, Hit.ImpactPoint, NAME_None);
 					
 				} else if (UPrimitiveComponent* PrimComponent = Cast<UPrimitiveComponent>(HitActor->GetRootComponent()))
 				{

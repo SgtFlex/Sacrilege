@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "DamageableInterface.h"
 #include "GameplayTagAssetInterface.h"
+#include "PhysicsInterface.h"
 #include "Components/TimelineComponent.h"
 #include "GameFramework/Character.h"
 #include "CharacterBase.generated.h"
@@ -59,7 +60,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrenadeInvetoryUpdated, TArray<FG
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGrenadeTypeSwitched, TSubclassOf<AGrenadeBase>, GrenadeClass, int, Index);
 
 UCLASS()
-class HALOFLOODFANGAME01_API ACharacterBase : public ACharacter, public IDamageableInterface, public IGameplayTagAssetInterface
+class HALOFLOODFANGAME01_API ACharacterBase : public ACharacter, public IDamageableInterface, public IGameplayTagAssetInterface, public IPhysicsInterface
 {
 	GENERATED_BODY()
 
@@ -314,6 +315,8 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void Server_Interact();
+
+	void ApplyPhysicsImpulse_Implementation(FVector Force, FVector Location, FName BoneName = NAME_None) override;
 
 
 protected:

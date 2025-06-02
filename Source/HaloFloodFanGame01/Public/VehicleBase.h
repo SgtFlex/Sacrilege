@@ -18,6 +18,7 @@ enum EDamageState : uint8
 	Healthy = 0,
 	Damaged = 1,
 	Critical = 2,
+	Destroyed = 3,
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDamageStateChanged, EDamageState, NewDamageState);

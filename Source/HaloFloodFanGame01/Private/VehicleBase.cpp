@@ -73,15 +73,18 @@ void AVehicleBase::UpdateDamageState()
 {
 	const float Health = HealthComponent->GetHealth();
 	const float MaxHealth = HealthComponent->GetMaxHealth();
-	if (Health <= MaxHealth && Health > MaxHealth * 0.75)
+	if (Health <= MaxHealth && Health > MaxHealth * 0.66)
 	{
 		SetDamageState(Healthy);
-	} else if (Health <= MaxHealth * 0.75 && Health > MaxHealth * 0.5)
+	} else if (Health <= MaxHealth * 0.66 && Health > MaxHealth * 0.33)
 	{
 		SetDamageState(Damaged);
-	} else
+	} else if (Health > 0)
 	{
 		SetDamageState(Critical);
+	} else
+	{
+		SetDamageState(EDamageState::Destroyed);
 	}
 }
 

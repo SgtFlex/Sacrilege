@@ -153,5 +153,6 @@ float AGrenadeBase::CustomTakePointDamage_Implementation(float Damage, FVector D
 
 float AGrenadeBase::CustomTakeRadialDamage_Implementation(FVector Origin, float Radius, float Force, const FHitResult& HitInfo, FRadialDamageEvent const& RadialDamageEvent, float MinimumRadius, AController* EventInstigator, AActor* DamageCauser)
 {
+	Mesh->AddImpulse((HitInfo.ImpactPoint - Origin).GetSafeNormal()*Force);
 	return CustomOnTakeAnyDamage(RadialDamageEvent.Params.BaseDamage, (GetActorLocation() - RadialDamageEvent.Origin).GetSafeNormal() * Force, EventInstigator, DamageCauser);
 }

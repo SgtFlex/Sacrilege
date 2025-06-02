@@ -64,6 +64,17 @@ ACharacterBase::ACharacterBase()
 
 }
 
+void ACharacterBase::ApplyPhysicsImpulse_Implementation(FVector Force, FVector Location, FName BoneName)
+{
+	if (GetHealthComponent()->IsAlive())
+	{
+		LaunchCharacter(Force*.01f, false, false);
+	} else
+	{
+		GetMesh()->AddImpulseAtLocation(Force, Location, BoneName);
+	}
+}
+
 // Called when the game starts or when spawned
 void ACharacterBase::BeginPlay()
 {

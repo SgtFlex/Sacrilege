@@ -24,5 +24,5 @@ class HALOFLOODFANGAME01_API IPhysicsInterface
 public:
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-	void ApplyPhysicsImpulse(FVector Force);
+	void ApplyPhysicsImpulse(FVector Force, FVector Location, FName BoneName = NAME_None);
 };
