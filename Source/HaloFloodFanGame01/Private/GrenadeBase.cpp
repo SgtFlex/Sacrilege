@@ -100,7 +100,7 @@ void AGrenadeBase::SetArmed_Implementation(bool NewArmed)
 
 void AGrenadeBase::StartFuse_Implementation(float NewFuseTime)
 {
-	bArmed = true;
+	SetArmed(true);
 	FuseStarted = true;
 	if (NewFuseTime > 0)
 	{
