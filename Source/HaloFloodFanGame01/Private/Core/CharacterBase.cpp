@@ -102,6 +102,7 @@ void ACharacterBase::Restart()
 
 void ACharacterBase::SpawnWeapons()
 {
+	if (!bCanUseWeapons) return;
 	UE_LOG(LogTemp, Warning, TEXT("Spawning weapons for %s"), *GetName());
 	if (!HasAuthority())
 		return;
@@ -568,6 +569,7 @@ void ACharacterBase::EquipGrenadeType_Implementation(TSubclassOf<AGrenadeBase> G
 
 void ACharacterBase::Melee_Implementation()
 {
+	if (!bCanMelee) return;
 	SV_Melee();
 }
 
@@ -683,6 +685,7 @@ bool ACharacterBase::AddGrenade_Implementation(const TSubclassOf<AGrenadeBase> G
 
 void ACharacterBase::ThrowEquippedGrenade()
 {
+	if (!bCanUseGrenades) return;
 	if (GetGrenadeInventory().IsEmpty()) return;
 	ThrowGrenade(GetGrenadeTypeIndex());
 }
@@ -993,6 +996,7 @@ void ACharacterBase::MulticastHolsterEquippedWeapon_Implementation()
 
 void ACharacterBase::PickupWeapon(AGunBase* Gun)
 {
+	if (!bCanUseWeapons) return;
 	if (HasAuthority())
 	{
 		Server_PickupWeapon(Gun);

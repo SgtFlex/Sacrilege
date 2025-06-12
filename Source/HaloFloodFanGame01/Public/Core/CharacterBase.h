@@ -491,6 +491,18 @@ public:
 	UPROPERTY(EditAnywhere, Category="Loadout")
 	int32 IncenCount = 0;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bCanUseWeapons = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bCanUseGrenades = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bCanUseVehicles = true;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bCanMelee = true;
+
 	UPROPERTY(EditDefaultsOnly)
 	UAnimMontage* ThrowGrenadeAnimation1P;
 
