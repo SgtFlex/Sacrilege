@@ -13,8 +13,8 @@
 class AGunBase;
 class ACharacterBase;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnScoreUpdated, AHaloPlayerState*, PlayerState, int, NewScore);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnResourceUpdated, AHaloPlayerState*, PlayerState, int, NewResource);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnScoreUpdated, AHaloPlayerState*, PlayerState, int, NewScore, int, ScoreGained);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnResourceUpdated, AHaloPlayerState*, PlayerState, int, NewResource, int, ResourceGained);
 
 UCLASS()
 class HALOFLOODFANGAME01_API AHaloPlayerState : public APlayerState

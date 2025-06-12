@@ -25,8 +25,9 @@ void AHaloPlayerState::SubtractPlayerScore(int SubtractScore)
 
 void AHaloPlayerState::SetPlayerScore_Implementation(int NewScore)
 {
+	const int ScoreGained = NewScore - PlayerScore;
 	PlayerScore = NewScore;
-	OnScoreUpdated.Broadcast(this, GetPlayerScore());
+	OnScoreUpdated.Broadcast(this, GetPlayerScore(), ScoreGained);
 }
 
 int AHaloPlayerState::GetPlayerScore()
@@ -46,8 +47,9 @@ void AHaloPlayerState::SubtractPlayerResource(int SubtractResource)
 
 void AHaloPlayerState::SetPlayerResource_Implementation(int NewResource)
 {
+	const int ResourceGained = NewResource - PlayerResource;
 	PlayerResource = NewResource;
-	OnResourceUpdated.Broadcast(this, GetPlayerResource());
+	OnResourceUpdated.Broadcast(this, GetPlayerResource(), ResourceGained);
 }
 
 
