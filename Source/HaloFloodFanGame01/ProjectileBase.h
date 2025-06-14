@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagAssetInterface.h"
 #include "PhysicsInterface.h"
 #include "GameFramework/Actor.h"
 #include "ProjectileBase.generated.h"
@@ -13,7 +14,7 @@ class USphereComponent;
 class UProjectileMovementComponent;
 
 UCLASS(config=Game)
-class AProjectileBase : public AActor, public IPhysicsInterface
+class AProjectileBase : public AActor, public IPhysicsInterface, public IGameplayTagAssetInterface
 {
 	GENERATED_BODY()
 
@@ -33,6 +34,8 @@ public:
 	USphereComponent* GetCollisionComp() const { return CollisionComp; }
 	/** Returns ProjectileMovement subobject **/
 	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
+
+	virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; return; }
 
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Projectile)
@@ -71,6 +74,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UAudioComponent* TestIdleSoundComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
+	FGameplayTagContainer GameplayTags;
 
 private:
 	UPROPERTY()
