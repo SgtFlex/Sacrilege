@@ -59,7 +59,11 @@ void UHoverMovementComponent::RequestDirectMove(const FVector& MoveVelocity, boo
 	
 	//DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), Destination, FColor::Red, false, 1.f, 0, 3.f);
 	//DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), VehicleLocation + (MoveVelocity - (PrimitiveComponent->GetPhysicsLinearVelocity()*20)).GetSafeNormal() * 500, FColor::Green, false, 1.f, 0, 3.f);
+	
 	TargetDirection = (MoveVelocity - PrimitiveComponent->GetPhysicsLinearVelocity()*30).GetSafeNormal();
+	TargetDirection.Z = PrimitiveComponent->GetForwardVector().Z;
+	//DrawDebugDirectionalArrow(GetWorld(), GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation() + (TargetDirection.GetSafeNormal() * 500), 50, FColor::Red, false, 1);
+	//TargetDirection = (MoveVelocity - PrimitiveComponent->GetPhysicsLinearVelocity()*30).GetSafeNormal();
 }
 
 void UHoverMovementComponent::StopActiveMovement()

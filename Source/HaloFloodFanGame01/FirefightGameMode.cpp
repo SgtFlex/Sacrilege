@@ -24,8 +24,6 @@ AFirefightGameMode::AFirefightGameMode()
 	//static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(TEXT("/Game/FirstPerson/Blueprints/BP_FirstPersonCharacter"));
 	//DefaultPawnClass = PlayerPawnClassFinder.Class;
 	// SoundtrackComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("SoundtrackComponent"));
-
-	CurPlayerLives = PlayerLives;
 }
 
 void AFirefightGameMode::BeginPlay()
@@ -34,6 +32,7 @@ void AFirefightGameMode::BeginPlay()
 
 	FirefightGameState = GetGameState<AFirefightGameState>();
 	SetMatchState(MatchState::InProgress);
+	FirefightGameState->SetPlayerLives(PlayerLives);
 }
 
 void AFirefightGameMode::EnemyKilled_Implementation(ACharacterBase* Character, AController* EventInstigator, AActor* DamageCauser)
@@ -280,9 +279,9 @@ void AFirefightGameMode::PlayerDied_Implementation(ACharacterBase* PlayerCharact
 {
 	if (!PlayerController) return;
 
-	if (CurPlayerLives > 0)
+	if (FirefightGameState->GetCurrentPlayerLives() > 0)
 	{
-		CurPlayerLives--;
+		FirefightGameState->SetPlayerLives(FirefightGameState->GetCurrentPlayerLives() - 1);
 		StartRespawnProcess(PlayerController, PlayerCharacter);
 	} else
 	{

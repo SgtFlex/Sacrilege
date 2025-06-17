@@ -151,9 +151,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int PlayerLives = 5;
 
-	UPROPERTY()
-	int CurPlayerLives;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TArray<TSubclassOf<AGunBase>> StartingPrimaryWeaponChoices;
 

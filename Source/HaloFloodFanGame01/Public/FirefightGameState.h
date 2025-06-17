@@ -35,6 +35,12 @@ public:
 	void SetCurrentSet(int NewSet);
 
 	UFUNCTION(NetMulticast, Reliable)
+	void SetPlayerLives(int NewPlayerLives);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	int GetCurrentPlayerLives();
+
+	UFUNCTION(NetMulticast, Reliable)
 	void SetCurrentEnemyCount(int EnemyCount);
 	
 
@@ -64,6 +70,12 @@ protected:
 
 	UPROPERTY(Replicated)
 	int curSet = 0;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	int PlayerLives = 5;
+
+	UPROPERTY()
+	int CurPlayerLives;
 
 	UPROPERTY(BlueprintReadWrite, Replicated)
 	int CurrentEnemyCount = 0;

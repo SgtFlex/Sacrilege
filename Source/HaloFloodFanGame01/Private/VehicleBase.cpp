@@ -275,6 +275,11 @@ void AVehicleBase::DetachPilot_Implementation()
 // }
 
 
+FVector AVehicleBase::GetNavAgentLocation() const
+{
+	return GetActorLocation() - FVector(0.f, 0.f, AgentZOffset);
+}
+
 void AVehicleBase::OnPilotKilled(ACharacterBase* Character, AController* Killer, AActor* Causer)
 {
 	Exit();

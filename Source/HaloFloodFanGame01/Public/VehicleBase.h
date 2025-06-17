@@ -105,6 +105,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void RemoveControls();
 
+	virtual FVector GetNavAgentLocation() const override;
+
 	UFUNCTION()
 	void OnPilotKilled(ACharacterBase* Character, AController* Killer, AActor* Causer);
 
@@ -175,6 +177,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsDestroyed = false;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	float AgentZOffset = 200.0f;
 
 	
 	//Delegates

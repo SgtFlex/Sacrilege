@@ -35,6 +35,19 @@ int AFirefightGameState::GetCurrentSet()
 	return curSet;
 }
 
+void AFirefightGameState::SetPlayerLives_Implementation(int NewPlayerLives)
+{
+	if (HasAuthority())
+	{
+		CurPlayerLives = NewPlayerLives;
+	}
+}
+
+int AFirefightGameState::GetCurrentPlayerLives()
+{
+	return CurPlayerLives;
+}
+
 void AFirefightGameState::SetCurrentSet_Implementation(int NewSet)
 {
 	SetStarted();
