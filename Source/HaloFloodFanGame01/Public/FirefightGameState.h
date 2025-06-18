@@ -74,8 +74,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int PlayerLives = 5;
 
-	UPROPERTY()
-	int CurPlayerLives;
+	UPROPERTY(Replicated)
+	int CurPlayerLives = 0;
 
 	UPROPERTY(BlueprintReadWrite, Replicated)
 	int CurrentEnemyCount = 0;

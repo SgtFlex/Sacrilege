@@ -186,6 +186,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
 	TArray<ACharacterBase*> FirefightEnemies;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	TMap<TSubclassOf<ACharacterBase>, int> ScoreMap;
 	
 private:
 	int MaxWavePool = 5;

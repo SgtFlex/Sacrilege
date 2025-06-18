@@ -12,6 +12,7 @@ void AFirefightGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	DOREPLIFETIME(AFirefightGameState, curWave);
 	DOREPLIFETIME(AFirefightGameState, curSet);
 	DOREPLIFETIME(AFirefightGameState, CurrentEnemyCount);
+	DOREPLIFETIME(AFirefightGameState, CurPlayerLives);
 }
 
 int AFirefightGameState::GetCurrentWave()

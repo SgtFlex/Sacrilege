@@ -41,8 +41,16 @@ void AFirefightGameMode::EnemyKilled_Implementation(ACharacterBase* Character, A
 	if (APlayerController* PlayerController = Cast<APlayerController>(EventInstigator))
 	{
 		AHaloPlayerState* HPS = PlayerController->GetPlayerState<AHaloPlayerState>();
-		HPS->AddPlayerScore(1);
-		HPS->AddPlayerResource(1);
+		if (ScoreMap.Contains(Character->GetClass()))
+		{
+			HPS->AddPlayerScore(ScoreMap[Character->GetClass()]);
+			HPS->AddPlayerResource(ScoreMap[Character->GetClass()]);
+		} else
+		{
+			HPS->AddPlayerScore(1);
+			HPS->AddPlayerResource(1);
+		}
+		
 		
 		//OnScoreUpdated.Broadcast(PlayerController, HPS->GetPlayerScore(), HPS->GetPlayerResource());
 	}

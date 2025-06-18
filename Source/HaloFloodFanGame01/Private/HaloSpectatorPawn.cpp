@@ -3,9 +3,21 @@
 
 #include "HaloSpectatorPawn.h"
 
+#include "EnhancedInputComponent.h"
+
+void AHaloSpectatorPawn::LookUpAtRate(float Rate)
+{
+	Super::LookUpAtRate(Rate);
+}
+
+void AHaloSpectatorPawn::TurnAtRate(float Rate)
+{
+	Super::TurnAtRate(Rate);
+}
+
 bool AHaloSpectatorPawn::CanBeSeenFrom(const FVector& ObserverLocation, FVector& OutSeenLocation,
-	int32& NumberOfLoSChecksPerformed, float& OutSightStrength, const AActor* IgnoreActor, const bool* bWasVisible,
-	int32* UserData) const
+                                       int32& NumberOfLoSChecksPerformed, float& OutSightStrength, const AActor* IgnoreActor, const bool* bWasVisible,
+                                       int32* UserData) const
 {
 	//return IAISightTargetInterface::CanBeSeenFrom(ObserverLocation, OutSeenLocation, NumberOfLoSChecksPerformed,OutSightStrength, IgnoreActor, bWasVisible, UserData);
 	return false;

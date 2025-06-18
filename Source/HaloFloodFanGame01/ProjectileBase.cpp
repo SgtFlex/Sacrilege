@@ -96,21 +96,20 @@ void AProjectileBase::OnProjectileOverlapped_Implementation(UPrimitiveComponent*
 		//ImpactDecal->AttachToComponent(OtherComp, FAttachmentTransformRules::KeepWorldTransform);
 		GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageDecal(UGameplayStatics::SpawnDecalAttached(ImpactDecalMaterial, FVector(100,100,100) * FMath::RandRange(0.1f, 1.0f), OtherComp, NAME_None, SweepResult.ImpactPoint, SweepResult.Normal.Rotation() + FRotator(-90, FMath::RandRange(-180, 180), 0), EAttachLocation::KeepWorldPosition));
 	}
-	IdleSoundComponent->Stop();
-	//Below commented code could be cause of EXCEPTION_ACCESS_VIOLATION errors I've been getting for years...
-	// FTimerDelegate TimerDelegate;
-	// TimerDelegate.BindLambda([&]()
-	// {
-	// 	Destroy();
-	// });
-	// if (!GetWorldTimerManager().TimerExists(DespawnTimerHandle))
-	// {
-	// 	GetWorldTimerManager().SetTimer(DespawnTimerHandle, TimerDelegate, 5.0f, false);
-	// }
-	
+	IdleSoundComponent->Stop();	
 	CollisionComp->Deactivate();
 	CollisionComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	ProjectileMovement->Deactivate();
+
+	FVector StopLocation;
+	if (bFromSweep)
+	{
+		StopLocation = SweepResult.Location;
+	} else
+	{
+		StopLocation = GetActorLocation();
+	}
+	ProjectileStopped(StopLocation, OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
 }
 
 void AProjectileBase::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
