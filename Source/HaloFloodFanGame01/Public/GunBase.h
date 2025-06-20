@@ -331,11 +331,11 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	TMap<TEnumAsByte<EPhysicalSurface>, TSubclassOf<AActor>> ImpactFXMap;
 
-	
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	ACharacterBase* CharacterOwner;
 	
 private:
-	UPROPERTY(Replicated)
-	ACharacterBase* CharacterOwner;
+	
 	
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AActor> ImpactDecal;	
