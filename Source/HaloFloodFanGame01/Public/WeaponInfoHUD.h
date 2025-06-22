@@ -6,6 +6,8 @@
 #include "Blueprint/UserWidget.h"
 #include "WeaponInfoHUD.generated.h"
 
+class AGunBase;
+class AWeaponBase;
 /**
  * 
  */
@@ -17,7 +19,7 @@ class HALOFLOODFANGAME01_API UWeaponInfoHUD : public UUserWidget
 	virtual void NativeConstruct() override;
 public:
 	UFUNCTION(BlueprintNativeEvent)
-	void ConstructAmmoGrid(AGunBase* Gun);
+	void ConstructAmmoGrid(const AGunBase* Gun);
 
 	UFUNCTION(BlueprintNativeEvent)
 	void SetAmmoReserveCounter(int32 AmmoReserve);
@@ -32,7 +34,7 @@ public:
 	void SetAmmoGridBullets(int32 CurMagazine, int32 MaxMagazine);
 
 	UFUNCTION()
-	void UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredGun);
+	void UpdateHUDWeaponData(AWeaponBase* EquippedWeapon, AWeaponBase* HolsteredWeapon);
 	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
@@ -64,9 +66,11 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Colors")
 	FLinearColor HUDColor = FColor(255, 150, 50, 255);
-	
+
 protected:
 	UPROPERTY()
 	class ACharacterBase* PlayerCharacter;
 
+	UPROPERTY()
+	AGunBase* EquippedGun;
 };

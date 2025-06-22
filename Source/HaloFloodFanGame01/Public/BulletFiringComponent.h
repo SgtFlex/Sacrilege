@@ -7,6 +7,7 @@
 #include "BulletFiringComponent.generated.h"
 
 
+class AProjectileBase;
 class UBullet;
 class UNiagaraSystem;
 

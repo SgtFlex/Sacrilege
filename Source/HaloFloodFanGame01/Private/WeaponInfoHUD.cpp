@@ -20,7 +20,7 @@ void UWeaponInfoHUD::NativeConstruct()
 	UpdateHUDWeaponData(PlayerCharacter->EquippedWeapon, PlayerCharacter->HolsteredWeapon);
 }
 
-void UWeaponInfoHUD::ConstructAmmoGrid_Implementation(AGunBase* Gun)
+void UWeaponInfoHUD::ConstructAmmoGrid_Implementation(const AGunBase* Gun)
 {
 	if (!Gun->BulletWidget) return;
     AmmoGrid->ClearChildren();
@@ -78,14 +78,15 @@ void UWeaponInfoHUD::SetMagazineReserveCounter_Implementation(int32 MagazineCoun
 void UWeaponInfoHUD::UpdateHUDMagazineElements()
 {
 	if (!PlayerCharacter || !PlayerCharacter->EquippedWeapon) return;
-	SetMagazineReserveCounter(PlayerCharacter->EquippedWeapon->CurMagazine);
-	SetAmmoReserveCounter(PlayerCharacter->EquippedWeapon->CurReserve);
-	SetAmmoGridBullets(PlayerCharacter->EquippedWeapon->CurMagazine, PlayerCharacter->EquippedWeapon->MaxMagazine);
+	SetMagazineReserveCounter(EquippedGun->CurMagazine);
+	SetAmmoReserveCounter(EquippedGun->CurReserve);
+	SetAmmoGridBullets(EquippedGun->CurMagazine, EquippedGun->MaxMagazine);
 }
 
-void UWeaponInfoHUD::UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* HolsteredGun)
+//@TODO We can potentially change this later to not use casting
+void UWeaponInfoHUD::UpdateHUDWeaponData(AWeaponBase* EquippedWeapon, AWeaponBase* HolsteredWeapon)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Updated HUD Weapon data"));
+	EquippedGun = Cast<AGunBase>(EquippedWeapon);
 	if (EquippedGun)
 	{
 		//SetCrosshairTexture(EquippedGun->CrosshairTexture);
@@ -106,10 +107,10 @@ void UWeaponInfoHUD::UpdateHUDWeaponData(AGunBase* EquippedGun, AGunBase* Holste
 		AmmoGrid->SetVisibility(ESlateVisibility::Hidden);
 		AmmoReserveCounter->SetVisibility(ESlateVisibility::Hidden);
 	}
-	if (HolsteredGun)
+	if (HolsteredWeapon)
 	{
 		HolsteredGunWidget->SetVisibility(ESlateVisibility::Visible);
-		HolsteredGunWidget->SetBrushFromTexture(HolsteredGun->WeaponIcon);
+		HolsteredGunWidget->SetBrushFromTexture(HolsteredWeapon->WeaponIcon);
 	} else
 	{
 		HolsteredGunWidget->SetVisibility(ESlateVisibility::Hidden);

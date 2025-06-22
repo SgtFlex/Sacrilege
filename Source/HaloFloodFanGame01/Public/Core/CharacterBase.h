@@ -19,7 +19,8 @@ enum EEmotion : uint8;
 class ASmartObject;
 class AGrenadeBase;
 class ADecalActor;
-class AGunBase;
+class AWeaponBase;
+class AWeaponBase;
 class UHealthComponent;
 
 //player class
@@ -54,7 +55,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractableChanged, AActor*, Int
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPickupWeapon);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDropWeapon);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTakeCustomPointDamage, float, Damage);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponsUpdated, AGunBase*, NewGun, AGunBase*, OldGun);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponsUpdated, AWeaponBase*, NewGun, AWeaponBase*, OldGun);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnKilled, ACharacterBase*, Character, AController*, Instigator, AActor*, Causer);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrenadeInvetoryUpdated, TArray<FGrenadeStruct>&, UpdatedGrenadeInventory);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGrenadeTypeSwitched, TSubclassOf<AGrenadeBase>, GrenadeClass, int, Index);
@@ -262,6 +263,12 @@ public:
 	UFUNCTION()
 	virtual void ScopeWeapon();
 
+	UFUNCTION(BlueprintCallable)
+	virtual void SecondaryAttack_Start();
+
+	UFUNCTION(BlueprintCallable)
+	virtual void SecondaryAttack_End();
+
 	UFUNCTION()
 	virtual void DrawEquippedWeapon();
 
@@ -272,13 +279,13 @@ public:
 	virtual void MulticastHolsterEquippedWeapon();
 
 	UFUNCTION(BlueprintCallable)
-	virtual void PickupWeapon(AGunBase* Gun);
+	virtual void PickupWeapon(AWeaponBase* Gun);
 
 	UFUNCTION(Server, Reliable)
-	virtual void Server_PickupWeapon(AGunBase* Gun);
+	virtual void Server_PickupWeapon(AWeaponBase* Gun);
 	
 	// UFUNCTION(NetMulticast, Reliable, BlueprintCallable)
-	// virtual void Multi_PickupWeapon(AGunBase* Gun);
+	// virtual void Multi_PickupWeapon(AWeaponBase* Gun);
 
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
@@ -290,7 +297,7 @@ public:
 	virtual void DropEquippedWeapon();
 
 	UFUNCTION(BlueprintCallable)
-	void DropWeapon(AGunBase* Gun);
+	void DropWeapon(AWeaponBase* Gun);
 
 	UFUNCTION()
 	void RagdollSettled(UPrimitiveComponent* Component, FName Name);
@@ -376,10 +383,10 @@ public:
 
 	//Loadout
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true))
-	TSubclassOf<AGunBase> EquippedWeaponClass;
+	TSubclassOf<AWeaponBase> EquippedWeaponClass;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true))
-	TSubclassOf<AGunBase> HolsteredWeaponClass;
+	TSubclassOf<AWeaponBase> HolsteredWeaponClass;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true), Replicated)
 	TArray<FGrenadeStruct> GrenadeInventory;
@@ -388,10 +395,10 @@ public:
 	TSubclassOf<AActor> EquipmentClass;
 
 	UPROPERTY(BlueprintReadOnly, Replicated, ReplicatedUsing=OnRep_EquippedWeapon)
-	AGunBase* EquippedWeapon;
+	AWeaponBase* EquippedWeapon;
 
 	UPROPERTY(BlueprintReadOnly, Replicated, ReplicatedUsing=OnRep_HolsteredWeapon)
-	AGunBase* HolsteredWeapon;
+	AWeaponBase* HolsteredWeapon;
 
 	UPROPERTY()
 	FTimerHandle HolsterHandle;

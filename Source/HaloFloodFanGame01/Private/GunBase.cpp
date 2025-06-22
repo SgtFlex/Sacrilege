@@ -11,6 +11,7 @@
 #include "WorldCleanupManager.h"
 #include "Components/Image.h"
 #include "HaloFloodFanGame01/PlayerCharacter.h"
+#include "HaloFloodFanGame01/ProjectileBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Perception/AISense_Hearing.h"
@@ -19,19 +20,8 @@
 // Sets default values
 AGunBase::AGunBase()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
-	
-	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
-	Mesh->SetSimulatePhysics(true);
-	RootComponent = Mesh;
-
 	BulletFiringComponent = CreateDefaultSubobject<UBulletFiringComponent>("BulletFiringComponent");
 	BulletFiringComponent->SetupAttachment(Mesh, "Muzzle");
-
-	bReplicates = true;
-	
 }
 
 // Called when the game starts or when spawned
@@ -49,34 +39,71 @@ void AGunBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AGunBase::OnPickup(ACharacterBase* Char)
+void AGunBase::Pickup(ACharacterBase* Char)
 {
+	Super::Pickup(Char);
 	SetOwner(Char);
 	CharacterOwner = Char;
 	GetWorld()->GetSubsystem<UWorldCleanupManager>()->StopManagingWeapon(this);
 	//Cast<AHaloGameState>(GetWorld()->GetGameState())->StopManagingWeapon(this);
 }
 
-void AGunBase::OnEquipped()
+void AGunBase::Equip()
 {
+	Super::Equip();
 	// if (DrawSFX) UGameplayStatics::PlaySoundAtLocation(GetWorld(), DrawSFX, GetActorLocation());
 }
 
-void AGunBase::OnDropped()
+void AGunBase::Drop()
 {
-	
+	Super::Drop();
 	GetWorldTimerManager().ClearTimer(ReloadTimer);
 	ScopeOut();
 	bReloading = false;
-	SetOwner(nullptr);
-	CharacterOwner = nullptr;
 	if (CurMagazine + CurReserve <= 0)
 	{
 		//Disable collision query responses to prevent being picked up.
 		Mesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	}
-	GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageWeapon(this);
-	//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageWeapon(this);
+}
+
+void AGunBase::Holster()
+{
+	Super::Holster();
+	if (ScopeActive) ScopeOut();
+	GetWorldTimerManager().ClearTimer(ReloadTimer);
+	bReloading = false;
+}
+
+void AGunBase::SecondaryFire_Start_Implementation()
+{
+	Super::SecondaryFire_Start_Implementation();
+
+	if (ScopeActive)
+	{
+		ScopeOut();
+	} else if (!ScopeActive && ZoomFOV != 0.0f)
+	{
+		ScopeIn();
+	}
+}
+
+void AGunBase::PrimaryFire_Start_Implementation()
+{
+	Super::PrimaryFire_Start_Implementation();
+	PullTrigger();
+}
+
+void AGunBase::PrimaryFire_End_Implementation()
+{
+	Super::PrimaryFire_End_Implementation();
+	ReleaseTrigger();
+}
+
+void AGunBase::Reload_Implementation()
+{
+	Super::Reload_Implementation();
+	StartReload();
 }
 
 void AGunBase::StartReload_Implementation()
@@ -144,11 +171,11 @@ void AGunBase::ReleaseTrigger_Implementation()
 
 
 
-void AGunBase::OnInteract_Implementation(ACharacterBase* Character)
-{
-	IInteractableInterface::OnInteract_Implementation(Character);
-	Character->PickupWeapon(this);
-}
+// void AGunBase::OnInteract_Implementation(ACharacterBase* Character)
+// {
+// 	IInteractableInterface::OnInteract_Implementation(Character);
+// 	Character->PickupWeapon(this);
+// }
 
 // void AGunBase::GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon, ACharacterBase* InteractingCharacter)
 // {
@@ -165,7 +192,6 @@ void AGunBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetime
 	DOREPLIFETIME(AGunBase, CurMagazine);
 	DOREPLIFETIME(AGunBase, CurReserve);
 	DOREPLIFETIME(AGunBase, bFiring);
-	DOREPLIFETIME(AGunBase, CharacterOwner);
 }
 
 bool AGunBase::CanFire()
@@ -173,21 +199,21 @@ bool AGunBase::CanFire()
 	return !(bReloading || CurMagazine <= 0);
 }
 
-void AGunBase::GetAim(FVector& AimLocation, FVector& AimDirection)
-{
-	if (CharacterOwner)
-	{
-		FRotator Rot;
-		CharacterOwner->GetActorEyesViewPoint(AimLocation, Rot);
-		
-		AimDirection = CharacterOwner->GetBaseAimRotation().Vector();
-	} else
-	{
-		AimLocation = BulletFiringComponent->GetComponentLocation();
-		AimDirection = GetActorRotation().Vector();
-	}
-	
-}
+// void AGunBase::GetAim(FVector& AimLocation, FVector& AimDirection)
+// {
+// 	if (CharacterOwner)
+// 	{
+// 		FRotator Rot;
+// 		CharacterOwner->GetActorEyesViewPoint(AimLocation, Rot);
+// 		
+// 		AimDirection = CharacterOwner->GetBaseAimRotation().Vector();
+// 	} else
+// 	{
+// 		AimLocation = BulletFiringComponent->GetComponentLocation();
+// 		AimDirection = GetActorRotation().Vector();
+// 	}
+// 	
+// }
 
 
 void AGunBase::UpdateMagazineElements()
@@ -295,14 +321,14 @@ AActor* AGunBase::SpawnProjectile_Implementation(TSubclassOf<AActor> ProjToSpawn
 	FVector AimLocation;
 	FVector AimDirection;
 	GetAim(AimLocation, AimDirection);
-	
-	
-	FVector Location = Mesh->DoesSocketExist("Muzzle") ? Mesh->GetSocketLocation("Muzzle") : GetActorLocation() + GetActorForwardVector()*50000.0f;
-	FRotator Rotation = AimDirection.Rotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
-	FActorSpawnParameters ActorSpawnParameters;
-	ActorSpawnParameters.Owner = this;
-	ActorSpawnParameters.Instigator = CharacterOwner;
-	return GetWorld()->SpawnActor(ProjToSpawn, &Location, &Rotation, ActorSpawnParameters);
+
+	AController* EventInstigator = nullptr;
+	if (CharacterOwner)
+	{
+		EventInstigator = CharacterOwner->GetController();
+	}
+	return BulletFiringComponent->FireProjectile(TSubclassOf<AProjectileBase>(ProjToSpawn), AimDirection, this, EventInstigator);
+	//return GetWorld()->SpawnActor(ProjToSpawn, &Location, &Rotation, ActorSpawnParameters);
 }
 
 void AGunBase::SpawnMuzzleFX_Implementation()

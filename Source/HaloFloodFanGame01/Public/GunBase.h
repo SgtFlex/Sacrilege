@@ -4,51 +4,24 @@
 
 #include "CoreMinimal.h"
 #include "InteractableInterface.h"
+#include "WeaponBase.h"
 #include "GameFramework/Actor.h"
 #include "GunBase.generated.h"
 
 class UBulletFiringComponent;
-
-USTRUCT()
-struct FHitScanTrace
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	FVector_NetQuantize TraceStart;
-
-	UPROPERTY()
-	FVector_NetQuantize TraceEnd;
-	
-};
-
-class UPlayerHUD;
 class ACharacterBase;
 class AProjectileBase;
 class UPhysicalMaterial;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFire);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReload);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAmmoUpdated);
 
 UCLASS()
-class HALOFLOODFANGAME01_API AGunBase : public AActor, public IInteractableInterface
+class HALOFLOODFANGAME01_API AGunBase : public AWeaponBase
 {
 	GENERATED_BODY()
-public:
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Mesh)
-	USkeletalMeshComponent* Mesh;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Bullets)
-	UBulletFiringComponent* BulletFiringComponent;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnFire OnFire;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnReload OnReload;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnAmmoUpdated OnAmmoUpdated;
 	
 public:	
 	// Sets default values for this actor's properties
@@ -62,11 +35,21 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void OnPickup(ACharacterBase* Char);
+	virtual void Pickup(ACharacterBase* Char) override;
 
-	void OnEquipped();
+	virtual void Equip() override;
 
-	void OnDropped();
+	virtual void Drop() override;
+
+	virtual void Holster() override;
+
+	virtual void SecondaryFire_Start_Implementation() override;
+
+	virtual void PrimaryFire_Start_Implementation() override;
+
+	virtual void PrimaryFire_End_Implementation() override;
+
+	virtual void Reload_Implementation() override;
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void Fire();
@@ -74,8 +57,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool CanFire();
 
-	UFUNCTION(BlueprintCallable)
-	void GetAim(FVector& AimLocation, FVector& AimDirection);
+	// UFUNCTION(BlueprintCallable)
+	// void GetAim(FVector& AimLocation, FVector& AimDirection);
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void SpawnBullet();
@@ -147,13 +130,25 @@ public:
 	// UFUNCTION(NetMulticast, Reliable)
 	// void Multi_ReleaseTrigger();
 	
-	virtual void OnInteract_Implementation(ACharacterBase* Character) override;
+	// virtual void OnInteract_Implementation(ACharacterBase* Character) override;
 
 	// virtual void GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon, ACharacterBase* InteractingCharacter) override;
 
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Bullets)
+	UBulletFiringComponent* BulletFiringComponent;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnFire OnFire;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnReload OnReload;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnAmmoUpdated OnAmmoUpdated;
+	
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UCameraShakeBase> FiringCameraShake;
 
@@ -188,12 +183,6 @@ public:
 	//Amount of seconds required to reload the gun
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
 	float ReloadSpeed = 3;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
-	float DrawSpeed = 1;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
-	float HolsterSpeed = 1;
 
 	//How far left/right the gun jumps when firing a bullet
 	UPROPERTY(EditAnywhere, meta = (Category="Attributes"))
@@ -243,9 +232,6 @@ public:
 	UPROPERTY(EditAnywhere, meta = (Category="SFX"))
 	USoundBase* HitSound;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="HUD"))
-	UTexture2D* CrosshairTexture;
-
 	UPROPERTY(EditAnywhere, meta = (Category="HUD"))
 	TSubclassOf<UUserWidget> ScopeWidget;
 
@@ -263,29 +249,14 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	float ZoomFOV = 0;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="HUD"))
-	UTexture2D* WeaponIcon;
-
-	UPROPERTY()
-	UTexture2D* InteractIcon = WeaponIcon;
 
 	int32 BulletsFired;
-
-	UPROPERTY()
-	FText InteractText = FText::FromString("Pickup");
-
+	
 	UPROPERTY()
 	FTimerHandle FireHandle;
 
 	UPROPERTY()
 	FTimerHandle BurstRetriggerHandle;
-
-	UPROPERTY()
-	FTimerHandle DrawHandle;
-
-	UPROPERTY()
-	FTimerHandle HolsterHandle;
 
 	bool bReloading = false;
 
@@ -299,13 +270,7 @@ public:
 	class UNiagaraSystem* TrailPFX;
 	
 	UPROPERTY(EditDefaultsOnly, meta = (Category="HUD"))
-	TSubclassOf<UUserWidget> BulletWidget;
-
-	UPROPERTY(EditDefaultsOnly, meta = (Category="Animations"))
-	UAnimMontage* DrawAnimation1P;
-	
-	UPROPERTY(EditDefaultsOnly, meta = (Category="Animations"))
-	UAnimMontage* HolsterAnimation1P;
+	TSubclassOf<UUserWidget> BulletWidget;	
 
 	UPROPERTY(EditDefaultsOnly, meta = (Category="Animations"))
 	UAnimMontage* FireAnimation1P;
@@ -316,27 +281,16 @@ public:
 	UPROPERTY(EditDefaultsOnly, meta = (Category="Animations"))
 	UAnimMontage* MeleeAnimation1P;
 
-	UPROPERTY(EditDefaultsOnly, meta = (Category="Sound Effects"))
-	USoundBase* DrawSFX;
-
 	UPROPERTY()
 	FTimerHandle ReloadTimer;
 
 	UPROPERTY(EditDefaultsOnly)
 	UForceFeedbackEffect* FireFeedback;
-
-	UPROPERTY(BlueprintReadOnly)
-	APawn* OwningPawn;
-
+	
 	UPROPERTY(EditDefaultsOnly)
 	TMap<TEnumAsByte<EPhysicalSurface>, TSubclassOf<AActor>> ImpactFXMap;
-
-	UPROPERTY(Replicated, BlueprintReadOnly)
-	ACharacterBase* CharacterOwner;
 	
 private:
-	
-	
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AActor> ImpactDecal;	
 };

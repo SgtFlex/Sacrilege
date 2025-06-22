@@ -32,10 +32,11 @@ void UBulletFiringComponent::BeginPlay()
 AProjectileBase* UBulletFiringComponent::FireProjectile(TSubclassOf<AProjectileBase> ProjectileClass, FVector Direction, AActor* Owner, AController* Instigator)
 {
 	OnBulletFired.Broadcast();
-	FVector Location = GetComponentLocation();
+	FVector Location = GetComponentLocation() + Direction*50.0f;
 	FRotator Rotation = Direction.Rotation();
 	FActorSpawnParameters ActorSpawnParameters;
-	ActorSpawnParameters.Owner = Owner;
+	ActorSpawnParameters.Owner = GetOwner();
+	ActorSpawnParameters.Instigator = GetOwner()->GetInstigator();
 	ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	if (Instigator)
 		if (APawn* Pawn = Instigator->GetPawn())

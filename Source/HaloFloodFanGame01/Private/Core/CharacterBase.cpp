@@ -110,13 +110,13 @@ void ACharacterBase::SpawnWeapons()
 	{
 		if (EquippedWeaponClass)
 		{
-			AGunBase* Gun = GetWorld()->SpawnActor<AGunBase>(EquippedWeaponClass);
+			AWeaponBase* Gun = GetWorld()->SpawnActor<AWeaponBase>(EquippedWeaponClass);
 			PickupWeapon(Gun);
 		
 		}
 		if (HolsteredWeaponClass)
 		{
-			AGunBase* Gun = GetWorld()->SpawnActor<AGunBase>(HolsteredWeaponClass);
+			AWeaponBase* Gun = GetWorld()->SpawnActor<AWeaponBase>(HolsteredWeaponClass);
 			PickupWeapon(Gun);
 		}
 	}
@@ -268,7 +268,9 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 		EnhancedInputComponent->BindAction(UseEquipmentAction, ETriggerEvent::Triggered, this, &ACharacterBase::UseEquipment);
 		
-		EnhancedInputComponent->BindAction(ScopeAction, ETriggerEvent::Triggered, this, &ACharacterBase::ScopeWeapon);
+		EnhancedInputComponent->BindAction(ScopeAction, ETriggerEvent::Started, this, &ACharacterBase::SecondaryAttack_Start);
+
+		EnhancedInputComponent->BindAction(ScopeAction, ETriggerEvent::Completed, this, &ACharacterBase::SecondaryAttack_End);
 	}
 
 }
@@ -834,7 +836,9 @@ void ACharacterBase::PrimaryAttack_Pull()
 void ACharacterBase::Server_PrimaryAttack_Pull_Implementation()
 {
 	if (EquippedWeapon)
-		EquippedWeapon->PullTrigger();
+		EquippedWeapon->PrimaryFire_Start();
+	// if (EquippedWeapon)
+	// 	EquippedWeapon->PullTrigger();
 	//Multi_PrimaryAttack_Pull();
 }
 
@@ -843,7 +847,8 @@ void ACharacterBase::Multi_PrimaryAttack_Pull_Implementation()
 {
 
 	if (EquippedWeapon)
-		EquippedWeapon->PullTrigger();
+		EquippedWeapon->PrimaryFire_Start();
+		// EquippedWeapon->PullTrigger();
 	
 }
 
@@ -855,7 +860,8 @@ void ACharacterBase::PrimaryAttack_Release()
 void ACharacterBase::Server_PrimaryAttack_Release_Implementation()
 {
 	if (EquippedWeapon)
-		EquippedWeapon->ReleaseTrigger();
+		EquippedWeapon->PrimaryFire_End();
+		//EquippedWeapon->ReleaseTrigger();
 	//Multi_PrimaryAttack_Release();
 }
 
@@ -863,7 +869,7 @@ void ACharacterBase::Server_PrimaryAttack_Release_Implementation()
 void ACharacterBase::Multi_PrimaryAttack_Release_Implementation()
 {
 	if (EquippedWeapon)
-		EquippedWeapon->ReleaseTrigger();
+		EquippedWeapon->PrimaryFire_End();
 }
 
 void ACharacterBase::ReloadWeapon()
@@ -874,7 +880,7 @@ void ACharacterBase::ReloadWeapon()
 void ACharacterBase::Server_ReloadWeapon_Implementation()
 {
 	if (EquippedWeapon)
-		EquippedWeapon->StartReload();
+		EquippedWeapon->Reload();
 	//Multi_ReloadWeapon();
 }
 
@@ -883,7 +889,7 @@ void ACharacterBase::Multi_ReloadWeapon_Implementation()
 {
 	if (EquippedWeapon)
 	{
-		EquippedWeapon->StartReload();
+		EquippedWeapon->Reload();
 	}
 }
 
@@ -909,7 +915,7 @@ void ACharacterBase::Multi_SwitchWeapon_Implementation()
 
 void ACharacterBase::ServerFinishSwitchingWeapons_Implementation()
 {
-	AGunBase* TempGun = EquippedWeapon;
+	AWeaponBase* TempGun = EquippedWeapon;
 	EquippedWeapon = HolsteredWeapon;
 	HolsteredWeapon = TempGun;
 	if (HasAuthority())
@@ -922,13 +928,33 @@ void ACharacterBase::ScopeWeapon()
 {
 	if (EquippedWeapon)
 	{
-		if (EquippedWeapon->ScopeActive)
-		{
-			EquippedWeapon->ScopeOut();
-		} else if (!EquippedWeapon->ScopeActive && EquippedWeapon->ZoomFOV != 0.0f)
-		{
-			EquippedWeapon->ScopeIn();
-		}
+		EquippedWeapon->SecondaryFire_Start();
+	}
+	// if (EquippedWeapon)
+	// {
+	// 	if (EquippedWeapon->ScopeActive)
+	// 	{
+	// 		EquippedWeapon->ScopeOut();
+	// 	} else if (!EquippedWeapon->ScopeActive && EquippedWeapon->ZoomFOV != 0.0f)
+	// 	{
+	// 		EquippedWeapon->ScopeIn();
+	// 	}
+	// }
+}
+
+void ACharacterBase::SecondaryAttack_Start()
+{
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->SecondaryFire_Start();
+	}
+}
+
+void ACharacterBase::SecondaryAttack_End()
+{
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->SecondaryFire_End();
 	}
 }
 
@@ -944,7 +970,7 @@ void ACharacterBase::DrawEquippedWeapon()
 	EquippedWeapon->SetActorEnableCollision(false);
 	EquippedWeapon->SetActorHiddenInGame(false);
 	
-	EquippedWeapon->OnEquipped();
+	EquippedWeapon->Equip();
 
 	if (HolsteredWeapon)
 		HolsteredWeapon->SetActorHiddenInGame(true);
@@ -980,11 +1006,8 @@ void ACharacterBase::SetupViewmodel(const bool bFirstPerson)
 void ACharacterBase::MulticastHolsterEquippedWeapon_Implementation()
 {
 	if (!EquippedWeapon) return;
+	EquippedWeapon->Holster();
 	UE_LOG(LogTemp, Warning, TEXT("%s holstered %s"), *GetName(), *EquippedWeapon->GetName());
-	if (EquippedWeapon->ScopeActive) EquippedWeapon->ScopeOut();
-	EquippedWeapon->ReleaseTrigger();
-	GetWorldTimerManager().ClearTimer(EquippedWeapon->ReloadTimer);
-	EquippedWeapon->bReloading = false;
 	//Gun->SetActorHiddenInGame(true);
 
 	if (IsLocallyControlled())
@@ -992,9 +1015,22 @@ void ACharacterBase::MulticastHolsterEquippedWeapon_Implementation()
 		if (EquippedWeapon->HolsterAnimation1P)
 			GetMesh1P()->GetAnimInstance()->Montage_Play(EquippedWeapon->HolsterAnimation1P, EquippedWeapon->HolsterAnimation1P->GetPlayLength() / EquippedWeapon->HolsterSpeed);
 	}
+	// if (!EquippedWeapon) return;
+	// UE_LOG(LogTemp, Warning, TEXT("%s holstered %s"), *GetName(), *EquippedWeapon->GetName());
+	// if (EquippedWeapon->ScopeActive) EquippedWeapon->ScopeOut();
+	// EquippedWeapon->ReleaseTrigger();
+	// GetWorldTimerManager().ClearTimer(EquippedWeapon->ReloadTimer);
+	// EquippedWeapon->bReloading = false;
+	// //Gun->SetActorHiddenInGame(true);
+	//
+	// if (IsLocallyControlled())
+	// {
+	// 	if (EquippedWeapon->HolsterAnimation1P)
+	// 		GetMesh1P()->GetAnimInstance()->Montage_Play(EquippedWeapon->HolsterAnimation1P, EquippedWeapon->HolsterAnimation1P->GetPlayLength() / EquippedWeapon->HolsterSpeed);
+	// }
 }
 
-void ACharacterBase::PickupWeapon(AGunBase* Gun)
+void ACharacterBase::PickupWeapon(AWeaponBase* Gun)
 {
 	if (!bCanUseWeapons) return;
 	if (HasAuthority())
@@ -1003,7 +1039,7 @@ void ACharacterBase::PickupWeapon(AGunBase* Gun)
 	}
 }
 
-void ACharacterBase::Server_PickupWeapon_Implementation(AGunBase* Gun)
+void ACharacterBase::Server_PickupWeapon_Implementation(AWeaponBase* Gun)
 {
 	// Server_PickupWeapon(Gun);
 	Gun->SetOwner(this);
@@ -1015,7 +1051,7 @@ void ACharacterBase::Server_PickupWeapon_Implementation(AGunBase* Gun)
 	UE_LOG(LogTemp, Warning, TEXT("%s picked up %s"), *GetName(), *Gun->GetName());
 
 	Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
-	Gun->OnPickup(this);
+	Gun->Pickup(this);
 	
 	if (!EquippedWeapon)
 	{
@@ -1041,7 +1077,7 @@ void ACharacterBase::Server_PickupWeapon_Implementation(AGunBase* Gun)
 	// Multi_PickupWeapon(Gun);
 }
 //
-// void ACharacterBase::Multi_PickupWeapon_Implementation(AGunBase* Gun)
+// void ACharacterBase::Multi_PickupWeapon_Implementation(AWeaponBase* Gun)
 // {
 // 	Gun->Mesh->SetSimulatePhysics(false);
 // 	Gun->SetActorEnableCollision(false);
@@ -1083,16 +1119,12 @@ void ACharacterBase::DropEquippedWeapon()
 	DropWeapon(EquippedWeapon);
 }
 
-void ACharacterBase::DropWeapon(AGunBase* Gun)
+void ACharacterBase::DropWeapon(AWeaponBase* Gun)
 {
 	//Gun->SetReplicateMovement(true);
 	if (!Gun) return;
-	Gun->ReleaseTrigger();
-	Gun->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-	Gun->SetActorEnableCollision(true);
-	Gun->Mesh->SetSimulatePhysics(true);
+	Gun->Drop();
 	Gun->Mesh->AddImpulse(GetControlRotation().Vector() * 300, NAME_None, true);
-	Gun->OnDropped();
 	WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
 	EquippedWeapon = nullptr;
 }
