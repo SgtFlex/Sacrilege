@@ -7,3 +7,5 @@ Currently, the only gamemode featured is Firefight: A Wave-based survival mode b
 Main repo over on https://dev.azure.com/sgtflex/Untitled%20Halo%20Fan%20Game/_wiki/wikis/Halo%20Fan%20Game%20Wiki/5/DesignDocument
 
 This is purely used for publishing releases.
+
+Halo © Microsoft Corporation. Sacrilege was created under Microsoft's "Game Content Usage Rules", and it is not endorsed by or affiliated with Microsoft.  
