@@ -55,7 +55,7 @@ public:
 	TMap<TSubclassOf<ACharacterBase>, int> Squad;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TMap<TSubclassOf<ACharacterBase>, int> SquadVehicles;
+	TMap<TSubclassOf<AVehicleBase>, int> SquadVehicles;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UBoxComponent* Box;

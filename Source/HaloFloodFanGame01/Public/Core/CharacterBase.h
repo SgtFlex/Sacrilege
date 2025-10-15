@@ -10,6 +10,7 @@
 #include "GameFramework/Character.h"
 #include "CharacterBase.generated.h"
 
+class AEquipmentBase;
 class APlayerControllerBase;
 class UBlendSpace1D;
 class AAIControllerBase;
@@ -218,7 +219,7 @@ public:
 	UFUNCTION(Client, Unreliable, BlueprintCosmetic)
 	void ClientCycleGrenadeType() const;
 	
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void UseEquipment();
 
 	UFUNCTION(BlueprintCallable)
@@ -392,7 +393,7 @@ public:
 	TArray<FGrenadeStruct> GrenadeInventory;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true))
-	TSubclassOf<AActor> EquipmentClass;
+	TSubclassOf<AEquipmentBase> EquipmentClass;
 
 	UPROPERTY(BlueprintReadOnly, Replicated, ReplicatedUsing=OnRep_EquippedWeapon)
 	AWeaponBase* EquippedWeapon;
