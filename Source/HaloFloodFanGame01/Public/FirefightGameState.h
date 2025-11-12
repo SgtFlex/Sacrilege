@@ -56,6 +56,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void MatchStarted();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void MatchEnded();
+
 	
 public:
 	UPROPERTY(BlueprintAssignable)

@@ -13,6 +13,9 @@ class UUniformGridPanel;
 /**
  * 
  */
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrenadeArrayUpdate, int, length);
+
 UCLASS()
 class HALOFLOODFANGAME01_API UGrenadeInventoryHUD : public UUserWidget
 {
@@ -36,7 +39,7 @@ protected:
 	UFUNCTION()
 	void DestroyGrenadeWidgets();
 
-protected:
+protected:	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UUniformGridPanel* FragHUD;
 	
@@ -59,4 +62,8 @@ protected:
 
 	UPROPERTY()
 	TArray<FGrenadeStruct> OldGrenadeInventory;
+
+public:
+	UPROPERTY(BlueprintAssignable, BlueprintReadWrite, EditAnywhere)
+	FOnGrenadeArrayUpdate OnGrenadeArrayUpdate;
 };

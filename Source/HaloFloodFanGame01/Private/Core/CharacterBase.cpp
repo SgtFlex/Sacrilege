@@ -7,6 +7,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputSubsystemInterface.h"
+#include "EquipmentBase.h"
 #include "GrenadeBase.h"
 #include "GunBase.h"
 #include "HealthComponent.h"
@@ -83,7 +84,7 @@ void ACharacterBase::BeginPlay()
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ACharacterBase::OnHit);
 
 	GetMesh()->OnComponentSleep.AddDynamic(this, &ACharacterBase::RagdollSettled);
-	SpawnWeapons();
+	SpawnLoadout();
 
 	
 	if (GetHealthComponent()) GetHealthComponent()->OnHealthDepleted.AddDynamic(this, &ACharacterBase::OnHealthDepleted);
@@ -100,7 +101,7 @@ void ACharacterBase::Restart()
 	Super::Restart();
 }
 
-void ACharacterBase::SpawnWeapons()
+void ACharacterBase::SpawnLoadout()
 {
 	if (!bCanUseWeapons) return;
 	UE_LOG(LogTemp, Warning, TEXT("Spawning weapons for %s"), *GetName());
@@ -108,27 +109,39 @@ void ACharacterBase::SpawnWeapons()
 		return;
 	else
 	{
-		if (EquippedWeaponClass)
+		if (Loadouts.Num() > 0)
 		{
-			AWeaponBase* Gun = GetWorld()->SpawnActor<AWeaponBase>(EquippedWeaponClass);
-			PickupWeapon(Gun);
+			FLoadoutStruct ChosenLoadoutStruct = Loadouts[FMath::RandRange(0, Loadouts.Num() - 1)];
+			if (ChosenLoadoutStruct.PrimaryWeaponClass)
+			{
+				AWeaponBase* Gun = GetWorld()->SpawnActor<AWeaponBase>(ChosenLoadoutStruct.PrimaryWeaponClass);
+				PickupWeapon(Gun);
 		
-		}
-		if (HolsteredWeaponClass)
-		{
-			AWeaponBase* Gun = GetWorld()->SpawnActor<AWeaponBase>(HolsteredWeaponClass);
-			PickupWeapon(Gun);
+			}
+			if (ChosenLoadoutStruct.SecondaryWeaponClass)
+			{
+				AWeaponBase* Gun = GetWorld()->SpawnActor<AWeaponBase>(ChosenLoadoutStruct.SecondaryWeaponClass);
+				PickupWeapon(Gun);
+			}
+			if (!ChosenLoadoutStruct.Grenades.IsEmpty())
+			{
+				GrenadeInventory = ChosenLoadoutStruct.Grenades;
+			}
+			if (ChosenLoadoutStruct.EquipmentClass)
+			{
+				
+			}
 		}
 	}
 }
 
-void ACharacterBase::Server_SpawnWeapons_Implementation()
+void ACharacterBase::Server_SpawnLoadout_Implementation()
 {
 	
-	SpawnWeapons();
+	SpawnLoadout();
 }
 
-void ACharacterBase::Multi_SpawnWeapons_Implementation()
+void ACharacterBase::Multi_SpawnLoadout_Implementation()
 {
 	
 }
@@ -734,8 +747,8 @@ void ACharacterBase::SpawnGrenade(const TSubclassOf<AGrenadeBase>& GrenadeType)
 	if (AGrenadeBase* Grenade = Cast<AGrenadeBase>(GetWorld()->SpawnActorDeferred<AGrenadeBase>(GrenadeType, SpawnTransform, this, this, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn)))
 	{
 		Grenade->SetInstigator(this);
-		Grenade->SetArmed(true);
 		Grenade->FinishSpawning(SpawnTransform);
+		Grenade->SetArmed(true);
 		//UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Grenade->ThrowSFX, Grenade->GetActorLocation());
 		FVector Direction = GetFirstPersonCameraComponent()->GetForwardVector() + FVector(0,0,0.15);
 		Direction.Normalize();

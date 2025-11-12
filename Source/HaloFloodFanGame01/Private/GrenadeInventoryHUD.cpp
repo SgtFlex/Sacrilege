@@ -47,6 +47,7 @@ void UGrenadeInventoryHUD::UpdateGrenadeInventory(TArray<FGrenadeStruct>& Grenad
 		CreateGrenadeWidgets();
 	}
 	OldGrenadeInventory = GrenadeInventory;
+	OnGrenadeArrayUpdate.Broadcast(GrenadeInventory.Num());
 }
 
 void UGrenadeInventoryHUD::CreateGrenadeWidgets()
@@ -81,6 +82,7 @@ void UGrenadeInventoryHUD::UpdateGrenadeWidgets()
 			GrenadeWidgets[i]->SetGrenadeCount(GrenadeInventory[i].GrenadeAmount);
 		}
 	}
+	
 }
 
 void UGrenadeInventoryHUD::DestroyGrenadeWidgets()

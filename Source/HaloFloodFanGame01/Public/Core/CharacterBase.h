@@ -10,6 +10,7 @@
 #include "GameFramework/Character.h"
 #include "CharacterBase.generated.h"
 
+class AGunBase;
 class AEquipmentBase;
 class APlayerControllerBase;
 class UBlendSpace1D;
@@ -52,6 +53,24 @@ struct FGrenadeStruct
 	
 };
 
+USTRUCT(BlueprintType)
+struct FLoadoutStruct
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TSubclassOf<AGunBase> PrimaryWeaponClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TSubclassOf<AGunBase> SecondaryWeaponClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TSubclassOf<AEquipmentBase> EquipmentClass;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TArray<FGrenadeStruct> Grenades;
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractableChanged, AActor*, Interactable);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPickupWeapon);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDropWeapon);
@@ -89,13 +108,13 @@ public:
 	virtual void Restart() override;
 
 	UFUNCTION()
-	virtual void SpawnWeapons();
+	virtual void SpawnLoadout();
 
 	UFUNCTION(Server, Reliable)
-	virtual void Server_SpawnWeapons();
+	virtual void Server_SpawnLoadout();
 
 	UFUNCTION(NetMulticast, Reliable)
-	virtual void Multi_SpawnWeapons();
+	virtual void Multi_SpawnLoadout();
 	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -384,15 +403,12 @@ public:
 
 	//Loadout
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true))
-	TSubclassOf<AWeaponBase> EquippedWeaponClass;
-	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true))
-	TSubclassOf<AWeaponBase> HolsteredWeaponClass;
+	TArray<FLoadoutStruct> Loadouts;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true), Replicated)
+	UPROPERTY(BlueprintReadWrite, meta = (DisplayPriority=0, ExposeOnSpawn=true), Replicated)
 	TArray<FGrenadeStruct> GrenadeInventory;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Unit Information|Loadout", meta = (DisplayPriority=0, ExposeOnSpawn=true))
+	UPROPERTY(BlueprintReadWrite)
 	TSubclassOf<AEquipmentBase> EquipmentClass;
 
 	UPROPERTY(BlueprintReadOnly, Replicated, ReplicatedUsing=OnRep_EquippedWeapon)

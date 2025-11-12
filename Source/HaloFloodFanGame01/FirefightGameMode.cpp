@@ -43,8 +43,11 @@ void AFirefightGameMode::EnemyKilled_Implementation(ACharacterBase* Character, A
 		AHaloPlayerState* HPS = PlayerController->GetPlayerState<AHaloPlayerState>();
 		if (ScoreMap.Contains(Character->GetClass()))
 		{
-			HPS->AddPlayerScore(ScoreMap[Character->GetClass()]);
-			HPS->AddPlayerResource(ScoreMap[Character->GetClass()]);
+			if (ScoreMap[Character->GetClass()] > 0)
+			{
+				HPS->AddPlayerScore(ScoreMap[Character->GetClass()]);
+				HPS->AddPlayerResource(ScoreMap[Character->GetClass()]);
+			}
 		} else
 		{
 			HPS->AddPlayerScore(1);
@@ -353,7 +356,7 @@ void AFirefightGameMode::HandleStartingNewPlayer_Implementation(APlayerControlle
 
 void AFirefightGameMode::EndGame()
 {
-	RestartGame();
+	FirefightGameState->MatchEnded();
 	//OnGameEnd.Broadcast();
 }
 
