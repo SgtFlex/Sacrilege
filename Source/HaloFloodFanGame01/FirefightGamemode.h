@@ -95,10 +95,10 @@ public:
 	void PlayerDied(ACharacterBase* PlayerCharacter, APlayerControllerBase* PlayerController);
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void CreateSpectator(ACharacterBase* Character, APlayerControllerBase* PlayerController, float TimeToSpawn);
+	APawn* CreateSpectator(ACharacterBase* Character, APlayerControllerBase* PlayerController, FTimerHandle RespawnTimerHandle);
 
 	UFUNCTION(BlueprintCallable)
-	bool SpawnPlayer(APlayerControllerBase* PlayerController, uint8 Team = 0, TSubclassOf<AGunBase> PrimaryWeaponClass = nullptr, TSubclassOf<AGunBase> SecondaryWeaponClass = nullptr, TSubclassOf<ACharacterBase> CharacterClass = nullptr);
+	bool SpawnPlayer(APlayerControllerBase* PlayerController);
 
 	UFUNCTION(BlueprintCallable)
 	void RespawnPlayer(APlayerControllerBase* PlayerController);
@@ -145,8 +145,8 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TSubclassOf<AVehicleBase> RespawnVehicle;
 
-	UPROPERTY(BlueprintReadOnly)
-	FTimerHandle RespawnTimerHandle;
+	//UPROPERTY(BlueprintReadOnly)
+	//FTimerHandle RespawnTimerHandle;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int PlayerLives = 5;

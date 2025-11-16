@@ -300,30 +300,12 @@ void AFirefightGameMode::PlayerDied_Implementation(ACharacterBase* PlayerCharact
 	}
 }
 
-bool AFirefightGameMode::SpawnPlayer(APlayerControllerBase* PlayerController, uint8 Team, TSubclassOf<AGunBase> PrimaryWeaponClass, TSubclassOf<AGunBase> SecondaryWeaponClass, TSubclassOf<ACharacterBase> CharacterClass)
+bool AFirefightGameMode::SpawnPlayer(APlayerControllerBase* PlayerController)
 {
-	AHaloPlayerState* HaloPlayerState = PlayerController->GetPlayerState<AHaloPlayerState>();
-	if (HaloPlayerState)
-	{
-		HaloPlayerState->Team = Team;
-		if (PrimaryWeaponClass)
-		{
-			HaloPlayerState->PrimaryWeaponClass = PrimaryWeaponClass;
-		}
-			
-		if (SecondaryWeaponClass)
-		{
-			HaloPlayerState->SecondaryWeaponClass = SecondaryWeaponClass;
-		}
-		if (CharacterClass)
-		{
-			HaloPlayerState->CharacterClass = CharacterClass;
-		}
-	}
 	if (GetWorld()->GetTimerManager().TimerExists(PlayerController->PlayerRespawnTimerHandle))
 	{
 		return false;
-	} else
+	}
 	{
 		RespawnPlayer(PlayerController);
 		return true;
@@ -343,9 +325,9 @@ void AFirefightGameMode::RespawnPlayer(APlayerControllerBase* PlayerController)
 void AFirefightGameMode::StartRespawnProcess(APlayerControllerBase* PC, ACharacterBase* PreviousCharacter)
 {
 	if (!PC) return;
-	GetWorld()->GetTimerManager().SetTimer(PC->PlayerRespawnTimerHandle, RespawnTime, false);
-	CreateSpectator(PreviousCharacter, PC, RespawnTime);
-	
+	//GetWorld()->GetTimerManager().SetTimer(PC->PlayerRespawnTimerHandle, RespawnTime, false);
+	FTimerHandle RespawnHandle = PC->StartRespawnDelayed(RespawnTime);
+	CreateSpectator(PreviousCharacter, PC, RespawnHandle);
 }
 
 void AFirefightGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)

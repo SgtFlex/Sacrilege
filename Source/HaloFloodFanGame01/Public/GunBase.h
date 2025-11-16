@@ -6,8 +6,10 @@
 #include "InteractableInterface.h"
 #include "WeaponBase.h"
 #include "GameFramework/Actor.h"
+#include "HaloFloodFanGame01/FGunAIBehavior.h"
 #include "GunBase.generated.h"
 
+struct FGunAIBehavior;
 class UBulletFiringComponent;
 class ACharacterBase;
 class AProjectileBase;
@@ -65,6 +67,9 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	AActor* SpawnProjectile(TSubclassOf<AActor> ProjToSpawn);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	AActor* SpawnProjectileInDirection(TSubclassOf<AActor> ProjToSpawn, FVector Direction);
 
 	UFUNCTION(NetMulticast, Unreliable)
 	void PlayFireFX();
@@ -137,6 +142,12 @@ public:
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	FGunAIBehavior GunAIBehavior;
+
+	UPROPERTY()
+	FVector AimOffset;
+	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Bullets)
 	UBulletFiringComponent* BulletFiringComponent;
 

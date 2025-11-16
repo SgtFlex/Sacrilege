@@ -199,6 +199,20 @@ bool AGunBase::CanFire()
 	return !(bReloading || CurMagazine <= 0);
 }
 
+AActor* AGunBase::SpawnProjectileInDirection_Implementation(TSubclassOf<AActor> ProjToSpawn, FVector Direction)
+{
+	FVector AimLocation;
+	FVector AimDirection;
+	GetAim(AimLocation, AimDirection);
+
+	AController* EventInstigator = nullptr;
+	if (CharacterOwner)
+	{
+		EventInstigator = CharacterOwner->GetController();
+	}
+	return BulletFiringComponent->FireProjectile(TSubclassOf<AProjectileBase>(ProjToSpawn), Direction, this, EventInstigator);
+}
+
 // void AGunBase::GetAim(FVector& AimLocation, FVector& AimDirection)
 // {
 // 	if (CharacterOwner)

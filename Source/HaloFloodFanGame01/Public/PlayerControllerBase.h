@@ -28,6 +28,9 @@ public:
 	UFUNCTION()
 	void OnControlledCharacterDied(ACharacterBase* DeadCharacter, AController* Inst, AActor* Causer);
 
+	UFUNCTION(BlueprintImplementableEvent)
+	FTimerHandle StartRespawnDelayed(float Delay);
+	
 	//----------------------------------------------------------------------//
 	// IGenericTeamAgentInterface
 	//----------------------------------------------------------------------//

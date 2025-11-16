@@ -119,7 +119,6 @@ ETeamAttitude::Type AAIControllerBase::GetTeamAttitudeTowards(const AActor& Othe
 {
 	//return Super::GetTeamAttitudeTowards(Other);
 	if (const APawn* OtherPawn = Cast<APawn>(&Other)) {
-
 		if (const IGenericTeamAgentInterface* TeamAgent = Cast<IGenericTeamAgentInterface>(OtherPawn->GetController()))
 		{
 			//UE_LOG(LogTemp, Warning, TEXT("%s get attitude"), *Other.GetActorLabel());
