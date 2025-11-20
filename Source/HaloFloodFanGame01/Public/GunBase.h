@@ -211,6 +211,9 @@ public:
 	UPROPERTY(EditAnywhere, meta = (Category="Attributes"))
 	float VerticalSpread = 0;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName Name = "";
+
 	// //Range of the hitscan trace
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes|Hitscan", EditCondition="!ProjectileClass", DeprecatedProperty))
 	// float Range = 5000;
