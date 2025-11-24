@@ -31,6 +31,7 @@
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISense_Damage.h"
 #include "Perception/AISense_Touch.h"
+#include "ProfilingDebugging/CookStats.h"
 
 // Sets default values
 ACharacterBase::ACharacterBase()
@@ -349,18 +350,13 @@ float ACharacterBase::CustomTakeDamage_Implementation(float Damage, FVector Forc
 float ACharacterBase::CustomTakePointDamage_Implementation(float Damage, FVector Direction, const FHitResult& HitInfo, float Force, AController* EventInstigator, AActor* DamageCauser)
 {
 	if (!HasAuthority()) return 0;
-	float x = IDamageableInterface::ChangeHealth(this, Damage, Direction * Force, HitInfo.Location, HitInfo.BoneName, EventInstigator, DamageCauser);
-	//float x = IDamageableInterface::CustomTakePointDamage(PointDamageEvent, Force, EventInstigator, DamageCauser);
-	if (EventInstigator && Cast<AAIControllerBase>(GetController()))
-	{
-		UAISense_Damage::ReportDamageEvent(GetWorld(), this, EventInstigator->GetPawn(), Damage, Cast<AActor>(EventInstigator)->GetActorLocation(), HitInfo.Location);
-	}
-	
 	if (const UHealthComponent* HealthComp = GetHealthComponent())
 	{
 		if (HealthComp->GetShields() <= 0)
 		{
-			
+			if (HitBoxNameMap.Contains(HitInfo.BoneName))
+				if (HitBoxDamageMultipliers.Contains(HitBoxNameMap[HitInfo.BoneName]))
+					Damage = Damage * HitBoxDamageMultipliers[HitBoxNameMap[HitInfo.BoneName]];
 			CurrentStunBuildup = CurrentStunBuildup + (Force/50);
 			if (CurrentStunBuildup >= StunThreshold)
 			{
@@ -370,6 +366,15 @@ float ACharacterBase::CustomTakePointDamage_Implementation(float Damage, FVector
 			MulticastSpawnBloodFX(Direction, HitInfo);
 		}
 	}
+	
+	float x = IDamageableInterface::ChangeHealth(this, Damage, Direction * Force, HitInfo.Location, HitInfo.BoneName, EventInstigator, DamageCauser);
+	//float x = IDamageableInterface::CustomTakePointDamage(PointDamageEvent, Force, EventInstigator, DamageCauser);
+	if (EventInstigator && Cast<AAIControllerBase>(GetController()))
+	{
+		UAISense_Damage::ReportDamageEvent(GetWorld(), this, EventInstigator->GetPawn(), Damage, Cast<AActor>(EventInstigator)->GetActorLocation(), HitInfo.Location);
+	}
+	
+	
 	OnTakeCustomPointDamage.Broadcast(Damage);
 	return x;
 }
@@ -457,11 +462,14 @@ void ACharacterBase::MC_OnHealthDepleted_Implementation(float Damage, FVector Fo
 	
 	GetCapsuleComponent()->DestroyComponent();
 	SetRootComponent(GetMesh());
-	if (Force.Length() > 50000 || !DeathAnim)
+	if (Force.Length() > 50000 || !DeathAnim || (HitBoxNameMap.Contains(HitBoneName) && HitBoxNameMap[HitBoneName]=="Head"))
 	{
 		GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		GetMesh()->SetSimulatePhysics(true);
-		GetMesh()->AddImpulseAtLocation(Force, HitLocation, HitBoneName);
+		if (HitBoxNameMap.Contains(HitBoneName) && HitBoxNameMap[HitBoneName]=="Head")
+			GetMesh()->AddImpulseAtLocation(((Force*7 + FVector(0,0,1)*Force.Length()*10) * GetMesh()->GetMass())*0.005, HitLocation, HitBoneName);
+		else
+			GetMesh()->AddImpulseAtLocation(Force, HitLocation, HitBoneName);
 	} else
 	{
 		GetMesh()->GetAnimInstance()->Montage_Play(DeathAnim);

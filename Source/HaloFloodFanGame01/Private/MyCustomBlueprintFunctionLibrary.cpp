@@ -98,34 +98,46 @@ void UMyCustomBlueprintFunctionLibrary::FireExplosion(TArray<AActor*>& ActorsToI
 	//UKismetSystemLibrary::SphereTraceMultiByProfile(World, Location, Location, OuterRadius, FName("Projectile"), false, ActorsToIgnore, EDrawDebugTrace::None, OutHits, true);
 	//UKismetSystemLibrary::SphereTraceMulti(World, Location, Location, OuterRadius, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, OutHits, true);
 	//UKismetSystemLibrary::SphereOverlapActors(World, Location, OuterRadius, Objects, AActor::StaticClass(), ActorsToIgnore, HitActors);
+	ActorsToIgnore.Add(DamageCauser);
 	for (FHitResult Hit : OutHits)
 	{
 		if (AActor* HitActor = Hit.GetActor())
 		{
 			if (!ActorsToIgnore.Contains(HitActor))
 			{
-				//We only want to hit once per object
-				ActorsToIgnore.AddUnique(Hit.GetActor());
+				
 				//TODO - Maybe use a "ForceInterface" for characters, projectiles, and others instead of casting?
-				if (HitActor->Implements<UDamageableInterface>())
+				FHitResult LOSCheck;
+				UKismetSystemLibrary::LineTraceSingle(World, Location, Hit.ImpactPoint, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::None, LOSCheck, true);
+				if (LOSCheck.GetActor() == HitActor)
 				{
-					//IDamageableInterface::Execute_CustomTakeRadialDamage(HitActor, Force, RadialDamageEvent, EventInstigator, DamageCauser);
-					IDamageableInterface::Execute_CustomTakeRadialDamage(HitActor, Location, OuterRadius, Force, Hit,
-																		 RadialDamageEvent, InnerRadius, EventInstigator,
-																		 DamageCauser);
-				} else if (HitActor->Implements<UPhysicsInterface>())
-				{
-					IPhysicsInterface::Execute_ApplyPhysicsImpulse(HitActor, (Hit.ImpactPoint - Location).GetSafeNormal() * Force, Hit.ImpactPoint, NAME_None);
-					
-				} else if (UPrimitiveComponent* PrimComponent = Cast<UPrimitiveComponent>(HitActor->GetRootComponent()))
-				{
-					if (PrimComponent->IsSimulatingPhysics() && PrimComponent->GetCollisionEnabled() ==
-						ECollisionEnabled::QueryAndPhysics)
+					//We only want to hit once per object
+					ActorsToIgnore.AddUnique(Hit.GetActor());
+					if (HitActor->Implements<UDamageableInterface>())
 					{
-						PrimComponent->AddImpulse((Hit.ImpactPoint - Location).GetSafeNormal() * Force);
-						//PrimComponent->AddImpulse((HitActor->GetActorLocation() - Location).GetSafeNormal() * FMath::Lerp(0, Force, (FVector::Distance(HitActor->GetActorLocation(), Location)) + InnerRadius));
+						//IDamageableInterface::Execute_CustomTakeRadialDamage(HitActor, Force, RadialDamageEvent, EventInstigator, DamageCauser);
+						IDamageableInterface::Execute_CustomTakeRadialDamage(HitActor, Location, OuterRadius, Force, Hit,
+																			 RadialDamageEvent, InnerRadius, EventInstigator,
+																			 DamageCauser);
+					} else if (HitActor->Implements<UPhysicsInterface>())
+					{
+						IPhysicsInterface::Execute_ApplyPhysicsImpulse(HitActor, (Hit.ImpactPoint - Location).GetSafeNormal() * Force, Hit.ImpactPoint, NAME_None);
+					
+					} else if (UPrimitiveComponent* PrimComponent = Cast<UPrimitiveComponent>(HitActor->GetRootComponent()))
+					{
+						if (PrimComponent->IsSimulatingPhysics() && PrimComponent->GetCollisionEnabled() ==
+							ECollisionEnabled::QueryAndPhysics)
+						{
+							PrimComponent->AddImpulse((Hit.ImpactPoint - Location).GetSafeNormal() * Force);
+							//PrimComponent->AddImpulse((HitActor->GetActorLocation() - Location).GetSafeNormal() * FMath::Lerp(0, Force, (FVector::Distance(HitActor->GetActorLocation(), Location)) + InnerRadius));
+						}
 					}
 				}
+				else
+				{
+					//DrawDebugLine(World, Location, Hit.ImpactPoint, FColor::Red, false, 2);
+				}
+				
 			}
 		}
 	}

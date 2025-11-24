@@ -543,6 +543,25 @@ public:
 	FGameplayTagContainer GameplayTags;
 
 	float ScopeSensitivityMultiplier = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TMap<FName, float> HitBoxDamageMultipliers = {
+		{"Head", 10.0f},
+	{"Arm", 0.5f},
+{"Arm", 0.5f},
+{"Leg", 0.5f},
+{"Leg", 0.5f},	
+	};
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TMap<FName, FName> HitBoxNameMap = {
+		{"Neck_001", "Head"},
+	{"ForeArm_L", "Arm"},
+{"ForeArm_R", "Arm"},
+{"LowerLeg_L", "Leg"},
+{"LowerLeg_R", "Leg"},	
+	};
+	
 private:
 	UPROPERTY(Replicated)
 	AActor* InteractableActor;
