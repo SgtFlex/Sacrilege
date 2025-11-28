@@ -104,6 +104,9 @@ public:
 	USoundBase* ShieldWarningSFX;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UNiagaraSystem* ShieldHitFX;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	UNiagaraSystem* ShieldBreakFX;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)

@@ -560,12 +560,14 @@ void ACharacterBase::MeleeActor(AActor* Actor)
 		ForceVector.Normalize();
 		HitComp->AddImpulse(ForceVector*MeleeForce);
 	}
-	
-	if (TSubclassOf<ADecalActor> MeleeImpactClass = *MeleeImpactFX.Find(MeleeHit.PhysMaterial->SurfaceType))
+	if (MeleeImpactFX.Contains(MeleeHit.PhysMaterial->SurfaceType))
 	{
-		const FVector Loc = MeleeHit.Location;
-		const FRotator Rot =  MeleeHit.ImpactNormal.Rotation() + FRotator(-90,0,0);
-		GetWorld()->SpawnActor(MeleeImpactClass, &Loc, &Rot);
+		if (TSubclassOf<ADecalActor> MeleeImpactClass = *MeleeImpactFX.Find(MeleeHit.PhysMaterial->SurfaceType))
+		{
+			const FVector Loc = MeleeHit.Location;
+			const FRotator Rot =  MeleeHit.ImpactNormal.Rotation() + FRotator(-90,0,0);
+			GetWorld()->SpawnActor(MeleeImpactClass, &Loc, &Rot);
+		}
 	}
 }
 

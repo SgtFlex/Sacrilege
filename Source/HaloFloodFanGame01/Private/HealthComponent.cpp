@@ -105,6 +105,9 @@ void UHealthComponent::Multi_TakeDamage_Implementation(float Damage, FVector For
 	}
 	if (Shields > 0) {
 		PlayShieldFX(true);
+		//@TODO there should not be any casting required
+		if (ShieldHitFX) UNiagaraFunctionLibrary::SpawnSystemAttached(ShieldHitFX, Cast<ACharacter>(GetOwner())->GetMesh(),
+		NAME_None, HitLocation, (Force*-1).Rotation(), EAttachLocation::KeepWorldPosition, true);
 	}
 	OnHealthUpdate.Broadcast(this);
 }
@@ -277,7 +280,11 @@ void UHealthComponent::StopShieldRegen()
 void UHealthComponent::PlayShieldFX(bool Show)
 {
 	if (Show && ShieldMat)
+	{
 		MeshComp->SetOverlayMaterial(ShieldMat);
+		
+	}
+		
 	else
 		MeshComp->SetOverlayMaterial(nullptr);
 }
