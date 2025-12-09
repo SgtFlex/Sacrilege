@@ -95,6 +95,10 @@ void UMyCustomBlueprintFunctionLibrary::FireExplosion(TArray<AActor*>& ActorsToI
 
 	TArray<FHitResult> OutHits;
 	UKismetSystemLibrary::SphereTraceMulti(World, Location, Location, OuterRadius, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::None, OutHits, true);
+#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
+	DrawDebugSphere(World, Location, OuterRadius, 8, FColor::Green, false, 3);
+	DrawDebugSphere(World, Location, InnerRadius, 8, FColor::Red, false, 3);
+#endif
 	//UKismetSystemLibrary::SphereTraceMultiByProfile(World, Location, Location, OuterRadius, FName("Projectile"), false, ActorsToIgnore, EDrawDebugTrace::None, OutHits, true);
 	//UKismetSystemLibrary::SphereTraceMulti(World, Location, Location, OuterRadius, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, OutHits, true);
 	//UKismetSystemLibrary::SphereOverlapActors(World, Location, OuterRadius, Objects, AActor::StaticClass(), ActorsToIgnore, HitActors);
@@ -115,6 +119,9 @@ void UMyCustomBlueprintFunctionLibrary::FireExplosion(TArray<AActor*>& ActorsToI
 					ActorsToIgnore.AddUnique(Hit.GetActor());
 					if (HitActor->Implements<UDamageableInterface>())
 					{
+						// (HitDist - MinRange)/(MaxRange - MinRange)
+						// Lerp result between Min damage and max damage
+						// FMath::Lerp(MinimumDamage, MaximumDamage, (MaxRange - HitDist)/(MaxRange - MinRange))
 						//IDamageableInterface::Execute_CustomTakeRadialDamage(HitActor, Force, RadialDamageEvent, EventInstigator, DamageCauser);
 						IDamageableInterface::Execute_CustomTakeRadialDamage(HitActor, Location, OuterRadius, Force, Hit,
 																			 RadialDamageEvent, InnerRadius, EventInstigator,

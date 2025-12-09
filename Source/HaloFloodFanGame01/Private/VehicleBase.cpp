@@ -195,9 +195,9 @@ void AVehicleBase::AttachPilot_Implementation()
 	if (IsValid(Pilot))
 	{
 		Pilot->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-		Pilot->AttachToComponent(GetVehicleMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("Seat"));
 		Pilot->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		Pilot->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Vehicle, ECR_Ignore);
+		Pilot->AttachToComponent(GetVehicleMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("Seat"));
 	}
 }
 

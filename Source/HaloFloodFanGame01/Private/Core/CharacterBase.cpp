@@ -333,7 +333,11 @@ void ACharacterBase::MulticastSpawnBloodFX_Implementation(FVector Direction, con
 
 float ACharacterBase::CustomTakeRadialDamage_Implementation(FVector Origin, float Radius, float Force, const FHitResult& HitInfo, FRadialDamageEvent const& RadialDamageEvent, float MinimumRadius, AController* EventInstigator, AActor* DamageCauser)
 {
-	return ChangeHealth(this, RadialDamageEvent.Params.BaseDamage, (Cast<AActor>(this)->GetActorLocation() - RadialDamageEvent.Origin).GetSafeNormal() * Force, FVector(0,0,0), FName(""), EventInstigator, DamageCauser);
+	//(MaxRange - HitDist)/(MaxRange - MinRange)
+	return ChangeHealth(this,
+		FMath::Lerp(RadialDamageEvent.Params.MinimumDamage, RadialDamageEvent.Params.BaseDamage,FMath::Pow( (Radius - FMath::Max((HitInfo.ImpactPoint - Origin).Length(), MinimumRadius))/(Radius - MinimumRadius), RadialDamageEvent.Params.DamageFalloff)),
+		(Cast<AActor>(this)->GetActorLocation() - RadialDamageEvent.Origin).GetSafeNormal() * Force * (Radius - (HitInfo.ImpactPoint - Origin).Length()/(Radius - MinimumRadius)),
+		FVector(0,0,0), FName(""), EventInstigator, DamageCauser);
 }
 
 float ACharacterBase::CustomTakeDamage_Implementation(float Damage, FVector Force, AController* EventInstigator, AActor* DamageCauser)
@@ -524,13 +528,17 @@ void ACharacterBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 	{
 		UAISense_Touch::ReportTouchEvent(GetWorld(), this, OtherActor, Hit.Location);
 		const float VelocityDifference = FMath::Abs(OtherComp->GetComponentVelocity().Length() - this->GetVelocity().Length());
-		const float Mass = OtherComp->IsSimulatingPhysics() ? (OtherComp->GetMass()) : 1;
-		const float DamageCalculation = FMath::Pow(VelocityDifference, 1.0f / 3.0f) * (Mass / 300);
+		const FVector ForceVector = OtherComp->GetComponentVelocity() - this->GetVelocity();
+		//Dotproduct doesnt work correctly if we're standing still
+		const float DotProduct = FMath::Abs(Hit.Normal.Dot(ForceVector.GetSafeNormal()));
+		const float OtherCompMass = OtherComp->GetMass();
+		UE_LOG(LogTemp, Warning, TEXT("Dot: %f"), DotProduct);
+		//const float DamageCalculation = FMath::Pow(VelocityDifference, 1.0f / 3.0f) * (OtherCompMass/300);
+		const float DamageCalculation = (VelocityDifference/25) * DotProduct;
 		if (DamageCalculation > 5)
 		{
-			FDamageEvent DamageEvent = FDamageEvent(UDamageType::StaticClass());
 			//@TODO Review collision damage
-			//CustomTakeDamage(DamageCalculation, NormalImpulse, DamageEvent, nullptr, nullptr);
+			//CustomTakeDamage(DamageCalculation, NormalImpulse, nullptr, nullptr);
 			//float DecalSize = 100;
 			//UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(DecalSize, DecalSize, DecalSize), GetMesh()->GetComponentLocation() + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), 0), FRotator(-90,0,FMath::RandRange(-180, 180)));
 		}

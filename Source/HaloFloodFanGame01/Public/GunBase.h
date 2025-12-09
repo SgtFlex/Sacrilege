@@ -151,13 +151,13 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Bullets)
 	UBulletFiringComponent* BulletFiringComponent;
 
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 	FOnFire OnFire;
 
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 	FOnReload OnReload;
 
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 	FOnAmmoUpdated OnAmmoUpdated;
 	
 	UPROPERTY(EditAnywhere)
