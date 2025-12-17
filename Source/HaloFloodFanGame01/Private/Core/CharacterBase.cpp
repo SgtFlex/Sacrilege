@@ -334,9 +334,10 @@ void ACharacterBase::MulticastSpawnBloodFX_Implementation(FVector Direction, con
 float ACharacterBase::CustomTakeRadialDamage_Implementation(FVector Origin, float Radius, float Force, const FHitResult& HitInfo, FRadialDamageEvent const& RadialDamageEvent, float MinimumRadius, AController* EventInstigator, AActor* DamageCauser)
 {
 	//(MaxRange - HitDist)/(MaxRange - MinRange)
+	const float Alpha = FMath::Pow( (Radius - FMath::Max((HitInfo.ImpactPoint - Origin).Length(), MinimumRadius))/(Radius - MinimumRadius), RadialDamageEvent.Params.DamageFalloff);
 	return ChangeHealth(this,
-		FMath::Lerp(RadialDamageEvent.Params.MinimumDamage, RadialDamageEvent.Params.BaseDamage,FMath::Pow( (Radius - FMath::Max((HitInfo.ImpactPoint - Origin).Length(), MinimumRadius))/(Radius - MinimumRadius), RadialDamageEvent.Params.DamageFalloff)),
-		(Cast<AActor>(this)->GetActorLocation() - RadialDamageEvent.Origin).GetSafeNormal() * Force * (Radius - (HitInfo.ImpactPoint - Origin).Length()/(Radius - MinimumRadius)),
+		FMath::Lerp(RadialDamageEvent.Params.MinimumDamage, RadialDamageEvent.Params.BaseDamage, Alpha),
+		(GetActorLocation() - RadialDamageEvent.Origin).GetSafeNormal() * Force,
 		FVector(0,0,0), FName(""), EventInstigator, DamageCauser);
 }
 
