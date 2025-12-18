@@ -242,9 +242,9 @@ void AVehicleBase::DetachPilot_Implementation()
 		UE_LOG(LogTemp, Warning, TEXT("Called detach pilot on %d"), GetRemoteRole());
 		Pilot->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_NavWalking);
 		Pilot->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		Pilot->SetActorTransform(ExitPoint->GetComponentTransform(), false);
 		Pilot->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		Pilot->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Vehicle, ECR_Block);
-		Pilot->SetActorTransform(ExitPoint->GetComponentTransform());
 	} else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Invalid pilot for %s"), *GetName());

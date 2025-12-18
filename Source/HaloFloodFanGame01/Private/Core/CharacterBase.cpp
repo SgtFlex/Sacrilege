@@ -1132,11 +1132,13 @@ void ACharacterBase::Server_PickupWeapon_Implementation(AWeaponBase* Gun)
 
 void ACharacterBase::OnRep_EquippedWeapon()
 {
+	if (!EquippedWeapon) return;
 	DrawEquippedWeapon();
 }
 
 void ACharacterBase::OnRep_HolsteredWeapon()
 {
+	if (!HolsteredWeapon) return;
 	HolsteredWeapon->SetOwner(this);
 	//HolsteredWeapon->SetReplicateMovement(false);
 	HolsteredWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "Holster");

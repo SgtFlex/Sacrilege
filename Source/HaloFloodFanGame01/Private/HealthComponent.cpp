@@ -279,13 +279,13 @@ void UHealthComponent::StopShieldRegen()
 
 void UHealthComponent::PlayShieldFX(bool Show)
 {
-	if (Show && ShieldMat)
+	if (MeshComp)
 	{
-		MeshComp->SetOverlayMaterial(ShieldMat);
-		
+		if (Show && ShieldMat)
+			MeshComp->SetOverlayMaterial(ShieldMat);
+		else
+			MeshComp->SetOverlayMaterial(nullptr);
 	}
-		
-	else
-		MeshComp->SetOverlayMaterial(nullptr);
+	
 }
 
