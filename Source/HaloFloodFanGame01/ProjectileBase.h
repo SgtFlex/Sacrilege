@@ -78,6 +78,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UAudioComponent* TestIdleSoundComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<AActor*> IgnoreActors;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
 	FGameplayTagContainer GameplayTags;
 

@@ -81,7 +81,7 @@ void AGrenadeBase::MC_Explode_Implementation()
 	if (ExplosionSFX) UGameplayStatics::PlaySoundAtLocation(GetWorld(), ExplosionSFX, GetActorLocation());
 	if (ExplosionPFX) UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ExplosionPFX, GetActorLocation());
 	UGameplayStatics::SpawnForceFeedbackAtLocation(GetWorld(), ExplosionFeedback, GetActorLocation(), FRotator::ZeroRotator, false, 1, 0, ExplosionFeedbackAttenuation);
-	GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageDecal(UGameplayStatics::SpawnDecalAtLocation(GetWorld(), ExplosionDecal, FVector(512, 512, 512), GetActorLocation()));
+	GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageDecal(UGameplayStatics::SpawnDecalAtLocation(GetWorld(), ExplosionDecal, FVector(512, 512, 512), GetActorLocation(), FRotator(FMath::RandRange(-180, 180), 0,0)));
 	Destroy();
 }
 

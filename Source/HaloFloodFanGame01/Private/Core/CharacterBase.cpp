@@ -25,6 +25,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "Camera/CameraComponent.h"
+#include "Components/DecalComponent.h"
 #include "Engine/DecalActor.h"
 #include "GameFramework/InputDeviceSubsystem.h"
 #include "Net/UnrealNetwork.h"
@@ -127,6 +128,7 @@ void ACharacterBase::SpawnLoadout()
 			if (!ChosenLoadoutStruct.Grenades.IsEmpty())
 			{
 				GrenadeInventory = ChosenLoadoutStruct.Grenades;
+				OnGrenadeInventoryUpdated.Broadcast(GrenadeInventory);
 			}
 			if (ChosenLoadoutStruct.EquipmentClass)
 			{
@@ -309,21 +311,23 @@ void ACharacterBase::MulticastSpawnBloodFX_Implementation(FVector Direction, con
 			BloodNiagaraComponent->SetVariableActor("Character", this);
 		}
 		if (BloodSplatterMat)
-		{
+		{			
 			UGameplayStatics::SpawnDecalAttached(BloodSplatterMat, FVector(10,10,10), GetMesh(),
 			HitInfo.BoneName, HitInfo.Location, HitInfo.Normal.Rotation() + FRotator(-90, 0, FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition, 0);
 		}
 		if (BloodDecalMaterial)
 		{
 			float DecalSize = FMath::RandRange(10, 130);
-
 			FHitResult HitResult;
 			FCollisionQueryParams QueryParams;
 			QueryParams.AddIgnoredActor(this);
 			GetWorld()->LineTraceSingleByChannel(HitResult, HitInfo.Location, HitInfo.Location + (Direction * 4000),ECollisionChannel::ECC_Visibility, QueryParams);
 			if (HitResult.bBlockingHit)
 			{
-				GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageDecal(UGameplayStatics::SpawnDecalAttached(BloodDecalMaterial, FVector(DecalSize,DecalSize,DecalSize), HitResult.GetComponent(), HitResult.BoneName, HitResult.Location, HitResult.Normal.Rotation() + FRotator(-180,0,FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition));
+				UDecalComponent* BloodDecal = UGameplayStatics::SpawnDecalAttached(BloodDecalMaterial, FVector(20,DecalSize,DecalSize), HitResult.GetComponent(), HitResult.BoneName, HitResult.Location, HitResult.Normal.Rotation() + FRotator(-180,0,FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition);
+				// UMaterialInstanceDynamic* DynamicMat = BloodDecal->CreateDynamicMaterialInstance();
+				// DynamicMat->SetScalarParameterValue("Mask", 3);
+				GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageDecal(BloodDecal);
 				//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAttached(BloodDecalMaterial, FVector(DecalSize,DecalSize,DecalSize), HitResult.GetComponent(), HitResult.BoneName, HitResult.Location, HitResult.Normal.Rotation() + FRotator(-180,0,FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition));
 			}
 		}
@@ -532,7 +536,8 @@ void ACharacterBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 		const FVector ForceVector = OtherComp->GetComponentVelocity() - this->GetVelocity();
 		//Dotproduct doesnt work correctly if we're standing still
 		const float DotProduct = FMath::Abs(Hit.Normal.Dot(ForceVector.GetSafeNormal()));
-		const float OtherCompMass = OtherComp->GetMass();
+		
+		//const float OtherCompMass = OtherComp->GetMass();
 		UE_LOG(LogTemp, Warning, TEXT("Dot: %f"), DotProduct);
 		//const float DamageCalculation = FMath::Pow(VelocityDifference, 1.0f / 3.0f) * (OtherCompMass/300);
 		const float DamageCalculation = (VelocityDifference/25) * DotProduct;

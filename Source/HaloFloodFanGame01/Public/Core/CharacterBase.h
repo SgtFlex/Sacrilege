@@ -101,7 +101,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void GetPlayerAim(FHitResult& HitResult) const;
-
+	
 	float AimAssist() const;
 	
 
@@ -121,6 +121,8 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	virtual void SpawnDefaultController() override;
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	float CustomTakeDamage(float DamageAmount, FVector Force, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
@@ -369,7 +371,7 @@ protected:
 	UFUNCTION(Client, Reliable)
 	virtual void CL_Unpossessed();
 
-	virtual void SpawnDefaultController() override;
+	
 
 	virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; return; }
 

@@ -210,7 +210,8 @@ AActor* AGunBase::SpawnProjectileInDirection_Implementation(TSubclassOf<AActor> 
 	{
 		EventInstigator = CharacterOwner->GetController();
 	}
-	return BulletFiringComponent->FireProjectile(TSubclassOf<AProjectileBase>(ProjToSpawn), Direction, this, EventInstigator);
+	TArray<AActor*> ActorsToIgnore;
+	return BulletFiringComponent->FireProjectile(TSubclassOf<AProjectileBase>(ProjToSpawn), Direction, this, EventInstigator, ActorsToIgnore);
 }
 
 // void AGunBase::GetAim(FVector& AimLocation, FVector& AimDirection)
@@ -341,7 +342,8 @@ AActor* AGunBase::SpawnProjectile_Implementation(TSubclassOf<AActor> ProjToSpawn
 	{
 		EventInstigator = CharacterOwner->GetController();
 	}
-	return BulletFiringComponent->FireProjectile(TSubclassOf<AProjectileBase>(ProjToSpawn), AimDirection, this, EventInstigator);
+	TArray<AActor*> ActorsToIgnore;
+	return BulletFiringComponent->FireProjectile(TSubclassOf<AProjectileBase>(ProjToSpawn), AimDirection, this, EventInstigator, ActorsToIgnore);
 	//return GetWorld()->SpawnActor(ProjToSpawn, &Location, &Rotation, ActorSpawnParameters);
 }
 

@@ -4,9 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Components/SceneComponent.h"
+#include "Engine/PointLight.h"
 #include "BulletFiringComponent.generated.h"
 
 
+class APointLight;
 class AProjectileBase;
 class UBullet;
 class UNiagaraSystem;
@@ -15,7 +17,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBulletFired);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBulletHit, FHitResult, HitResult);
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS( Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 
 
 
@@ -42,8 +44,9 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	UFUNCTION(BlueprintCallable)
-	virtual AProjectileBase* FireProjectile(TSubclassOf<AProjectileBase> ProjectileClass, FVector Direction, AActor* Owner, AController* Instigator);
+	UFUNCTION(BlueprintCallable, meta = (AutoCreateRefTerm = "IgnoreActors"))
+	virtual AProjectileBase* FireProjectile(TSubclassOf<AProjectileBase> ProjectileClass, FVector Direction, AActor* Owner, AController* Instigator, const TArray<
+	                                        AActor*>& IgnoreActors);
 
 	UFUNCTION(BlueprintCallable)
 	virtual void FireBullet(FHitResult& HitResult, FVector AimLocation, FVector Direction,  TArray<AActor*> ActorsToIgnore, AActor* DamageCauser, AController* EventInstigator);
@@ -66,6 +69,9 @@ public:
 
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DeprecatedProperty))
 	// float HitScanForce = 100;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<APointLight> PointLightClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float HorizontalSpread = 0;

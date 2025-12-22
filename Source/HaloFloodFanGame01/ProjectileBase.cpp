@@ -63,6 +63,7 @@ void AProjectileBase::OnProjectileOverlapped_Implementation(UPrimitiveComponent*
 	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
 	const FHitResult& SweepResult)
 {
+	if (IgnoreActors.Contains(OtherActor)) return;
 	UAISense_Hearing::ReportNoiseEvent(GetWorld(), SweepResult.Location, 300.0f, GetInstigator(), 300.0f);
 	// IDamageableInterface* DamageableActor = Cast<IDamageableInterface>(OtherActor);
 	FVector Direction = GetVelocity();
