@@ -3,6 +3,7 @@
 
 #include "HealthComponent.h"
 
+#include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "TimerManager.h"
 #include "Components/AudioComponent.h"
@@ -125,6 +126,7 @@ void UHealthComponent::HealthDepleted(float Damage, FVector Force, FVector HitLo
 	ShieldDelayTimerHandle.Invalidate();
 	GetWorld()->GetTimerManager().ClearTimer(ShieldDelayTimerHandle);
 	Multi_HealthDepleted(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
+	if (ShieldBrokenComponent) ShieldBrokenComponent->DestroyComponent();
 	OnHealthDepleted.Broadcast(Damage, Force, HitLocation, HitBoneName, EventInstigator, DamageCauser);
 }
 
@@ -245,6 +247,11 @@ void UHealthComponent::BreakShields_Implementation()
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ShieldBreakSFX, GetOwner()->GetActorLocation());
 		// ShieldAudioComponent->Play();
 	}
+	if (ShieldBrokenVFX && MeshComp)
+	{
+		ShieldBrokenComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(ShieldBrokenVFX, MeshComp,
+		NAME_None, FVector(0,0,0), FRotator(0,0,0),EAttachLocation::SnapToTarget, true);
+	}
 }
 
 void UHealthComponent::StartShieldRegen()
@@ -258,6 +265,7 @@ void UHealthComponent::StartShieldRegen()
 	if (ShieldRegenVFX && MeshComp) if (ShieldBreakFX) UNiagaraFunctionLibrary::SpawnSystemAttached(ShieldRegenVFX, MeshComp,
 		NAME_None, FVector(0,0,0), FRotator(0,0,0),EAttachLocation::SnapToTarget, true);
 	GetOwner()->GetWorldTimerManager().SetTimer(ShieldRegenTimer, this, &UHealthComponent::RegenShields, ShieldRegenTickRate, true);
+	if (ShieldBrokenComponent) ShieldBrokenComponent->DestroyComponent();
 }
 
 void UHealthComponent::RegenShields()

@@ -8,6 +8,7 @@
 #include "HealthComponent.generated.h"
 
 
+class UNiagaraComponent;
 class UNiagaraSystem;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnHealthDepleted, float, Damage, FVector, Force, FVector, HitLocation,
                                               FName, HitBoneName, AController*, EventInstigator, AActor*, DamageCauser);
@@ -96,6 +97,12 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	UNiagaraSystem* ShieldRegenVFX;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UNiagaraSystem* ShieldBrokenVFX;
+
+	UPROPERTY()
+	UNiagaraComponent* ShieldBrokenComponent;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	USoundBase* ShieldBreakSFX;
