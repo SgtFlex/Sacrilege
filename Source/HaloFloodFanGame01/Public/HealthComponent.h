@@ -124,6 +124,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	UMaterialInterface* ShieldMat;
 
+	UPROPERTY()
+	UMaterialInstanceDynamic* ShieldMatInstance;
+
 	UPROPERTY(VisibleAnywhere, BlueprintAssignable)
 	FOnHealthDepleted OnHealthDepleted;
 
@@ -161,6 +164,10 @@ private:
 	FTimerHandle ShieldDelayTimerHandle;
 	UPROPERTY()
 	FTimerHandle ShieldRegenTimer;
+	UPROPERTY()
+	FTimerHandle ShieldMatTimer;
+	UPROPERTY()
+	float LastDamagedTime = -1;
 	
 public:
 	UFUNCTION(BlueprintCallable)

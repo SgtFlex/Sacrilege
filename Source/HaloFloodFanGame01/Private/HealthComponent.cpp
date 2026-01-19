@@ -21,6 +21,7 @@ UHealthComponent::UHealthComponent()
 	ShieldAudioComponent = CreateDefaultSubobject<UAudioComponent>("AudioComp");
 	
 	// ...
+	
 }
 
 void UHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -37,6 +38,7 @@ void UHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (ShieldMat) ShieldMatInstance = UMaterialInstanceDynamic::Create(ShieldMat, this);
 	MeshComp = Cast<UMeshComponent>(GetOwner()->GetComponentByClass(UMeshComponent::StaticClass()));
 	ShieldAudioComponent->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
 	if (ShieldAttenuationSettings)
@@ -50,6 +52,12 @@ void UHealthComponent::BeginPlay()
 void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (LastDamagedTime + 0.5f > GetWorld()->GetTimeSeconds())
+	{
+		float TimeAlpha = (GetWorld()->GetTimeSeconds() - LastDamagedTime + 0.5)/(LastDamagedTime + 0.5); //Should start at 0 then go to 1
+		ShieldMatInstance->SetScalarParameterValue("Intensity", FMath::Lerp(0, 100, (1-(Shields/MaxShields)) - TimeAlpha));
+	}
 
 	// ...
 }
@@ -105,7 +113,10 @@ void UHealthComponent::Multi_TakeDamage_Implementation(float Damage, FVector For
 	}
 	if (Shields > 0) {
 		PlayShieldFX(true);
+		LastDamagedTime = GetWorld()->GetTimeSeconds();
+		
 		//@TODO there should not be any casting required
+		
 		if (ShieldHitFX) UNiagaraFunctionLibrary::SpawnSystemAttached(ShieldHitFX, Cast<ACharacter>(GetOwner())->GetMesh(),
 		NAME_None, HitLocation, (Force*-1).Rotation(), EAttachLocation::KeepWorldPosition, true);
 	}
@@ -281,11 +292,18 @@ void UHealthComponent::PlayShieldFX(bool Show)
 {
 	if (MeshComp)
 	{
-		if (Show && ShieldMat)
-			MeshComp->SetOverlayMaterial(ShieldMat);
+		if (Show && ShieldMatInstance)
+		{
+			MeshComp->SetOverlayMaterial(ShieldMatInstance);
+			ShieldMatInstance->SetScalarParameterValue("Inflate", FMath::Lerp(3, 5, 1-(Shields/MaxShields)));
+			FTimerDelegate TimerDelegate;
+			TimerDelegate.BindUFunction(this, FName("PlayShieldFX"), false);
+			GetOwner()->GetWorldTimerManager().SetTimer(ShieldMatTimer, TimerDelegate, 0.5, false);			
+		}
 		else
+		{
 			MeshComp->SetOverlayMaterial(nullptr);
+		}
 	}
-	
 }
 
