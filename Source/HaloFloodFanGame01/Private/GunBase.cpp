@@ -376,11 +376,13 @@ bool AGunBase::ScopeIn_Implementation()
 void AGunBase::ScopeOut_Implementation()
 {
 	if (!ScopeActive) return;
+	
+	ScopeOverlay->RemoveFromParent();
+	//PlayerChar->GetFirstPersonCameraComponent()->SetFieldOfView(90);
+	ScopeActive = false;
+	
 	if (CharacterOwner)
 	{
-		ScopeOverlay->RemoveFromParent();
-		//PlayerChar->GetFirstPersonCameraComponent()->SetFieldOfView(90);
-		ScopeActive = false;
 		CharacterOwner->ScopeSensitivityMultiplier = 1;
 		if (ScopeOutSFX) UGameplayStatics::PlaySound2D(GetWorld(), ScopeOutSFX);
 	}
