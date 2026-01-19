@@ -21,7 +21,6 @@ UHealthComponent::UHealthComponent()
 	ShieldAudioComponent = CreateDefaultSubobject<UAudioComponent>("AudioComp");
 	
 	// ...
-	
 }
 
 void UHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -53,13 +52,12 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (LastDamagedTime + 0.5f > GetWorld()->GetTimeSeconds())
+	if (ShieldMatInstance && LastDamagedTime + ShieldMatDuration > GetWorld()->GetTimeSeconds())
 	{
-		float TimeAlpha = (GetWorld()->GetTimeSeconds() - LastDamagedTime + 0.5)/(LastDamagedTime + 0.5); //Should start at 0 then go to 1
-		ShieldMatInstance->SetScalarParameterValue("Intensity", FMath::Lerp(0, 100, (1-(Shields/MaxShields)) - TimeAlpha));
+		
+		const float DamageTimeAlpha = (ShieldMatDuration - (GetWorld()->GetTimeSeconds() - LastDamagedTime))/ShieldMatDuration;
+		ShieldMatInstance->SetScalarParameterValue("Intensity", FMath::Lerp(0, 100, (1-(Shields/MaxShields)) * DamageTimeAlpha));
 	}
-
-	// ...
 }
 
 void UHealthComponent::TakeDamage_Implementation(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser, bool bIgnoreShields, bool bIgnoreHealthArmor, bool bIgnoreShieldArmor)
@@ -93,7 +91,7 @@ void UHealthComponent::Multi_TakeDamage_Implementation(float Damage, FVector For
 	bool bIgnoreShieldArmor)
 {
 	if (!IsAlive()) return;
-	
+	LastDamagedTime = GetWorld()->GetTimeSeconds();
 	if (MaxShields > 0)
 	{
 		// if (Shields <= 0)
@@ -113,11 +111,8 @@ void UHealthComponent::Multi_TakeDamage_Implementation(float Damage, FVector For
 	}
 	if (Shields > 0) {
 		PlayShieldFX(true);
-		LastDamagedTime = GetWorld()->GetTimeSeconds();
 		
-		//@TODO there should not be any casting required
-		
-		if (ShieldHitFX) UNiagaraFunctionLibrary::SpawnSystemAttached(ShieldHitFX, Cast<ACharacter>(GetOwner())->GetMesh(),
+		if (ShieldHitFX && MeshComp) UNiagaraFunctionLibrary::SpawnSystemAttached(ShieldHitFX, MeshComp,
 		NAME_None, HitLocation, (Force*-1).Rotation(), EAttachLocation::KeepWorldPosition, true);
 	}
 	OnHealthUpdate.Broadcast(this);
@@ -242,7 +237,7 @@ void UHealthComponent::SetShieldRegenRatePerSecond(float NewShieldRegenRatePerSe
 void UHealthComponent::BreakShields_Implementation()
 {
 	PlayShieldFX(false);
-	if (ShieldBreakFX) UNiagaraFunctionLibrary::SpawnSystemAttached(ShieldBreakFX, Cast<ACharacter>(GetOwner())->GetMesh(),
+	if (ShieldBreakFX && MeshComp) UNiagaraFunctionLibrary::SpawnSystemAttached(ShieldBreakFX, MeshComp,
 		NAME_None, FVector(0,0,0), FRotator(0,0,0),EAttachLocation::SnapToTarget, true);
 	if (ShieldBreakSFX)
 	{
@@ -260,6 +255,8 @@ void UHealthComponent::StartShieldRegen()
 		ShieldAudioComponent->SetSound(ShieldStartRegenSFX);
 		ShieldAudioComponent->Play(ShieldStartRegenSFX->GetDuration() * Shields/MaxShields);
 	}
+	if (ShieldRegenVFX && MeshComp) if (ShieldBreakFX) UNiagaraFunctionLibrary::SpawnSystemAttached(ShieldRegenVFX, MeshComp,
+		NAME_None, FVector(0,0,0), FRotator(0,0,0),EAttachLocation::SnapToTarget, true);
 	GetOwner()->GetWorldTimerManager().SetTimer(ShieldRegenTimer, this, &UHealthComponent::RegenShields, ShieldRegenTickRate, true);
 }
 
@@ -269,11 +266,11 @@ void UHealthComponent::RegenShields()
 	SetShields(FMath::Min(MaxShields, Shields + ShieldRegenAmount));
 	if (Shields >= MaxShields)
 	{
-		PlayShieldFX(false);
+		//PlayShieldFX(false);
 		StopShieldRegen();
 	} else
 	{
-		PlayShieldFX(true);
+		//PlayShieldFX(true);
 	};
 	OnHealthUpdate.Broadcast(this);
 }
@@ -295,10 +292,11 @@ void UHealthComponent::PlayShieldFX(bool Show)
 		if (Show && ShieldMatInstance)
 		{
 			MeshComp->SetOverlayMaterial(ShieldMatInstance);
-			ShieldMatInstance->SetScalarParameterValue("Inflate", FMath::Lerp(3, 5, 1-(Shields/MaxShields)));
+			ShieldMatInstance->SetScalarParameterValue("Inflate", FMath::Lerp(3, 10, 1-(Shields/MaxShields)));
+			ShieldMatInstance->SetScalarParameterValue("Intensity", FMath::Lerp(0, 100, (1-(Shields/MaxShields))));
 			FTimerDelegate TimerDelegate;
 			TimerDelegate.BindUFunction(this, FName("PlayShieldFX"), false);
-			GetOwner()->GetWorldTimerManager().SetTimer(ShieldMatTimer, TimerDelegate, 0.5, false);			
+			GetOwner()->GetWorldTimerManager().SetTimer(ShieldMatTimer, TimerDelegate, ShieldMatDuration, false);			
 		}
 		else
 		{

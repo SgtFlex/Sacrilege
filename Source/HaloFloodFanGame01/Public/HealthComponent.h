@@ -22,7 +22,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnShieldsReplicated, float, Shields
 
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class HALOFLOODFANGAME01_API UHealthComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -93,6 +93,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category="Unit Information|Shields", meta = (DisplayPriority=1))
 	float ShieldRegenRatePerSecond = 30;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UNiagaraSystem* ShieldRegenVFX;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	USoundBase* ShieldBreakSFX;
@@ -168,6 +171,8 @@ private:
 	FTimerHandle ShieldMatTimer;
 	UPROPERTY()
 	float LastDamagedTime = -1;
+	UPROPERTY(EditDefaultsOnly)
+	float ShieldMatDuration = 0.5f;
 	
 public:
 	UFUNCTION(BlueprintCallable)
