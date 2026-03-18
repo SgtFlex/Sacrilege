@@ -7,6 +7,9 @@
 #include "AlertState.h"
 #include "SmartObject.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCommandStarted);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCommandComplete);
+
 class UBehaviorTree;
 UCLASS()
 class HALOFLOODFANGAME01_API ASmartObject : public AActor
@@ -31,4 +34,13 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TEnumAsByte<EAlertState> AlertState;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ASmartObject* NextSmartObject;
+
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+	FOnCommandStarted OnCommandStarted;
+
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+	FOnCommandComplete OnCommandComplete;
 };
