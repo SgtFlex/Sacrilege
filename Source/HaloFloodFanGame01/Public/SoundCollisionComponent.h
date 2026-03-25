@@ -7,6 +7,8 @@
 #include "SoundCollisionComponent.generated.h"
 
 
+class UNiagaraSystem;
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class HALOFLOODFANGAME01_API USoundCollisionComponent : public UActorComponent
 {
@@ -33,6 +35,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	USoundBase* HitSound;
+	
+	UPROPERTY(EditAnywhere)
+    UNiagaraSystem* CollidePFX;
 
 	UPROPERTY()
 	UPrimitiveComponent* PrimitiveComponent;

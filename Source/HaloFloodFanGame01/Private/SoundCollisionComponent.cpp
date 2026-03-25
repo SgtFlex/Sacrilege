@@ -3,6 +3,7 @@
 
 #include "SoundCollisionComponent.h"
 
+#include "NiagaraFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values for this component's properties
@@ -51,6 +52,7 @@ void USoundCollisionComponent::OnMyHit(UPrimitiveComponent* HitComponent, AActor
 		//UE_LOG(LogTemp, Warning, TEXT("%f"), AngleDifference);
 		if (HitComponent->GetComponentVelocity().Length() > 150 && AngleDifference < 85) {
 			if (HitSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, Hit.ImpactPoint, FMath::Max(1, HitComponent->GetComponentVelocity().Length() / 250));
+			if (CollidePFX) UNiagaraFunctionLibrary::SpawnSystemAttached(CollidePFX,HitComponent, NAME_None, Hit.ImpactPoint, Hit.ImpactNormal.Rotation(), EAttachLocation::KeepWorldPosition, true);
 			//if (ImpactShake) UGameplayStatics::PlayWorldCameraShake(GetWorld(), ImpactShake, GetOwner()->GetActorLocation(), 0, 500);
 		}
 	}
