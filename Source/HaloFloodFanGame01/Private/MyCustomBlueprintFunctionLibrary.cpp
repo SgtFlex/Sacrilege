@@ -29,7 +29,7 @@ void UMyCustomBlueprintFunctionLibrary::FireHitScanBullet(FHitResult& Hit, TArra
 
 
 	FHitResult HitThin;
-	UKismetSystemLibrary::LineTraceSingle(World, StartLocation, StartLocation + (Direction*Range), TraceTypeQuery1, true, ActorsToIgnore, EDrawDebugTrace::None, HitThin, true);
+	UKismetSystemLibrary::LineTraceSingle(World, StartLocation, StartLocation + (Direction*Range), UEngineTypes::ConvertToTraceType(ECC_Visibility), true, ActorsToIgnore, EDrawDebugTrace::None, HitThin, true);
 	if (HitThin.bBlockingHit && HitThin.GetActor()->Implements<UDamageableInterface>())
 	{
 		Hit = HitThin;

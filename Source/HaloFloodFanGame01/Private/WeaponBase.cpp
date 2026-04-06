@@ -70,6 +70,7 @@ void AWeaponBase::GetAim(FVector& AimLocation, FVector& AimDirection)
 	{
 		FRotator Rot;
 		CharacterOwner->GetActorEyesViewPoint(AimLocation, Rot);
+
 		
 		AimDirection = CharacterOwner->GetControlRotation().Vector();
 	} else

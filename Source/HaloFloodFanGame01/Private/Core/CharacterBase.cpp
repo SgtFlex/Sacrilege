@@ -538,7 +538,7 @@ void ACharacterBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 		const float DotProduct = FMath::Abs(Hit.Normal.Dot(ForceVector.GetSafeNormal()));
 		
 		//const float OtherCompMass = OtherComp->GetMass();
-		UE_LOG(LogTemp, Warning, TEXT("Dot: %f"), DotProduct);
+		//UE_LOG(LogTemp, Warning, TEXT("Dot: %f"), DotProduct);
 		//const float DamageCalculation = FMath::Pow(VelocityDifference, 1.0f / 3.0f) * (OtherCompMass/300);
 		const float DamageCalculation = (VelocityDifference/25) * DotProduct;
 		if (DamageCalculation > 5)
@@ -1217,7 +1217,7 @@ void ACharacterBase::ServerSetCurrentInteractable_Implementation()
 	TArray<AActor*> ActorsToIgnore;
 	ActorsToIgnore.Add(this);
 	if (IsPlayerControlled())
-	UKismetSystemLibrary::SphereTraceSingle(GetWorld(), FirstPersonCameraComponent->GetComponentLocation(), FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector()*10000.0f, 20, UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Visibility), false, ActorsToIgnore, EDrawDebugTrace::ForOneFrame, PlayerAim, true, FLinearColor::Red, FLinearColor::Green, 5);
+	UKismetSystemLibrary::SphereTraceSingle(GetWorld(), FirstPersonCameraComponent->GetComponentLocation(), FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector()*10000.0f, 20, UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Visibility), false, ActorsToIgnore, EDrawDebugTrace::None, PlayerAim, true, FLinearColor::Red, FLinearColor::Green, 5);
 	AActor* FoundActor = nullptr;
 
 
