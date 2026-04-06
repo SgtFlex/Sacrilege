@@ -19,9 +19,8 @@ UHealthComponent::UHealthComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
+	//We probably should move SFX and VFX off of this component and into the actual classes that implement them.
 	ShieldAudioComponent = CreateDefaultSubobject<UAudioComponent>("AudioComp");
-	
-	// ...
 }
 
 void UHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

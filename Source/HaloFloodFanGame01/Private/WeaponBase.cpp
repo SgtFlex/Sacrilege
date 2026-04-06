@@ -71,7 +71,7 @@ void AWeaponBase::GetAim(FVector& AimLocation, FVector& AimDirection)
 		FRotator Rot;
 		CharacterOwner->GetActorEyesViewPoint(AimLocation, Rot);
 		
-		AimDirection = CharacterOwner->GetBaseAimRotation().Vector();
+		AimDirection = CharacterOwner->GetControlRotation().Vector();
 	} else
 	{
 		AimLocation = Mesh->GetSocketLocation("Muzzle");

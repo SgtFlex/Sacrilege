@@ -502,7 +502,7 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnInteractableChanged OnInteractableChanged;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class UUserWidget> PlayerHUDClass;
 
 	UPROPERTY(BlueprintReadWrite)

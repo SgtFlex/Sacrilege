@@ -1217,7 +1217,7 @@ void ACharacterBase::ServerSetCurrentInteractable_Implementation()
 	TArray<AActor*> ActorsToIgnore;
 	ActorsToIgnore.Add(this);
 	if (IsPlayerControlled())
-	UKismetSystemLibrary::SphereTraceSingle(GetWorld(), FirstPersonCameraComponent->GetComponentLocation(), FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector()*10000.0f, 20, UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Visibility), false, ActorsToIgnore, EDrawDebugTrace::None, PlayerAim, true, FLinearColor::Red, FLinearColor::Green, 5);
+	UKismetSystemLibrary::SphereTraceSingle(GetWorld(), FirstPersonCameraComponent->GetComponentLocation(), FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector()*10000.0f, 20, UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Visibility), false, ActorsToIgnore, EDrawDebugTrace::ForOneFrame, PlayerAim, true, FLinearColor::Red, FLinearColor::Green, 5);
 	AActor* FoundActor = nullptr;
 
 
