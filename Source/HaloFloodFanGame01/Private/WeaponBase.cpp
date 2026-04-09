@@ -16,7 +16,6 @@ AWeaponBase::AWeaponBase()
 	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
 	Mesh->SetSimulatePhysics(true);
 	RootComponent = Mesh;
-
 	bReplicates = true;
 
 }

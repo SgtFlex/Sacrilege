@@ -15,7 +15,7 @@ class UImage;
 class UProjectileMovementComponent;
 class UPickupComponent;
 class UNiagaraSystem;
-UCLASS()
+UCLASS(Abstract)
 class HALOFLOODFANGAME01_API AGrenadeBase : public AActor, public IPickupInterface, public IDamageableInterface, public IGameplayTagAssetInterface
 {
 	GENERATED_BODY()

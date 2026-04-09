@@ -80,7 +80,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnKilled, ACharacterBase*, Chara
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrenadeInvetoryUpdated, TArray<FGrenadeStruct>&, UpdatedGrenadeInventory);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGrenadeTypeSwitched, TSubclassOf<AGrenadeBase>, GrenadeClass, int, Index);
 
-UCLASS()
+UCLASS(Abstract)
 class HALOFLOODFANGAME01_API ACharacterBase : public ACharacter, public IDamageableInterface, public IGameplayTagAssetInterface, public IPhysicsInterface
 {
 	GENERATED_BODY()

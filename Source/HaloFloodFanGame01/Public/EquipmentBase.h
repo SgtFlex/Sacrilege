@@ -7,7 +7,7 @@
 #include "GameFramework/Actor.h"
 #include "EquipmentBase.generated.h"
 
-UCLASS()
+UCLASS(Abstract)
 class HALOFLOODFANGAME01_API AEquipmentBase : public AActor
 {
 	GENERATED_BODY()

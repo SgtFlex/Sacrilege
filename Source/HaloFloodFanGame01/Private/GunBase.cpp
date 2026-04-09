@@ -210,7 +210,7 @@ AActor* AGunBase::SpawnProjectileInDirection_Implementation(TSubclassOf<AActor> 
 	{
 		EventInstigator = CharacterOwner->GetController();
 	}
-	TArray<AActor*> ActorsToIgnore;
+	//TArray<AActor*> ActorsToIgnore;
 	return BulletFiringComponent->FireProjectile(TSubclassOf<AProjectileBase>(ProjToSpawn), Direction, this, EventInstigator, ActorsToIgnore);
 }
 
@@ -315,9 +315,9 @@ void AGunBase::SpawnBullet_Implementation()
 			}
 			EyeRotation = AimDirection.Rotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
 			
-			TArray<AActor*> ActorsToIgnore;
 			ActorsToIgnore.Add(this);
 			ActorsToIgnore.Add(GetOwner());
+			
 			BulletFiringComponent->FireBullet(Hit, AimLocation,EyeRotation.Vector(), ActorsToIgnore, this, EventInstigator);
 			SpawnTrailFX(Hit);
 
@@ -342,7 +342,7 @@ AActor* AGunBase::SpawnProjectile_Implementation(TSubclassOf<AActor> ProjToSpawn
 	{
 		EventInstigator = CharacterOwner->GetController();
 	}
-	TArray<AActor*> ActorsToIgnore;
+	//TArray<AActor*> ActorsToIgnore;
 	return BulletFiringComponent->FireProjectile(TSubclassOf<AProjectileBase>(ProjToSpawn), AimDirection, this, EventInstigator, ActorsToIgnore);
 	//return GetWorld()->SpawnActor(ProjToSpawn, &Location, &Rotation, ActorSpawnParameters);
 }

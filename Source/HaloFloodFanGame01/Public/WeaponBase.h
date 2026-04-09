@@ -9,7 +9,7 @@
 
 class ACharacterBase;
 
-UCLASS()
+UCLASS(Abstract)
 class HALOFLOODFANGAME01_API AWeaponBase : public AActor, public IInteractableInterface
 {
 	GENERATED_BODY()
@@ -97,6 +97,9 @@ public:
 
 	UPROPERTY(Replicated, BlueprintReadOnly)
 	ACharacterBase* CharacterOwner;
+
+	UPROPERTY(BlueprintReadWrite)
+	TArray<AActor*> ActorsToIgnore;
 private:
 
 protected:

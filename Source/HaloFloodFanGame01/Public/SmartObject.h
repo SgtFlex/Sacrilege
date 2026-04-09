@@ -11,7 +11,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCommandStarted);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCommandComplete);
 
 class UBehaviorTree;
-UCLASS()
+UCLASS(Abstract)
 class HALOFLOODFANGAME01_API ASmartObject : public AActor
 {
 	GENERATED_BODY()

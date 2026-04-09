@@ -8,7 +8,7 @@
 
 class ASmartObject;
 class UCapsuleComponent;
-UCLASS()
+UCLASS(Abstract)
 class HALOFLOODFANGAME01_API APawnBase : public APawn
 {
 	GENERATED_BODY()
