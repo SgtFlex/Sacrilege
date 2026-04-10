@@ -21,6 +21,13 @@ enum EDamageState : uint8
 	Destroyed = 3,
 };
 
+UENUM(BlueprintType)
+enum EAnimType {
+	Turret,
+	Driver,
+	Passenger,
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDamageStateChanged, EDamageState, NewDamageState);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEntered);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnExited);
@@ -180,6 +187,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	float AgentZOffset = 200.0f;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	TEnumAsByte<EAnimType> AnimType = EAnimType::Driver;
 
 	
 	//Delegates

@@ -10,6 +10,7 @@
 #include "GameFramework/Character.h"
 #include "CharacterBase.generated.h"
 
+class AVehicleBase;
 class AGunBase;
 class AEquipmentBase;
 class APlayerControllerBase;
@@ -545,6 +546,12 @@ public:
 	FGameplayTagContainer GameplayTags;
 
 	float ScopeSensitivityMultiplier = 1;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	bool bIsInVehicle = false;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	AVehicleBase* OccupiedVehicle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TMap<FName, float> HitBoxDamageMultipliers = {

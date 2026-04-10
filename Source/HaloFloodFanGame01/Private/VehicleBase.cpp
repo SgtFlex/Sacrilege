@@ -178,6 +178,8 @@ void AVehicleBase::SetPilotToPossess_Implementation(ACharacterBase* NewPilot)
 	Pilot = NewPilot;
 	PilotController = Pilot->GetController();
 	SetOwner(PilotController);
+	Pilot->bIsInVehicle = true;
+	Pilot->OccupiedVehicle = this;
 	AttachPilot();
 	Pilot->OnKilled.AddUniqueDynamic(this, &AVehicleBase::OnPilotKilled);
 	PilotController->UnPossess();
@@ -227,7 +229,8 @@ void AVehicleBase::ResetPilot_Implementation()
 		if (Pilot->GetHealthComponent()->IsAlive())
 			PilotController->Possess(Pilot);
 	}
-	
+	Pilot->bIsInVehicle = false;
+	Pilot->OccupiedVehicle = nullptr;
 	Pilot->OnKilled.RemoveDynamic(this, &AVehicleBase::OnPilotKilled);
 	DetachPilot();
 	SetOwner(nullptr);
