@@ -191,6 +191,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TEnumAsByte<EAnimType> AnimType = EAnimType::Driver;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	FVector LeftHandIKLocation;
+
 	
 	//Delegates
 	UPROPERTY(BlueprintAssignable)

@@ -6,6 +6,7 @@
 #include "AIControllerBase.h"
 #include "GrenadeWidget.h"
 #include "HealthComponent.h"
+#include "WeaponBase.h"
 #include "Components/CapsuleComponent.h"
 #include "Core/CharacterBase.h"
 #include "Engine/DamageEvents.h"
@@ -199,7 +200,10 @@ void AVehicleBase::AttachPilot_Implementation()
 		Pilot->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 		Pilot->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		Pilot->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Vehicle, ECR_Ignore);
-		Pilot->AttachToComponent(GetVehicleMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("Seat"));
+		FName Socket = NAME_None;
+		if (GetVehicleMesh()->DoesSocketExist("Seat")) Socket = "Seat";
+		if (Pilot->EquippedWeapon) Pilot->EquippedWeapon->SetActorHiddenInGame(true);
+		Pilot->AttachToComponent(GetVehicleMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, Socket);
 	}
 }
 
@@ -248,6 +252,8 @@ void AVehicleBase::DetachPilot_Implementation()
 		Pilot->SetActorTransform(ExitPoint->GetComponentTransform(), false);
 		Pilot->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		Pilot->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Vehicle, ECR_Block);
+		if (Pilot->EquippedWeapon) Pilot->EquippedWeapon->SetActorHiddenInGame(false);
+
 	} else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Invalid pilot for %s"), *GetName());
