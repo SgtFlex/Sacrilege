@@ -500,6 +500,7 @@ void ACharacterBase::CreateRagdollCorpse() const
 {
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetMesh()->SetSimulatePhysics(true);
+	//GetMesh()->SetComponentTickEnabled(false);
 }
 
 

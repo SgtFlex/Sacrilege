@@ -20,7 +20,7 @@ void UWorldCleanupManager::ManageCorpse_Implementation(AActor* Actor)
 	{
 		if (IsValid(Ragdolls[0]))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Cleaning up ragdoll %s"), *Ragdolls[0]->GetName());
+			UE_LOG(LogTemp, Warning, TEXT("Cleaning up corpse %s"), *Ragdolls[0]->GetName());
 			Ragdolls[0]->OnDestroyed.RemoveDynamic(this, &UWorldCleanupManager::StopManagingCorpse);
 			Ragdolls[0]->Destroy();
 		}
@@ -101,7 +101,6 @@ void UWorldCleanupManager::StopManagingActor_Implementation(const FString& Categ
 void UWorldCleanupManager::ManageWeapon_Implementation(AActor* Weapon)
 {
 	Weapons.Add(Weapon);
-	UE_LOG(LogTemp, Warning, TEXT("Managing weapon %s"), *Weapon->GetName());
 	Weapon->OnDestroyed.AddDynamic(this, &UWorldCleanupManager::StopManagingWeapon);
 	if (Weapons.Num() > MaxWeapons)
 	{
@@ -117,7 +116,6 @@ void UWorldCleanupManager::ManageWeapon_Implementation(AActor* Weapon)
 
 void UWorldCleanupManager::StopManagingWeapon_Implementation(AActor* Weapon)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Stopping Management for weapon %s"), *Weapon->GetName());
 	Weapon->OnDestroyed.RemoveDynamic(this, &UWorldCleanupManager::StopManagingWeapon);
 	if (Weapons.Contains(Weapon))
 	{
@@ -128,7 +126,6 @@ void UWorldCleanupManager::StopManagingWeapon_Implementation(AActor* Weapon)
 void UWorldCleanupManager::ManageGrenade_Implementation(AActor* Grenade)
 {
 	Grenades.Add(Grenade);
-	UE_LOG(LogTemp, Warning, TEXT("Managing grenade %s"), *Grenade->GetName());
 	Grenade->OnDestroyed.AddDynamic(this, &UWorldCleanupManager::StopManagingGrenade);
 	if (Grenades.Num() > MaxGrenades)
 	{
@@ -144,7 +141,6 @@ void UWorldCleanupManager::ManageGrenade_Implementation(AActor* Grenade)
 
 void UWorldCleanupManager::StopManagingGrenade_Implementation(AActor* Grenade)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Stopping Management for grenade %s"), *Grenade->GetName());
 	Grenade->OnDestroyed.RemoveDynamic(this, &UWorldCleanupManager::StopManagingGrenade);
 	if (Grenades.Contains(Grenade))
 	{

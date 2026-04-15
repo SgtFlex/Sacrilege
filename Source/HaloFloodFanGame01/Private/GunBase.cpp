@@ -22,6 +22,7 @@ AGunBase::AGunBase()
 {
 	BulletFiringComponent = CreateDefaultSubobject<UBulletFiringComponent>("BulletFiringComponent");
 	BulletFiringComponent->SetupAttachment(Mesh, "Muzzle");
+	
 }
 
 // Called when the game starts or when spawned
@@ -44,6 +45,7 @@ void AGunBase::Pickup(ACharacterBase* Char)
 	Super::Pickup(Char);
 	SetOwner(Char);
 	CharacterOwner = Char;
+	
 	GetWorld()->GetSubsystem<UWorldCleanupManager>()->StopManagingWeapon(this);
 	//Cast<AHaloGameState>(GetWorld()->GetGameState())->StopManagingWeapon(this);
 }

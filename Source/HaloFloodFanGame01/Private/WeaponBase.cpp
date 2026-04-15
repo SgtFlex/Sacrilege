@@ -17,6 +17,8 @@ AWeaponBase::AWeaponBase()
 	Mesh->SetSimulatePhysics(true);
 	RootComponent = Mesh;
 	bReplicates = true;
+	Mesh->SetComponentTickEnabled(false);
+	Mesh->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
 
 }
 
@@ -39,6 +41,7 @@ void AWeaponBase::Pickup(ACharacterBase* Char)
 	SetOwner(Char);
 	CharacterOwner = Char;
 	GetWorld()->GetSubsystem<UWorldCleanupManager>()->StopManagingWeapon(this);
+	Mesh->SetComponentTickEnabled(true);
 }
 
 void AWeaponBase::Equip()
@@ -55,6 +58,7 @@ void AWeaponBase::Drop()
 	SetOwner(nullptr);
 	CharacterOwner = nullptr;
 	GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageWeapon(this);
+	Mesh->SetComponentTickEnabled(false);
 }
 
 void AWeaponBase::Holster()

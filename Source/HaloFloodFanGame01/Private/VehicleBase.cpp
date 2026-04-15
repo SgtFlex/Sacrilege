@@ -67,6 +67,7 @@ void AVehicleBase::OnHealthUpdated(UHealthComponent* HealthComp)
 void AVehicleBase::OnHealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName,
 	AController* EventInstigator, AActor* DamageCauser)
 {
+	if (Pilot) Pilot->CustomTakeDamage(5000, FVector(0,0,0), EventInstigator, DamageCauser);
 	SetIsDestroyed(true);
 }
 

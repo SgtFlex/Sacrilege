@@ -9,6 +9,17 @@
 
 class ACharacterBase;
 
+UENUM(BlueprintType)
+enum EHoldType {
+	Pistol,
+	Rifle,
+	Launcher,
+	Underhand,
+	Sword,
+	Hammer,
+	Custom
+};
+
 UCLASS(Abstract)
 class HALOFLOODFANGAME01_API AWeaponBase : public AActor, public IInteractableInterface
 {
@@ -100,6 +111,10 @@ public:
 
 	UPROPERTY(BlueprintReadWrite)
 	TArray<AActor*> ActorsToIgnore;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	TEnumAsByte<EHoldType> HoldType = EHoldType::Pistol;
+	
 private:
 
 protected:

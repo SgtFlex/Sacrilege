@@ -60,10 +60,10 @@ struct FLoadoutStruct
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<AGunBase> PrimaryWeaponClass;
+	TSubclassOf<AWeaponBase> PrimaryWeaponClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<AGunBase> SecondaryWeaponClass;
+	TSubclassOf<AWeaponBase> SecondaryWeaponClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<AEquipmentBase> EquipmentClass;
