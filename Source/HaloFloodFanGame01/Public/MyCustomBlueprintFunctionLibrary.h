@@ -18,14 +18,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 	static void Ignite(UPrimitiveComponent* Component, float DamagePerSecond, float Duration);
 
-	UFUNCTION(BlueprintCallable, meta=(WorldContext="WorldContextObject"))
-	static void FireHitScanBullet(FHitResult& Hit, TArray<AActor*>& ActorsToIgnore, FVector StartLocation = FVector(0,0,0), FVector Direction = FVector(0,0,0), float Range = 5000, UCurveFloat* FalloffCurve = nullptr, float Damage = 5, float Force = 100, AActor* DamageCauser = nullptr, AController* EventInstigator = nullptr, float MagnetizeRadius = 20);
+	UFUNCTION(BlueprintCallable, meta=(WorldContext="WorldContextObject", AutoCreateRefTerm = "ActorsToIgnore"))
+	static void FireHitScanBullet(FHitResult& Hit, const TArray<AActor*>& ActorsToIgnore, FVector StartLocation = FVector(0,0,0), FVector Direction = FVector(0,0,0), float Range = 5000, UCurveFloat* FalloffCurve = nullptr, float Damage = 5, float Force = 100, AActor* DamageCauser = nullptr, AController* EventInstigator = nullptr, float MagnetizeRadius = 20);
 
 	UFUNCTION(BlueprintCallable, meta=(WorldContext="WorldContextObject"))
 	static AActor* FireProjectile(FVector StartLocation, FVector Direction, TSubclassOf<AActor> ActorToSpawn);
 
-	UFUNCTION(BlueprintCallable, meta=(WorldContext="WorldContextObject"))
-	static void FireExplosion(TArray<AActor*>& ActorsToIgnore, FVector Location = FVector(0,0,0), float BaseDamage = 50, float MinimumDamage = 10, float OuterRadius = 500, float InnerRadius = 100, float DamageFalloff = 0, float Force = 100, AActor* DamageCauser = nullptr, AController* EventInstigator = nullptr);
+	UFUNCTION(BlueprintCallable, meta=(WorldContext="WorldContextObject", AutoCreateRefTerm = "ActorsToIgnore"))
+	static void FireExplosion(TArray<AActor*> ActorsToIgnore, FVector Location = FVector(0,0,0), float BaseDamage = 50, float MinimumDamage = 10, float OuterRadius = 500, float InnerRadius = 100, float DamageFalloff = 0, float Force = 100, AActor* DamageCauser = nullptr, AController* EventInstigator = nullptr);
 	
 	UFUNCTION(BlueprintCallable, meta=(WorldContext="WorldContextObject"))
     static void FireExplosionWithCosmetics(TArray<AActor*>& ActorsToIgnore, FVector Location = FVector(0,0,0), float BaseDamage = 50, float MinimumDamage = 10, float OuterRadius = 500, float InnerRadius = 100, float DamageFalloff = 0, float Force = 100, AActor* DamageCauser = nullptr, AController* EventInstigator = nullptr, UNiagaraSystem* Particles = nullptr, USoundBase* Sound = nullptr, TSubclassOf<UCameraShakeBase> CameraShake = nullptr, UForceFeedbackEffect* ForceFeedbackEffect = nullptr);

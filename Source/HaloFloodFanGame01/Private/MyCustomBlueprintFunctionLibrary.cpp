@@ -23,7 +23,7 @@ void UMyCustomBlueprintFunctionLibrary::Ignite(UPrimitiveComponent* Component, f
 	
 }
 
-void UMyCustomBlueprintFunctionLibrary::FireHitScanBullet(FHitResult& Hit, TArray<AActor*>& ActorsToIgnore, FVector StartLocation, FVector Direction, float Range, UCurveFloat* FalloffCurve, float Damage, float Force, AActor* DamageCauser, AController* EventInstigator, float MagnetizeRadius)
+void UMyCustomBlueprintFunctionLibrary::FireHitScanBullet(FHitResult& Hit, const TArray<AActor*>& ActorsToIgnore, FVector StartLocation, FVector Direction, float Range, UCurveFloat* FalloffCurve, float Damage, float Force, AActor* DamageCauser, AController* EventInstigator, float MagnetizeRadius)
 {
 	UWorld* World = GEngine->GameViewport->GetWorld();
 
@@ -80,7 +80,7 @@ AActor* UMyCustomBlueprintFunctionLibrary::FireProjectile(FVector StartLocation,
 }
 
 
-void UMyCustomBlueprintFunctionLibrary::FireExplosion(TArray<AActor*>& ActorsToIgnore, FVector Location, float BaseDamage, float MinimumDamage, float OuterRadius, float InnerRadius, float DamageFalloff, float Force, AActor* DamageCauser, AController* EventInstigator)
+void UMyCustomBlueprintFunctionLibrary::FireExplosion(TArray<AActor*> ActorsToIgnore, FVector Location, float BaseDamage, float MinimumDamage, float OuterRadius, float InnerRadius, float DamageFalloff, float Force, AActor* DamageCauser, AController* EventInstigator)
 {
 	UWorld* World = GEngine->GameViewport->GetWorld();
 
@@ -135,7 +135,7 @@ void UMyCustomBlueprintFunctionLibrary::FireExplosion(TArray<AActor*>& ActorsToI
 						if (PrimComponent->IsSimulatingPhysics() && PrimComponent->GetCollisionEnabled() ==
 							ECollisionEnabled::QueryAndPhysics)
 						{
-							PrimComponent->AddImpulse((Hit.ImpactPoint - Location).GetSafeNormal() * Force);
+							PrimComponent->AddImpulseAtLocation(((Hit.ImpactPoint - Location).GetSafeNormal() * Force), Hit.ImpactPoint);
 							//PrimComponent->AddImpulse((HitActor->GetActorLocation() - Location).GetSafeNormal() * FMath::Lerp(0, Force, (FVector::Distance(HitActor->GetActorLocation(), Location)) + InnerRadius));
 						}
 					}
