@@ -164,11 +164,14 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void Melee();
 
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void Lunge(AActor* Target);
+
 	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void SV_Melee();
 
-	UFUNCTION(BlueprintImplementableEvent)
-	void SlideMelee(AActor* Actor);
+	// UFUNCTION(BlueprintImplementableEvent)
+	// void SlideMelee(AActor* Actor);
 
 	UFUNCTION(BlueprintCallable)
 	virtual void MeleeActor(AActor* Actor);
@@ -666,13 +669,13 @@ protected:
 	UPROPERTY()
 	FTimerHandle PossessionDelay;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadWrite)
 	FVector StartMeleeLocation;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadWrite)
 	FVector EndMeleeLocation;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadWrite)
 	FRotator StartMeleeRotation;
 
 	UPROPERTY(BlueprintReadOnly)

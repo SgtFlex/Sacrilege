@@ -563,36 +563,36 @@ void ACharacterBase::SetSmartObject(ASmartObject* NewSmartObject)
 
 void ACharacterBase::MeleeActor(AActor* Actor)
 {
-	if (Actor->Implements<UDamageableInterface>())
-	{
-		const FVector Dir = (Actor->GetActorLocation() - GetActorLocation()).GetSafeNormal();
-		IDamageableInterface::Execute_CustomTakePointDamage(Actor, MeleeDamage, Dir, MeleeHit, MeleeForce, GetInstigatorController(), this);
-	}
-	UPrimitiveComponent* HitComp = MeleeHit.GetComponent();
-	if (HitComp && HitComp->IsSimulatingPhysics())
-	{
-		FVector ForceVector = (HitComp->GetComponentLocation() - GetActorLocation());
-		ForceVector.Normalize();
-		HitComp->AddImpulse(ForceVector*MeleeForce);
-	}
-	if (MeleeImpactFX.Contains(MeleeHit.PhysMaterial->SurfaceType))
-	{
-		if (TSubclassOf<ADecalActor> MeleeImpactClass = *MeleeImpactFX.Find(MeleeHit.PhysMaterial->SurfaceType))
-		{
-			const FVector Loc = MeleeHit.Location;
-			const FRotator Rot =  MeleeHit.ImpactNormal.Rotation() + FRotator(-90,0,0);
-			GetWorld()->SpawnActor(MeleeImpactClass, &Loc, &Rot);
-		}
-	}
+	// if (Actor->Implements<UDamageableInterface>())
+	// {
+	// 	const FVector Dir = (Actor->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+	// 	IDamageableInterface::Execute_CustomTakePointDamage(Actor, MeleeDamage, Dir, MeleeHit, MeleeForce, GetInstigatorController(), this);
+	// }
+	// UPrimitiveComponent* HitComp = MeleeHit.GetComponent();
+	// if (HitComp && HitComp->IsSimulatingPhysics())
+	// {
+	// 	FVector ForceVector = (HitComp->GetComponentLocation() - GetActorLocation());
+	// 	ForceVector.Normalize();
+	// 	HitComp->AddImpulse(ForceVector*MeleeForce);
+	// }
+	// if (MeleeImpactFX.Contains(MeleeHit.PhysMaterial->SurfaceType))
+	// {
+	// 	if (TSubclassOf<ADecalActor> MeleeImpactClass = *MeleeImpactFX.Find(MeleeHit.PhysMaterial->SurfaceType))
+	// 	{
+	// 		const FVector Loc = MeleeHit.Location;
+	// 		const FRotator Rot =  MeleeHit.ImpactNormal.Rotation() + FRotator(-90,0,0);
+	// 		GetWorld()->SpawnActor(MeleeImpactClass, &Loc, &Rot);
+	// 	}
+	// }
 }
 
 void ACharacterBase::MeleeUpdate(float Alpha)
 {
-	SetActorLocation(FMath::Lerp(StartMeleeLocation, EndMeleeLocation, Alpha));
-	if (Controller)
-	{
-		Controller->SetControlRotation(FMath::Lerp(StartMeleeRotation, (EndMeleeLocation - StartMeleeLocation).Rotation(), Alpha));
-	}
+	// SetActorLocation(FMath::Lerp(StartMeleeLocation, EndMeleeLocation, Alpha));
+	// if (Controller)
+	// {
+	// 	Controller->SetControlRotation(FMath::Lerp(StartMeleeRotation, (EndMeleeLocation - StartMeleeLocation).Rotation(), Alpha));
+	// }
 }
 
 
@@ -626,32 +626,35 @@ void ACharacterBase::SV_Melee_Implementation()
 
 void ACharacterBase::PlayerMelee_Implementation()
 {
-	if (GetWorld()->GetTimerManager().TimerExists(MeleeTimer)) return;
-	GetWorld()->GetTimerManager().SetTimer(MeleeTimer, 1, false);
-	MulticastPlayMeleeFX();
-	FVector TraceStart = GetFirstPersonCameraComponent()->GetComponentLocation();
-	FVector TraceEnd = GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*500;
-	FCollisionQueryParams CollisionParameters;
-	CollisionParameters.AddIgnoredActor(this);
-	CollisionParameters.AddIgnoredActor(GetAttachParentActor());
-	CollisionParameters.bReturnPhysicalMaterial = true;
-	GetWorld()->LineTraceSingleByChannel(MeleeHit, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParameters);
-	//DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor(255, 0, 0), false, 3);
-
-	if (MeleeHit.GetActor())
-	{
-		ACharacterBase* MeleeChar = Cast<ACharacterBase>(MeleeHit.GetActor());
-		if (MeleeChar && MeleeChar->GetHealthComponent()->IsAlive())
-		{
-			StartMeleeLocation = GetActorLocation();
-			StartMeleeRotation = GetController()->GetControlRotation();
-			EndMeleeLocation = MeleeHit.GetActor()->GetActorLocation();
-			SlideMelee(MeleeChar);
-		} else
-		{
-			MeleeActor(MeleeHit.GetActor());
-		}
-	}
+	EquippedWeapon->WeaponMelee();
+	// if (GetWorld()->GetTimerManager().TimerExists(MeleeTimer)) return;
+	// GetWorld()->GetTimerManager().SetTimer(MeleeTimer, 1, false);
+	// MulticastPlayMeleeFX();
+	// FVector TraceStart = GetFirstPersonCameraComponent()->GetComponentLocation();
+	// FVector TraceEnd = GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*500;
+	// FCollisionQueryParams CollisionParameters;
+	// CollisionParameters.AddIgnoredActor(this);
+	// CollisionParameters.AddIgnoredActor(GetAttachParentActor());
+	// CollisionParameters.bReturnPhysicalMaterial = true;
+	// GetWorld()->LineTraceSingleByChannel(MeleeHit, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParameters);
+	// //DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor(255, 0, 0), false, 3);
+	//
+	// if (MeleeHit.GetActor())
+	// {
+	// 	
+	// 	ACharacterBase* MeleeChar = Cast<ACharacterBase>(MeleeHit.GetActor());
+	// 	if (MeleeChar && MeleeChar->GetHealthComponent()->IsAlive())
+	// 	{
+	// 		Lunge(MeleeHit.GetActor());
+	// 		// StartMeleeLocation = GetActorLocation();
+	// 		// StartMeleeRotation = GetController()->GetControlRotation();
+	// 		// EndMeleeLocation = MeleeHit.GetActor()->GetActorLocation();
+	// 		// SlideMelee(MeleeChar);
+	// 	} else
+	// 	{
+	// 		MeleeActor(MeleeHit.GetActor());
+	// 	}
+	// }
 }
 
 void ACharacterBase::NPCMelee_Implementation()

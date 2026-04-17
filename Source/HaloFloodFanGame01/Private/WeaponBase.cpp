@@ -4,7 +4,9 @@
 #include "WeaponBase.h"
 
 #include "WorldCleanupManager.h"
+#include "Camera/CameraComponent.h"
 #include "Core/CharacterBase.h"
+#include "Engine/DecalActor.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values
@@ -107,6 +109,57 @@ void AWeaponBase::TertiaryFire_Implementation()
 
 void AWeaponBase::Reload_Implementation()
 {
+}
+
+
+void AWeaponBase::WeaponMelee_Implementation()
+{
+	FHitResult MeleeHit;
+	CharacterOwner->GetPlayerAim(MeleeHit);
+
+	if (MeleeHit.GetActor() && MeleeHit.Distance < MeleeDistance)
+	{
+		ACharacterBase* MeleeChar = Cast<ACharacterBase>(MeleeHit.GetActor());
+		if (MeleeChar)
+		{
+			CharacterOwner->Lunge(MeleeHit.GetActor());
+			MeleeContact(MeleeHit, MeleeHit.GetActor());
+		} else
+		{
+			MeleeContact(MeleeHit, MeleeHit.GetActor());
+		}
+	} else
+	{
+		MeleeContact(MeleeHit);
+	}
+}
+
+void AWeaponBase::MeleeContact_Implementation(FHitResult& MeleeHit, AActor* Actor)
+{
+	if (Actor)
+	{
+		if (Actor->Implements<UDamageableInterface>())
+		{
+			const FVector Dir = (Actor->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+			IDamageableInterface::Execute_CustomTakePointDamage(Actor, MeleeDamage, Dir, MeleeHit, MeleeForce, GetInstigatorController(), this);
+		}
+		UPrimitiveComponent* HitComp = MeleeHit.GetComponent();
+		if (HitComp && HitComp->IsSimulatingPhysics())
+		{
+			FVector ForceVector = (HitComp->GetComponentLocation() - GetActorLocation());
+			ForceVector.Normalize();
+			HitComp->AddImpulse(ForceVector*MeleeForce);
+		}
+		if (MeleeImpactFX.Contains(MeleeHit.PhysMaterial->SurfaceType))
+		{
+			if (TSubclassOf<ADecalActor> MeleeImpactClass = *MeleeImpactFX.Find(MeleeHit.PhysMaterial->SurfaceType))
+			{
+				const FVector Loc = MeleeHit.Location;
+				const FRotator Rot =  MeleeHit.ImpactNormal.Rotation() + FRotator(-90,0,0);
+				GetWorld()->SpawnActor(MeleeImpactClass, &Loc, &Rot);
+			}
+		}
+	}
 }
 
 

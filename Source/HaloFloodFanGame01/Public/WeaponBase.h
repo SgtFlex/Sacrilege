@@ -7,6 +7,7 @@
 #include "GameFramework/Actor.h"
 #include "WeaponBase.generated.h"
 
+class ADecalActor;
 class ACharacterBase;
 
 UENUM(BlueprintType)
@@ -63,6 +64,12 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	void TertiaryFire();
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void WeaponMelee();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void MeleeContact(FHitResult& MeleeHit, AActor* Actor = nullptr); 
+
 	virtual void OnInteract_Implementation(ACharacterBase* Character) override;
 
 	// virtual void GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon, ACharacterBase* InteractingCharacter) override;
@@ -114,7 +121,19 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TEnumAsByte<EHoldType> HoldType = EHoldType::Pistol;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MeleeDamage = 50;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MeleeForce = 100000;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MeleeDistance = 500;
+
+	UPROPERTY(EditDefaultsOnly)
+	TMap<TEnumAsByte<EPhysicalSurface>, TSubclassOf<ADecalActor>> MeleeImpactFX;
+
 private:
 
 protected:
