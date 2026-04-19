@@ -3,7 +3,11 @@
 
 #include "AIControllerBase.h"
 
+#include "Bullet.h"
+#include "BulletFiringComponent.h"
+#include "GunBase.h"
 #include "SmartObject.h"
+#include "WeaponBase.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -40,7 +44,9 @@ void AAIControllerBase::BeginPlay()
 {
 	Super::BeginPlay();
 	if (ACharacterBase* Char = Cast<ACharacterBase>(GetPawn()))
+	{
 		SetGenericTeamId(FGenericTeamId(Char->TeamId));
+	}
 	else
 		SetGenericTeamId(FGenericTeamId(TeamNumber));
 	GetWorldTimerManager().SetTimer(Delay, this, &AAIControllerBase::BeginPlayDelayed, 0.1f, false);
@@ -94,6 +100,7 @@ void AAIControllerBase::OnPossess(APawn* InPawn)
 	if (ACharacterBase* Char = Cast<ACharacterBase>(InPawn))
 	{
 		PawnChar = Char;
+		GetBlackboardComponent()->SetValueAsObject("Character", Char);
 		SetGenericTeamId(Char->TeamId);
 	} else
 	{

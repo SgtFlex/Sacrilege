@@ -204,7 +204,7 @@ void AVehicleBase::AttachPilot_Implementation()
 		FName Socket = NAME_None;
 		if (GetVehicleMesh()->DoesSocketExist("Seat")) Socket = "Seat";
 		if (Pilot->EquippedWeapon) Pilot->EquippedWeapon->SetActorHiddenInGame(true);
-		Pilot->AttachToComponent(GetVehicleMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, Socket);
+		Pilot->AttachToComponent(GetVehicleMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, Socket);
 	}
 }
 

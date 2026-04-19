@@ -1019,7 +1019,6 @@ void ACharacterBase::DrawEquippedWeapon()
 
 	SetupViewmodel(true);
 	
-
 	WeaponsUpdated.Broadcast(EquippedWeapon, HolsteredWeapon);
 }
 

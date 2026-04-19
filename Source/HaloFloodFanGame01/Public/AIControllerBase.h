@@ -8,6 +8,7 @@
 #include "AlertState.h"
 #include "AIControllerBase.generated.h"
 
+class AWeaponBase;
 class UBehaviorTreeComponent;
 class ASmartObject;
 class ACharacterBase;
@@ -62,7 +63,6 @@ public:
 	void SetAlertState(TEnumAsByte<EAlertState> AlertState);
 
 	void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
-
 public:
 	UPROPERTY(BlueprintAssignable)
 	FOnEnemyUpdated OnEnemyUpdated;

@@ -7,6 +7,7 @@
 #include "Camera/CameraComponent.h"
 #include "Core/CharacterBase.h"
 #include "Engine/DecalActor.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values
@@ -114,9 +115,12 @@ void AWeaponBase::Reload_Implementation()
 
 void AWeaponBase::WeaponMelee_Implementation()
 {
+	FVector AimLoc;
+	FVector AimDir;
+	GetAim(AimLoc, AimDir);
 	FHitResult MeleeHit;
-	CharacterOwner->GetPlayerAim(MeleeHit);
-
+	ActorsToIgnore.Add(CharacterOwner);
+	UKismetSystemLibrary::LineTraceSingle(GetWorld(), AimLoc, AimLoc + (AimDir*MeleeDistance), UEngineTypes::ConvertToTraceType(ECC_Visibility), true, ActorsToIgnore, EDrawDebugTrace::None, MeleeHit, true);
 	if (MeleeHit.GetActor() && MeleeHit.Distance < MeleeDistance)
 	{
 		ACharacterBase* MeleeChar = Cast<ACharacterBase>(MeleeHit.GetActor());
