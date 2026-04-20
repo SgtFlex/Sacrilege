@@ -165,7 +165,7 @@ public:
 	void Melee();
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
-	void Lunge(AActor* Target);
+	void Lunge(AActor* Target, const FVector& ImpactPoint);
 
 	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void SV_Melee();

@@ -292,9 +292,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, meta = (Category="Animations"))
 	UAnimMontage* ReloadAnimation1P;
 
-	UPROPERTY(EditDefaultsOnly, meta = (Category="Animations"))
-	UAnimMontage* MeleeAnimation1P;
-
 	UPROPERTY()
 	FTimerHandle ReloadTimer;
 

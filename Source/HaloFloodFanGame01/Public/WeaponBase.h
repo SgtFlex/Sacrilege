@@ -67,8 +67,11 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void WeaponMelee();
 
+	UFUNCTION(BlueprintCallable)
+	void GetMeleeHit(FHitResult& MeleeHit);
+
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void MeleeContact(FHitResult& MeleeHit, AActor* Actor = nullptr); 
+	void DoMeleeHit(const FHitResult MeleeHit); 
 
 	virtual void OnInteract_Implementation(ACharacterBase* Character) override;
 
@@ -101,11 +104,17 @@ public:
 	UPROPERTY()
 	UTexture2D* InteractIcon = WeaponIcon;
 
-	UPROPERTY(EditDefaultsOnly, meta = (Category="Animations"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (Category="Animations"))
 	UAnimMontage* DrawAnimation1P;
 	
-	UPROPERTY(EditDefaultsOnly, meta = (Category="Animations"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (Category="Animations"))
 	UAnimMontage* HolsterAnimation1P;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (Category="Animations"))
+	UAnimMontage* MeleeAnimation1P;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (Category="Animations"))
+	USoundBase* MeleeMissSound;
 	
 	UPROPERTY(EditDefaultsOnly, meta = (Category="Sound Effects"))
 	USoundBase* DrawSFX;
@@ -122,14 +131,23 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TEnumAsByte<EHoldType> HoldType = EHoldType::Pistol;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Melee"))
 	float MeleeDamage = 50;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Melee"))
 	float MeleeForce = 100000;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MeleeDistance = 500;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Melee"))
+	float MeleeDamageRange = 300;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Melee"))
+	float MeleeLungeRange = 600;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Melee"))
+	float MeleeDelay = 0.1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Melee"))
+	float MeleeCooldownRate = 1;
 
 	UPROPERTY(EditDefaultsOnly)
 	TMap<TEnumAsByte<EPhysicalSurface>, TSubclassOf<ADecalActor>> MeleeImpactFX;
@@ -137,10 +155,15 @@ public:
 private:
 
 protected:
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
 	FTimerHandle DrawHandle;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
 	FTimerHandle HolsterHandle;
 
+	UPROPERTY(BlueprintReadWrite)
+	FTimerHandle MeleeHitDelayHandle;
+
+	UPROPERTY(BlueprintReadWrite)
+	FTimerHandle MeleeCooldownHandle1;
 };

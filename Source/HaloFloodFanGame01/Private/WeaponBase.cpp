@@ -115,44 +115,44 @@ void AWeaponBase::Reload_Implementation()
 
 void AWeaponBase::WeaponMelee_Implementation()
 {
-	FVector AimLoc;
-	FVector AimDir;
-	GetAim(AimLoc, AimDir);
+	if (GetWorldTimerManager().TimerExists(MeleeCooldownHandle1)) return;
 	FHitResult MeleeHit;
-	ActorsToIgnore.Add(CharacterOwner);
-	UKismetSystemLibrary::LineTraceSingle(GetWorld(), AimLoc, AimLoc + (AimDir*MeleeDistance), UEngineTypes::ConvertToTraceType(ECC_Visibility), true, ActorsToIgnore, EDrawDebugTrace::None, MeleeHit, true);
-	if (MeleeHit.GetActor() && MeleeHit.Distance < MeleeDistance)
+	GetMeleeHit(MeleeHit);
+	FTimerDelegate TimerDel;
+	TimerDel.BindUObject(this, &AWeaponBase::DoMeleeHit, MeleeHit);
+	GetWorldTimerManager().SetTimer(MeleeHitDelayHandle, TimerDel, MeleeDelay, false);
+	GetWorldTimerManager().SetTimer(MeleeCooldownHandle1, MeleeCooldownRate, false);
+	if (MeleeAnimation1P) CharacterOwner->GetMesh1P()->GetAnimInstance()->Montage_Play(MeleeAnimation1P);
+	if (MeleeHit.GetActor() && MeleeHit.Distance < MeleeLungeRange)
 	{
-		ACharacterBase* MeleeChar = Cast<ACharacterBase>(MeleeHit.GetActor());
-		if (MeleeChar)
+		if (const ACharacterBase* MeleeChar = Cast<ACharacterBase>(MeleeHit.GetActor()))
 		{
-			CharacterOwner->Lunge(MeleeHit.GetActor());
-			MeleeContact(MeleeHit, MeleeHit.GetActor());
-		} else
-		{
-			MeleeContact(MeleeHit, MeleeHit.GetActor());
+			CharacterOwner->Lunge(MeleeHit.GetActor(), MeleeHit.ImpactPoint);
 		}
 	} else
 	{
-		MeleeContact(MeleeHit);
+		if (MeleeMissSound) UGameplayStatics::SpawnSoundAttached(MeleeMissSound, Mesh);
 	}
 }
 
-void AWeaponBase::MeleeContact_Implementation(FHitResult& MeleeHit, AActor* Actor)
+void AWeaponBase::DoMeleeHit_Implementation(const FHitResult MeleeHit)
 {
-	if (Actor)
+	if ((CharacterOwner->GetActorLocation() - MeleeHit.ImpactPoint).Length() <= MeleeDamageRange)
 	{
-		if (Actor->Implements<UDamageableInterface>())
+		if (MeleeHit.GetActor())
 		{
-			const FVector Dir = (Actor->GetActorLocation() - GetActorLocation()).GetSafeNormal();
-			IDamageableInterface::Execute_CustomTakePointDamage(Actor, MeleeDamage, Dir, MeleeHit, MeleeForce, GetInstigatorController(), this);
-		}
-		UPrimitiveComponent* HitComp = MeleeHit.GetComponent();
-		if (HitComp && HitComp->IsSimulatingPhysics())
-		{
-			FVector ForceVector = (HitComp->GetComponentLocation() - GetActorLocation());
-			ForceVector.Normalize();
-			HitComp->AddImpulse(ForceVector*MeleeForce);
+			if (MeleeHit.GetActor()->Implements<UDamageableInterface>())
+			{
+				const FVector Dir = (MeleeHit.GetActor()->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+				IDamageableInterface::Execute_CustomTakePointDamage(MeleeHit.GetActor(), MeleeDamage, Dir, MeleeHit, MeleeForce, GetInstigatorController(), this);
+			}
+			UPrimitiveComponent* HitComp = MeleeHit.GetComponent();
+			if (HitComp && HitComp->IsSimulatingPhysics())
+			{
+				FVector ForceVector = (HitComp->GetComponentLocation() - GetActorLocation());
+				ForceVector.Normalize();
+				HitComp->AddImpulse(ForceVector*MeleeForce);
+			}
 		}
 		if (MeleeImpactFX.Contains(MeleeHit.PhysMaterial->SurfaceType))
 		{
@@ -167,6 +167,14 @@ void AWeaponBase::MeleeContact_Implementation(FHitResult& MeleeHit, AActor* Acto
 }
 
 
+void AWeaponBase::GetMeleeHit(FHitResult& MeleeHit)
+{
+	FVector AimLoc;
+	FVector AimDir;
+	GetAim(AimLoc, AimDir);
+	ActorsToIgnore.Add(CharacterOwner);
+	UKismetSystemLibrary::LineTraceSingle(GetWorld(), AimLoc, AimLoc + (AimDir*MeleeLungeRange), UEngineTypes::ConvertToTraceType(ECC_Visibility), true, ActorsToIgnore, EDrawDebugTrace::None, MeleeHit, true);
+}
 
 void AWeaponBase::OnInteract_Implementation(ACharacterBase* Character)
 {
