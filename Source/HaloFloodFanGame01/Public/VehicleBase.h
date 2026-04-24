@@ -85,6 +85,9 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	void Exit();
 
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	void DoVehicleUnpossession();
+
 	UFUNCTION(Client, Reliable)
 	void CL_Exit();
 
@@ -99,6 +102,12 @@ public:
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void AttachPilot();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void LerpToSeat(const FVector& StartingPoint);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void LerpToExit();
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void SpawnHUD();
@@ -152,6 +161,9 @@ public:
 	virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; return; }
 
 public:
+	UPROPERTY()
+	FTimerHandle ExitDelayHandle;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<UUserWidget> VehicleHUDClass;
 

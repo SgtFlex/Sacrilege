@@ -10,6 +10,7 @@
 #include "GameFramework/Character.h"
 #include "CharacterBase.generated.h"
 
+enum EAnimType : int;
 class AVehicleBase;
 class AGunBase;
 class AEquipmentBase;
@@ -538,6 +539,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	UAnimMontage* ThrowGrenadeAnimation;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TMap<TEnumAsByte<EAnimType>, UAnimMontage*> VehicleAnimMontages;
 
 	UPROPERTY()
 	TArray<AActor*> InteractableActors;

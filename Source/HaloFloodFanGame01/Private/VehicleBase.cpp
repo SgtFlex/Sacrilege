@@ -144,6 +144,8 @@ void AVehicleBase::UnPossessed()
 	Super::UnPossessed();
 }
 
+
+
 void AVehicleBase::Client_Unpossessed_Implementation()
 {
 	if (IsLocallyViewed())
@@ -198,6 +200,8 @@ void AVehicleBase::AttachPilot_Implementation()
 {
 	if (IsValid(Pilot))
 	{
+		FVector StartingPoint = Pilot->GetActorLocation();
+		if (Pilot->VehicleAnimMontages.Contains(AnimType)) Pilot->GetMesh()->GetAnimInstance()->Montage_Play(*Pilot->VehicleAnimMontages.Find(AnimType.GetValue()));
 		Pilot->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 		Pilot->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		Pilot->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Vehicle, ECR_Ignore);
@@ -205,10 +209,17 @@ void AVehicleBase::AttachPilot_Implementation()
 		if (GetVehicleMesh()->DoesSocketExist("Seat")) Socket = "Seat";
 		if (Pilot->EquippedWeapon) Pilot->EquippedWeapon->SetActorHiddenInGame(true);
 		Pilot->AttachToComponent(GetVehicleMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, Socket);
+		LerpToSeat(StartingPoint);
 	}
 }
 
 void AVehicleBase::Exit_Implementation()
+{
+	LerpToExit();
+	GetWorldTimerManager().SetTimer(ExitDelayHandle, this, &AVehicleBase::DoVehicleUnpossession, 1, false);
+}
+
+void AVehicleBase::DoVehicleUnpossession_Implementation()
 {
 	if (IsPlayerControlled())
 		CL_Exit();
@@ -250,9 +261,9 @@ void AVehicleBase::DetachPilot_Implementation()
 		UE_LOG(LogTemp, Warning, TEXT("Called detach pilot on %d"), GetRemoteRole());
 		Pilot->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_NavWalking);
 		Pilot->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-		Pilot->SetActorTransform(ExitPoint->GetComponentTransform(), false);
 		Pilot->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		Pilot->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Vehicle, ECR_Block);
+		//Pilot->SetActorLocation(ExitPoint->GetComponentLocation(), false);
 		if (Pilot->EquippedWeapon) Pilot->EquippedWeapon->SetActorHiddenInGame(false);
 
 	} else
