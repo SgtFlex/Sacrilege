@@ -171,7 +171,9 @@ void AVehicleBase::Enter_Implementation(ACharacterBase* NewPilot)
 	{
 		CL_Enter(NewPilot);
 	}
-	
+	//TArray<AActor*> IgnoreActors;
+	//GetIgnoreActors(IgnoreActors);
+	//Pilot->EquippedWeapon->ActorsToIgnore.Append(IgnoreActors);
 	OnEntered.Broadcast();
 }
 
@@ -323,6 +325,27 @@ void AVehicleBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 USkeletalMeshComponent* AVehicleBase::GetVehicleMesh()
 {
 	return VehicleSkeletalMesh;
+}
+
+void AVehicleBase::AddPartnerVehicleToIgnoreList(AVehicleBase* Vehicle)
+{
+	VehicleGroup.Add(Vehicle);
+}
+
+void AVehicleBase::GetIgnoreActors(TArray<AActor*>& IgnoreActors)
+{
+	for (auto Vehicle : VehicleGroup)
+	{
+		IgnoreActors.Add(Vehicle);
+		if (Vehicle->Pilot) IgnoreActors.Add(Vehicle->Pilot);
+	}
+	IgnoreActors.Add(this);
+	if (Pilot) IgnoreActors.Add(Pilot);
+}
+
+void AVehicleBase::UpdateFriendlyFireList()
+{
+	
 }
 
 float AVehicleBase::CustomTakeDamage_Implementation(float Damage, FVector Force, AController* EventInstigator, AActor* DamageCauser)

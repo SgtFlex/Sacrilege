@@ -10,6 +10,9 @@
 class ADecalActor;
 class ACharacterBase;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponPickedUp);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponDropped);
+
 UENUM(BlueprintType)
 enum EHoldType {
 	Pistol,
@@ -67,11 +70,23 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void WeaponMelee();
 
+	UFUNCTION(Reliable, Server)
+	void ServerWeaponMelee();
+
+	UFUNCTION(Reliable, NetMulticast)
+	void MulticastWeaponMelee();
+
 	UFUNCTION(BlueprintCallable)
 	void GetMeleeHit(FHitResult& MeleeHit);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void DoMeleeHit(const FHitResult MeleeHit); 
+	void DoMeleeHit(const FHitResult MeleeHit);
+
+	UFUNCTION(Server, Reliable)
+	void ServerMeleeHit(const FHitResult MeleeHit);
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastDoMeleeHit(const FHitResult MeleeHit); 
 
 	virtual void OnInteract_Implementation(ACharacterBase* Character) override;
 
@@ -151,6 +166,12 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	TMap<TEnumAsByte<EPhysicalSurface>, TSubclassOf<ADecalActor>> MeleeImpactFX;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnWeaponDropped OnWeaponDropped;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnWeaponPickedUp OnWeaponPickedUp;
 
 private:
 

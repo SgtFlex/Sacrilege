@@ -31,6 +31,7 @@ enum EAnimType {
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDamageStateChanged, EDamageState, NewDamageState);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEntered);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnExited);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnIgnoreListUpdated);
 
 UCLASS(Abstract)
 class HALOFLOODFANGAME01_API AVehicleBase : public APawn, public IDamageableInterface, public IInteractableInterface, public IGameplayTagAssetInterface
@@ -133,6 +134,15 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	USkeletalMeshComponent* GetVehicleMesh();
+
+	UFUNCTION(BlueprintCallable)
+	void AddPartnerVehicleToIgnoreList(AVehicleBase* Vehicle);
+
+	UFUNCTION(BlueprintCallable)
+	void GetIgnoreActors(TArray<AActor*>& IgnoreActors);
+
+	UFUNCTION()
+	void UpdateFriendlyFireList();
 	
 	//Delegate Binds
 
@@ -219,6 +229,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnExited	OnExited;
+
+	UPROPERTY(BlueprintReadWrite)
+	TArray<AVehicleBase*> VehicleGroup;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
 	FGameplayTagContainer GameplayTags;

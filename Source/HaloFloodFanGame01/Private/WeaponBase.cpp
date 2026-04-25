@@ -45,6 +45,7 @@ void AWeaponBase::Pickup(ACharacterBase* Char)
 	CharacterOwner = Char;
 	GetWorld()->GetSubsystem<UWorldCleanupManager>()->StopManagingWeapon(this);
 	Mesh->SetComponentTickEnabled(true);
+	OnWeaponPickedUp.Broadcast();
 }
 
 void AWeaponBase::Equip()
@@ -62,6 +63,7 @@ void AWeaponBase::Drop()
 	CharacterOwner = nullptr;
 	GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageWeapon(this);
 	Mesh->SetComponentTickEnabled(false);
+	OnWeaponDropped.Broadcast();
 }
 
 void AWeaponBase::Holster()
@@ -115,6 +117,11 @@ void AWeaponBase::Reload_Implementation()
 
 void AWeaponBase::WeaponMelee_Implementation()
 {
+	ServerWeaponMelee();
+}
+
+void AWeaponBase::ServerWeaponMelee_Implementation()
+{
 	if (GetWorldTimerManager().TimerExists(MeleeCooldownHandle1)) return;
 	FHitResult MeleeHit;
 	GetMeleeHit(MeleeHit);
@@ -122,20 +129,30 @@ void AWeaponBase::WeaponMelee_Implementation()
 	TimerDel.BindUObject(this, &AWeaponBase::DoMeleeHit, MeleeHit);
 	GetWorldTimerManager().SetTimer(MeleeHitDelayHandle, TimerDel, MeleeDelay, false);
 	GetWorldTimerManager().SetTimer(MeleeCooldownHandle1, MeleeCooldownRate, false);
-	if (MeleeAnimation1P) CharacterOwner->GetMesh1P()->GetAnimInstance()->Montage_Play(MeleeAnimation1P);
+	//if (MeleeAnimation1P) CharacterOwner->GetMesh1P()->GetAnimInstance()->Montage_Play(MeleeAnimation1P);
+	MulticastWeaponMelee();
 	if (MeleeHit.GetActor() && MeleeHit.Distance < MeleeLungeRange)
 	{
 		if (const ACharacterBase* MeleeChar = Cast<ACharacterBase>(MeleeHit.GetActor()))
 		{
 			CharacterOwner->Lunge(MeleeHit.GetActor(), MeleeHit.ImpactPoint);
 		}
-	} else
-	{
-		if (MeleeMissSound) UGameplayStatics::SpawnSoundAttached(MeleeMissSound, Mesh);
 	}
 }
 
+void AWeaponBase::MulticastWeaponMelee_Implementation()
+{
+	if (MeleeAnimation1P) CharacterOwner->GetMesh1P()->GetAnimInstance()->Montage_Play(MeleeAnimation1P);
+	if (CharacterOwner->MeleeAnim) CharacterOwner->GetMesh()->GetAnimInstance()->Montage_Play(CharacterOwner->MeleeAnim);
+	if (MeleeMissSound) UGameplayStatics::SpawnSoundAttached(MeleeMissSound, Mesh);
+}
+
 void AWeaponBase::DoMeleeHit_Implementation(const FHitResult MeleeHit)
+{
+	ServerMeleeHit(MeleeHit);
+}
+
+void AWeaponBase::ServerMeleeHit_Implementation(const FHitResult MeleeHit)
 {
 	if ((CharacterOwner->GetActorLocation() - MeleeHit.ImpactPoint).Length() <= MeleeDamageRange)
 	{
@@ -154,14 +171,19 @@ void AWeaponBase::DoMeleeHit_Implementation(const FHitResult MeleeHit)
 				HitComp->AddImpulse(ForceVector*MeleeForce);
 			}
 		}
-		if (MeleeImpactFX.Contains(MeleeHit.PhysMaterial->SurfaceType))
+		MulticastDoMeleeHit(MeleeHit);
+	}
+}
+
+void AWeaponBase::MulticastDoMeleeHit_Implementation(const FHitResult MeleeHit)
+{
+	if (MeleeImpactFX.Contains(MeleeHit.PhysMaterial->SurfaceType))
+	{
+		if (TSubclassOf<ADecalActor> MeleeImpactClass = *MeleeImpactFX.Find(MeleeHit.PhysMaterial->SurfaceType))
 		{
-			if (TSubclassOf<ADecalActor> MeleeImpactClass = *MeleeImpactFX.Find(MeleeHit.PhysMaterial->SurfaceType))
-			{
-				const FVector Loc = MeleeHit.Location;
-				const FRotator Rot =  MeleeHit.ImpactNormal.Rotation() + FRotator(-90,0,0);
-				GetWorld()->SpawnActor(MeleeImpactClass, &Loc, &Rot);
-			}
+			const FVector Loc = MeleeHit.Location;
+			const FRotator Rot =  MeleeHit.ImpactNormal.Rotation() + FRotator(-90,0,0);
+			GetWorld()->SpawnActor(MeleeImpactClass, &Loc, &Rot);
 		}
 	}
 }
