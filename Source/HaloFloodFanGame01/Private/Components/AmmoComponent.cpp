@@ -3,6 +3,8 @@
 
 #include "Components/AmmoComponent.h"
 
+
+
 // Sets default values for this component's properties
 UAmmoComponent::UAmmoComponent()
 {
@@ -37,19 +39,26 @@ int32 UAmmoComponent::GetAmmo()
 	return CurrentAmmo;
 }
 
-void UAmmoComponent::SetAmmo(const int32 NewAmmo)
+int32 UAmmoComponent::SetAmmo(const int32 NewAmmo)
 {
-	CurrentAmmo = NewAmmo;
+	CurrentAmmo = FMath::Clamp(NewAmmo, 0, AmmoTotal);
+	OnAmmoChanged.Broadcast();
+	return CurrentAmmo;
 }
 
 void UAmmoComponent::ResetAmmo()
 {
-	CurrentAmmo = AmmoTotal;
+	SetAmmo(AmmoTotal);
 }
 
 int32 UAmmoComponent::DecrementAmmo()
 {
-	return CurrentAmmo--;
+	return SetAmmo(--CurrentAmmo);
+}
+
+int32 UAmmoComponent::IncrementAmmo()
+{
+	return SetAmmo(++CurrentAmmo);
 }
 
 bool UAmmoComponent::HasAnyAmmo() const

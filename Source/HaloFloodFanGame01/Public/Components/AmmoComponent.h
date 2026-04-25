@@ -5,9 +5,11 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "AmmoComponent.generated.h"
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAmmoChanged);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+
+
 class HALOFLOODFANGAME01_API UAmmoComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -24,6 +26,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
 	int32 CurrentAmmo = AmmoTotal;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnAmmoChanged OnAmmoChanged;
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -36,13 +41,16 @@ public:
 	int32 GetAmmo();
 	
 	UFUNCTION(BlueprintCallable)
-	void SetAmmo(int32 NewAmmo);
+	int32 SetAmmo(int32 NewAmmo);
 
 	UFUNCTION(BlueprintCallable)
 	void ResetAmmo();
 
 	UFUNCTION(BlueprintCallable)
 	int32 DecrementAmmo();
+
+	UFUNCTION(BlueprintCallable)
+	int32 IncrementAmmo();
 
 	UFUNCTION(BlueprintPure, BlueprintCallable)
 	bool HasAnyAmmo() const;

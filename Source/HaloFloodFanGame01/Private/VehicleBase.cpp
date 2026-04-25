@@ -39,6 +39,13 @@ void AVehicleBase::BeginPlay()
 void AVehicleBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (GetLocalRole() == ENetRole::ROLE_Authority) UpdateAimRotation();
+}
+
+void AVehicleBase::UpdateAimRotation_Implementation()
+{
+	AimRotation = GetBaseAimRotation();
 }
 
 // Called to bind functionality to input
@@ -207,7 +214,7 @@ void AVehicleBase::AttachPilot_Implementation()
 		Pilot->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Vehicle, ECR_Ignore);
 		FName Socket = NAME_None;
 		if (GetVehicleMesh()->DoesSocketExist("Seat")) Socket = "Seat";
-		if (Pilot->EquippedWeapon) Pilot->EquippedWeapon->SetActorHiddenInGame(true);
+		if (AnimType!=Passenger && Pilot->EquippedWeapon) Pilot->EquippedWeapon->SetActorHiddenInGame(true);
 		Pilot->AttachToComponent(GetVehicleMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, Socket);
 		LerpToSeat(StartingPoint);
 	}
@@ -215,16 +222,18 @@ void AVehicleBase::AttachPilot_Implementation()
 
 void AVehicleBase::Exit_Implementation()
 {
+	if (!Pilot) return;
 	LerpToExit();
 	GetWorldTimerManager().SetTimer(ExitDelayHandle, this, &AVehicleBase::DoVehicleUnpossession, 1, false);
 }
 
 void AVehicleBase::DoVehicleUnpossession_Implementation()
 {
+	if (!Pilot) return;
 	if (IsPlayerControlled())
 		CL_Exit();
 	ResetPilot();
-	OnExited.Broadcast();
+	OnExited.Broadcast();	
 }
 
 void AVehicleBase::CL_Exit_Implementation()
@@ -294,7 +303,6 @@ void AVehicleBase::DetachPilot_Implementation()
 // 		VehicleHUD = nullptr;
 // 	}
 // }
-
 
 FVector AVehicleBase::GetNavAgentLocation() const
 {

@@ -65,7 +65,7 @@ void AGrenadeBase::Explode_Implementation()
 	// DecalActor->GetDecal()->DecalSize = FVector(512, 512, 512);
 	// Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAtLocation(GetWorld(), ExplosionDecal, FVector(512, 512, 512), GetActorLocation()));
 	// Destroy();
-	SV_Explode();
+	if (HasAuthority()) SV_Explode();
 }
 
 void AGrenadeBase::SV_Explode_Implementation()

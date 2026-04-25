@@ -737,7 +737,7 @@ void ACharacterBase::ThrowGrenade(const int GrenadeTypeIndex)
 {
 	if (GetGrenadeInventory().IsEmpty()) return;
 	ThrowGrenadeFX(GetSelectedGrenadeType());
-	if (!HasAuthority())
+	if (GetLocalRole()!=ROLE_Authority)
 	{
 		//If we are a client, play the throw grenade FX and animation and send an RPC to the server to throw the actual grenade
 		ServerThrowGrenade(GrenadeTypeIndex);

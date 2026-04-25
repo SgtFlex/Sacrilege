@@ -554,10 +554,10 @@ public:
 
 	float ScopeSensitivityMultiplier = 1;
 
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated)
 	bool bIsInVehicle = false;
 
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated)
 	AVehicleBase* OccupiedVehicle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

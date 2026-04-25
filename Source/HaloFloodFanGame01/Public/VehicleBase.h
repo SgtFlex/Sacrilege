@@ -49,6 +49,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION(Server, Reliable)
+	void UpdateAimRotation();
+
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -205,6 +208,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FVector LeftHandIKLocation;
+
+	UPROPERTY(BlueprintReadOnly, Replicated)
+	FRotator AimRotation;
 
 	
 	//Delegates
