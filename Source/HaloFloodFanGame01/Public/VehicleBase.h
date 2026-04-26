@@ -214,6 +214,9 @@ public:
 	float AgentZOffset = 200.0f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	float ExitTime = 1.0f;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TEnumAsByte<EAnimType> AnimType = EAnimType::Driver;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)

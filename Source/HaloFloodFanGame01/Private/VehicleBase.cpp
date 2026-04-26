@@ -210,7 +210,7 @@ void AVehicleBase::AttachPilot_Implementation()
 	if (IsValid(Pilot))
 	{
 		FVector StartingPoint = Pilot->GetActorLocation();
-		if (Pilot->VehicleAnimMontages.Contains(AnimType)) Pilot->GetMesh()->GetAnimInstance()->Montage_Play(*Pilot->VehicleAnimMontages.Find(AnimType.GetValue()));
+		if (Pilot->VehicleAnimEnterMontages.Contains(AnimType)) Pilot->GetMesh()->GetAnimInstance()->Montage_Play(*Pilot->VehicleAnimEnterMontages.Find(AnimType.GetValue()));
 		Pilot->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 		Pilot->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		Pilot->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Vehicle, ECR_Ignore);
@@ -226,7 +226,12 @@ void AVehicleBase::Exit_Implementation()
 {
 	if (!Pilot) return;
 	LerpToExit();
-	GetWorldTimerManager().SetTimer(ExitDelayHandle, this, &AVehicleBase::DoVehicleUnpossession, 1, false);
+	if (Pilot->VehicleAnimExitMontages.Contains(AnimType.GetValue()))
+	{
+		UAnimMontage* ExitMontage = *Pilot->VehicleAnimExitMontages.Find(AnimType.GetValue());
+		Pilot->GetMesh()->GetAnimInstance()->Montage_Play(ExitMontage, ExitMontage->GetPlayLength()/ExitTime);
+	}
+	GetWorldTimerManager().SetTimer(ExitDelayHandle, this, &AVehicleBase::DoVehicleUnpossession, ExitTime, false);
 }
 
 void AVehicleBase::DoVehicleUnpossession_Implementation()
@@ -274,6 +279,7 @@ void AVehicleBase::DetachPilot_Implementation()
 		Pilot->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 		Pilot->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		Pilot->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Vehicle, ECR_Block);
+		if (Pilot->VehicleAnimExitMontages.Contains(AnimType)) Pilot->GetMesh()->GetAnimInstance()->Montage_Stop(0, *Pilot->VehicleAnimExitMontages.Find(AnimType.GetValue()));
 		//Pilot->SetActorLocation(ExitPoint->GetComponentLocation(), false);
 		if (Pilot->EquippedWeapon) Pilot->EquippedWeapon->SetActorHiddenInGame(false);
 

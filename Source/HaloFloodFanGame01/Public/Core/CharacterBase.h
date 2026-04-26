@@ -541,8 +541,11 @@ public:
 	UAnimMontage* ThrowGrenadeAnimation;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TMap<TEnumAsByte<EAnimType>, UAnimMontage*> VehicleAnimMontages;
+	TMap<TEnumAsByte<EAnimType>, UAnimMontage*> VehicleAnimEnterMontages;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TMap<TEnumAsByte<EAnimType>, UAnimMontage*> VehicleAnimExitMontages;
+	
 	UPROPERTY()
 	TArray<AActor*> InteractableActors;
 
