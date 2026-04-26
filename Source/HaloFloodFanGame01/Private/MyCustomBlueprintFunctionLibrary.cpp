@@ -26,8 +26,7 @@ void UMyCustomBlueprintFunctionLibrary::Ignite(UPrimitiveComponent* Component, f
 void UMyCustomBlueprintFunctionLibrary::FireHitScanBullet(FHitResult& Hit, const TArray<AActor*>& ActorsToIgnore, FVector StartLocation, FVector Direction, float Range, UCurveFloat* FalloffCurve, float Damage, float Force, AActor* DamageCauser, AController* EventInstigator, float MagnetizeRadius)
 {
 	UWorld* World = GEngine->GameViewport->GetWorld();
-
-
+	
 	FHitResult HitThin;
 	UKismetSystemLibrary::LineTraceSingle(World, StartLocation, StartLocation + (Direction*Range), TraceTypeQuery1, true, ActorsToIgnore, EDrawDebugTrace::None, HitThin, true);
 	if (HitThin.bBlockingHit && HitThin.GetActor()->Implements<UDamageableInterface>())
