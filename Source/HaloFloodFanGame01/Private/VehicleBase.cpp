@@ -7,6 +7,7 @@
 #include "GrenadeWidget.h"
 #include "HealthComponent.h"
 #include "WeaponBase.h"
+#include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Core/CharacterBase.h"
 #include "Engine/DamageEvents.h"
@@ -257,9 +258,14 @@ void AVehicleBase::ResetPilot_Implementation()
 	if (!Pilot) return;
 	if (GetController())
 	{
+		Pilot->SetActorRotation(GetControlRotation());
 		GetController()->UnPossess();
 		if (Pilot->GetHealthComponent()->IsAlive())
+		{
+			
 			PilotController->Possess(Pilot);
+			
+		}
 	}
 	Pilot->bIsInVehicle = false;
 	Pilot->OccupiedVehicle = nullptr;
@@ -277,6 +283,11 @@ void AVehicleBase::DetachPilot_Implementation()
 		UE_LOG(LogTemp, Warning, TEXT("Called detach pilot on %d"), GetRemoteRole());
 		Pilot->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_NavWalking);
 		Pilot->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		
+		//below should be on client only
+		Pilot->LerpCamera(GetCamera()->GetComponentTransform().GetRelativeTransform(Pilot->GetFirstPersonCameraComponent()->GetComponentTransform()), Pilot->GetFirstPersonCameraComponent()->GetRelativeTransform());
+		//Pilot->SetActorRotation(FRotator(0, 0, 0));
+		//PilotController->SetControlRotation(GetControlRotation());
 		Pilot->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		Pilot->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Vehicle, ECR_Block);
 		if (Pilot->VehicleAnimExitMontages.Contains(AnimType)) Pilot->GetMesh()->GetAnimInstance()->Montage_Stop(0, *Pilot->VehicleAnimExitMontages.Find(AnimType.GetValue()));

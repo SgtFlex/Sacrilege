@@ -9,6 +9,7 @@
 #include "GameFramework/Pawn.h"
 #include "VehicleBase.generated.h"
 
+class UCameraComponent;
 class ACharacterBase;
 class UHealthComponent;
 
@@ -166,6 +167,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	UHealthComponent* GetHealthComponent();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	UCameraComponent* GetCamera();
 
 	//IInteractableInterface
 

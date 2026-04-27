@@ -352,6 +352,9 @@ public:
 
 	void ApplyPhysicsImpulse_Implementation(FVector Force, FVector Location, FName BoneName = NAME_None) override;
 
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void LerpCamera(const FTransform& StartTransform, const FTransform& EndTransform);
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -370,6 +373,8 @@ protected:
 	void Multi_Look(float Pitch);
 
 	virtual void NotifyRestarted() override;
+
+	
 	
 	virtual void UnPossessed() override;
 
