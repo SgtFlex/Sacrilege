@@ -140,10 +140,10 @@ public:
 	void AddPartnerVehicleToIgnoreList(AVehicleBase* Vehicle);
 
 	UFUNCTION(BlueprintCallable)
-	void GetIgnoreActors(TArray<AActor*>& IgnoreActors);
+	void UpdateIgnoreList();
 
-	UFUNCTION()
-	void UpdateFriendlyFireList();
+	UFUNCTION(BlueprintCallable)
+	void GetIgnoreActors(TArray<AActor*>& IgnoreActors);
 	
 	//Delegate Binds
 
@@ -242,5 +242,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
 	FGameplayTagContainer GameplayTags;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnIgnoreListUpdated IgnoreListUpdated;
 
 };

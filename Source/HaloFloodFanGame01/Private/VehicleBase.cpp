@@ -176,6 +176,7 @@ void AVehicleBase::Enter_Implementation(ACharacterBase* NewPilot)
 	//GetIgnoreActors(IgnoreActors);
 	//Pilot->EquippedWeapon->ActorsToIgnore.Append(IgnoreActors);
 	OnEntered.Broadcast();
+	IgnoreListUpdated.Broadcast();
 }
 
 void AVehicleBase::CL_Enter_Implementation(ACharacterBase* NewPilot)
@@ -241,7 +242,8 @@ void AVehicleBase::DoVehicleUnpossession_Implementation()
 	if (IsPlayerControlled())
 		CL_Exit();
 	ResetPilot();
-	OnExited.Broadcast();	
+	OnExited.Broadcast();
+	IgnoreListUpdated.Broadcast();
 }
 
 void AVehicleBase::CL_Exit_Implementation()
@@ -347,22 +349,31 @@ USkeletalMeshComponent* AVehicleBase::GetVehicleMesh()
 void AVehicleBase::AddPartnerVehicleToIgnoreList(AVehicleBase* Vehicle)
 {
 	VehicleGroup.Add(Vehicle);
+	Vehicle->OnEntered.AddUniqueDynamic(this, &AVehicleBase::UpdateIgnoreList);
+	Vehicle->OnExited.AddUniqueDynamic(this, &AVehicleBase::UpdateIgnoreList);
+	IgnoreListUpdated.Broadcast();
+}
+
+void AVehicleBase::UpdateIgnoreList()
+{
+	IgnoreListUpdated.Broadcast();
 }
 
 void AVehicleBase::GetIgnoreActors(TArray<AActor*>& IgnoreActors)
 {
-	for (auto Vehicle : VehicleGroup)
+	if (IsChildActor())
 	{
-		IgnoreActors.Add(Vehicle);
-		if (Vehicle->Pilot) IgnoreActors.Add(Vehicle->Pilot);
+		if (AVehicleBase* ParentVehicle = Cast<AVehicleBase>(GetParentActor())) ParentVehicle->GetIgnoreActors(IgnoreActors);
+	} else
+	{
+		for (const auto Vehicle : VehicleGroup)
+		{
+			IgnoreActors.Add(Vehicle);
+			if (Vehicle && Vehicle->Pilot) IgnoreActors.Add(Vehicle->Pilot);
+		}
 	}
 	IgnoreActors.Add(this);
 	if (Pilot) IgnoreActors.Add(Pilot);
-}
-
-void AVehicleBase::UpdateFriendlyFireList()
-{
-	
 }
 
 float AVehicleBase::CustomTakeDamage_Implementation(float Damage, FVector Force, AController* EventInstigator, AActor* DamageCauser)
