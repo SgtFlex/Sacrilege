@@ -41,10 +41,10 @@ void AVehicleBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (GetLocalRole() == ENetRole::ROLE_Authority) UpdateAimRotation();
+	if (GetLocalRole() == ENetRole::ROLE_Authority) ServerUpdateAimRotation();
 }
 
-void AVehicleBase::UpdateAimRotation_Implementation()
+void AVehicleBase::ServerUpdateAimRotation_Implementation()
 {
 	AimRotation = GetBaseAimRotation();
 }
@@ -167,7 +167,7 @@ void AVehicleBase::Client_Unpossessed_Implementation()
 void AVehicleBase::Enter_Implementation(ACharacterBase* NewPilot)
 {
 	if (bIsDestroyed || Pilot) return;
-	SetPilotToPossess(NewPilot);
+	ServerSetPilotToPossess(NewPilot);
 	if (IsPlayerControlled())
 	{
 		CL_Enter(NewPilot);
@@ -188,14 +188,14 @@ void AVehicleBase::CL_Enter_Implementation(ACharacterBase* NewPilot)
 	// }
 }
 
-void AVehicleBase::SetPilotToPossess_Implementation(ACharacterBase* NewPilot)
+void AVehicleBase::ServerSetPilotToPossess_Implementation(ACharacterBase* NewPilot)
 {
 	Pilot = NewPilot;
 	PilotController = Pilot->GetController();
 	SetOwner(PilotController);
 	Pilot->bIsInVehicle = true;
 	Pilot->OccupiedVehicle = this;
-	AttachPilot();
+	MulticastAttachPilot();
 	Pilot->OnKilled.AddUniqueDynamic(this, &AVehicleBase::OnPilotKilled);
 	PilotController->UnPossess();
 	if (Cast<APlayerController>(PilotController))
@@ -207,7 +207,7 @@ void AVehicleBase::SetPilotToPossess_Implementation(ACharacterBase* NewPilot)
 	}
 }
 
-void AVehicleBase::AttachPilot_Implementation()
+void AVehicleBase::MulticastAttachPilot_Implementation()
 {
 	if (IsValid(Pilot))
 	{
@@ -241,7 +241,7 @@ void AVehicleBase::DoVehicleUnpossession_Implementation()
 	if (!Pilot) return;
 	if (IsPlayerControlled())
 		CL_Exit();
-	ResetPilot();
+	ServerResetPilot();
 	OnExited.Broadcast();
 	IgnoreListUpdated.Broadcast();
 }
@@ -255,7 +255,7 @@ void AVehicleBase::CL_Exit_Implementation()
 	}
 }
 
-void AVehicleBase::ResetPilot_Implementation()
+void AVehicleBase::ServerResetPilot_Implementation()
 {
 	if (!Pilot) return;
 	if (GetController())
@@ -272,13 +272,13 @@ void AVehicleBase::ResetPilot_Implementation()
 	Pilot->bIsInVehicle = false;
 	Pilot->OccupiedVehicle = nullptr;
 	Pilot->OnKilled.RemoveDynamic(this, &AVehicleBase::OnPilotKilled);
-	DetachPilot();
+	MulticastDetachPilot();
 	SetOwner(nullptr);
 	Pilot = nullptr;
 	PilotController = nullptr;
 }
 
-void AVehicleBase::DetachPilot_Implementation()
+void AVehicleBase::MulticastDetachPilot_Implementation()
 {
 	if (IsValid(Pilot))
 	{

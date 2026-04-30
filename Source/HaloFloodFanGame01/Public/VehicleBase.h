@@ -52,7 +52,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(Server, Reliable)
-	void UpdateAimRotation();
+	void ServerUpdateAimRotation();
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -97,16 +97,16 @@ public:
 	void CL_Exit();
 
 	UFUNCTION(Server, Reliable)
-	void ResetPilot();
+	void ServerResetPilot();
 
 	UFUNCTION(NetMulticast, Reliable)
-	void DetachPilot();
+	void MulticastDetachPilot();
 
 	UFUNCTION(Server, Reliable)
-	void SetPilotToPossess(ACharacterBase* NewPilot);
+	void ServerSetPilotToPossess(ACharacterBase* NewPilot);
 	
 	UFUNCTION(NetMulticast, Reliable)
-	void AttachPilot();
+	void MulticastAttachPilot();
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void LerpToSeat(const FVector& StartingPoint);
@@ -186,7 +186,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UUserWidget* VehicleHUD;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UHealthComponent* HealthComponent;
 
@@ -205,7 +205,7 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnDamageStateChanged OnDamageStateChanged;
 
-	UPROPERTY(BlueprintReadWrite, ReplicatedUsing=AttachPilot)
+	UPROPERTY(BlueprintReadWrite, ReplicatedUsing=MulticastAttachPilot)
 	ACharacterBase* Pilot;
 
 	UPROPERTY(BlueprintReadWrite)
