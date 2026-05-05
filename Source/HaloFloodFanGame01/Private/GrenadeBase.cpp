@@ -123,6 +123,7 @@ void AGrenadeBase::OnCollide_Implementation(UPrimitiveComponent* HitComponent, A
 
 void AGrenadeBase::Pickup(ACharacterBase* Character)
 {
+	if (!Character->GameplayTags.HasTag(FGameplayTag::RequestGameplayTag(FName("Character.CanUseGrenades")))) return;
 	IPickupInterface::Pickup(Character);
 	
 	if (Character->AddGrenade(GetClass(), 1))

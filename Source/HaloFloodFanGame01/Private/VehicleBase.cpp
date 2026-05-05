@@ -403,6 +403,7 @@ UHealthComponent* AVehicleBase::GetHealthComponent_Implementation()
 
 void AVehicleBase::OnInteract_Implementation(ACharacterBase* Character)
 {
+	if (!Character->GameplayTags.HasTag(FGameplayTag::RequestGameplayTag(FName("Character.CanUseVehicles")))) return;
 	IInteractableInterface::OnInteract_Implementation(Character);
 
 	if (bIsDestroyed) return;

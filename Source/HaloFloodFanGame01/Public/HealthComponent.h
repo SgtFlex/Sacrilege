@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "DamageableInterface.h"
+#include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
 #include "HealthComponent.generated.h"
 
@@ -151,6 +152,9 @@ public:
 
 	UPROPERTY()
 	UMeshComponent* MeshComp;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TMap<FGameplayTag, float> DamageResistances;
 
 	//DELEGATES
 

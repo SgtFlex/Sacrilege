@@ -200,6 +200,7 @@ void AWeaponBase::GetMeleeHit(FHitResult& MeleeHit)
 
 void AWeaponBase::OnInteract_Implementation(ACharacterBase* Character)
 {
+	if (!Character->GameplayTags.HasTag(FGameplayTag::RequestGameplayTag(FName("Character.CanUseWeapons")))) return;
 	IInteractableInterface::OnInteract_Implementation(Character);
 	Character->PickupWeapon(this);
 }

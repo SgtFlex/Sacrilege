@@ -435,6 +435,9 @@ public:
 	UPROPERTY()
 	FTimerHandle DrawHandle;
 
+	UPROPERTY()
+	FTimerHandle ThrowGrenadeDelayHandle;
+
 	//Blood
 	UPROPERTY(EditAnywhere)
 	class UNiagaraSystem* BloodPFX;

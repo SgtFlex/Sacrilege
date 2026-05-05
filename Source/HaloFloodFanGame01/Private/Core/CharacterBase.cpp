@@ -64,7 +64,6 @@ ACharacterBase::ACharacterBase()
 	FirstPersonCameraComponent->SetupAttachment(GetMesh1P(), "HeadSocket");
 	//FirstPersonCameraComponent->SetRelativeLocation(FVector(-10.f, 0.f, 60.f)); // Position the camera
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
-
 }
 
 void ACharacterBase::ApplyPhysicsImpulse_Implementation(FVector Force, FVector Location, FName BoneName)
@@ -705,7 +704,7 @@ bool ACharacterBase::AddGrenade_Implementation(const TSubclassOf<AGrenadeBase> G
 			if (GrenadeInventory[i].GrenadeAmount < 4)
 			{
 				GrenadeInventory[i].GrenadeAmount++;
-				if (GrenadeType.GetDefaultObject()->PickupSFX) UGameplayStatics::PlaySound2D(GetWorld(), GrenadeType.GetDefaultObject()->PickupSFX);
+				if (IsLocallyControlled() && GrenadeType.GetDefaultObject()->PickupSFX) UGameplayStatics::PlaySound2D(GetWorld(), GrenadeType.GetDefaultObject()->PickupSFX);
 			} else
 			{
 				return false;
@@ -743,9 +742,12 @@ void ACharacterBase::ThrowGrenade(const int GrenadeTypeIndex)
 		ServerThrowGrenade(GrenadeTypeIndex);
 		return;
 	}
+	// FTimerDelegate ThrowGrenadeTimerDelegate;
+	// ThrowGrenadeTimerDelegate.BindUObject(this, &ACharacterBase::SpawnGrenade, GrenadeInventory[GrenadeTypeIndex].GrenadeClass);
+	// GetWorldTimerManager().SetTimer(ThrowGrenadeDelayHandle, ThrowGrenadeTimerDelegate, 0.5f, false);
 	SpawnGrenade(GrenadeInventory[GrenadeTypeIndex].GrenadeClass);
-	MulticastThrowGrenade(GrenadeInventory[GrenadeTypeIndex].GrenadeClass);
 	SubtractGrenade(GrenadeTypeIndex);
+	MulticastThrowGrenade(GrenadeInventory[GrenadeTypeIndex].GrenadeClass);
 }
 
 void ACharacterBase::SubtractGrenade(const int GrenadeTypeIndex)
@@ -805,13 +807,9 @@ void ACharacterBase::ThrowGrenadeFX(const TSubclassOf<AGrenadeBase> GrenadeType)
 	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), GrenadeType.GetDefaultObject()->ThrowSFX, GetActorLocation());
 	if (IsLocallyControlled())
 	{
-		if (ThrowGrenadeAnimation1P)
-			GetMesh1P()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation1P);
-	} else
-	{
-		if (ThrowGrenadeAnimation)
-			GetMesh()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation);
+		if (ThrowGrenadeAnimation1P) GetMesh1P()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation1P);
 	}
+	if (ThrowGrenadeAnimation) GetMesh()->GetAnimInstance()->Montage_Play(ThrowGrenadeAnimation);
 }
 
 TArray<FGrenadeStruct>& ACharacterBase::GetGrenadeInventory()
@@ -1216,7 +1214,7 @@ void ACharacterBase::Unstun() const
 
 void ACharacterBase::ServerSetCurrentInteractable_Implementation()
 {
-	if (!IsPlayerControlled() || !CanInteract) return;
+	if (!IsPlayerControlled() || !CanInteract || !GameplayTags.HasTag(FGameplayTag::RequestGameplayTag(FName("Character.CanInteract")))) return;
 	TArray<AActor*> ActorsToIgnore;
 	ActorsToIgnore.Add(this);
 	if (IsPlayerControlled())
