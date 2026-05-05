@@ -137,7 +137,7 @@ public:
 	USkeletalMeshComponent* GetVehicleMesh();
 
 	UFUNCTION(BlueprintCallable)
-	void AddPartnerVehicleToIgnoreList(AVehicleBase* Vehicle);
+	void AddChildVehicleToIgnoreList(AVehicleBase* Vehicle);
 
 	UFUNCTION(BlueprintCallable)
 	void UpdateIgnoreList();
@@ -165,7 +165,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	float CustomTakeRadialDamage(FVector Origin, float Radius, float Force, const FHitResult& HitInfo, FRadialDamageEvent const& RadialDamageEvent, float MinimumRadius, AController* EventInstigator = nullptr, AActor* DamageCauser = nullptr);
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, BlueprintPure)
 	UHealthComponent* GetHealthComponent();
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
@@ -238,7 +238,7 @@ public:
 	FOnExited	OnExited;
 
 	UPROPERTY(BlueprintReadWrite)
-	TArray<AVehicleBase*> VehicleGroup;
+	TArray<AVehicleBase*> ChildVehicles;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
 	FGameplayTagContainer GameplayTags;

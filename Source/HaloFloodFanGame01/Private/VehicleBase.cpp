@@ -31,8 +31,8 @@ AVehicleBase::AVehicleBase()
 void AVehicleBase::BeginPlay()
 {
 	Super::BeginPlay();
-	HealthComponent->OnHealthUpdate.AddDynamic(this, &AVehicleBase::OnHealthUpdated);
-	HealthComponent->OnHealthDepleted.AddDynamic(this, &AVehicleBase::OnHealthDepleted);
+	GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &AVehicleBase::OnHealthUpdated);
+	GetHealthComponent()->OnHealthDepleted.AddDynamic(this, &AVehicleBase::OnHealthDepleted);
 	UpdateDamageState();
 }
 
@@ -75,14 +75,14 @@ void AVehicleBase::OnHealthUpdated(UHealthComponent* HealthComp)
 void AVehicleBase::OnHealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName,
 	AController* EventInstigator, AActor* DamageCauser)
 {
-	if (Pilot) Pilot->CustomTakeDamage(5000, FVector(0,0,0), EventInstigator, DamageCauser);
+	if (Pilot) Pilot->CustomTakeDamage(5000, Force, EventInstigator, DamageCauser);
 	SetIsDestroyed(true);
 }
 
 void AVehicleBase::UpdateDamageState()
 {
-	const float Health = HealthComponent->GetHealth();
-	const float MaxHealth = HealthComponent->GetMaxHealth();
+	const float Health = GetHealthComponent()->GetHealth();
+	const float MaxHealth = GetHealthComponent()->GetMaxHealth();
 	if (Health <= MaxHealth && Health > MaxHealth * 0.66)
 	{
 		SetDamageState(Healthy);
@@ -346,9 +346,9 @@ USkeletalMeshComponent* AVehicleBase::GetVehicleMesh()
 	return VehicleSkeletalMesh;
 }
 
-void AVehicleBase::AddPartnerVehicleToIgnoreList(AVehicleBase* Vehicle)
+void AVehicleBase::AddChildVehicleToIgnoreList(AVehicleBase* Vehicle)
 {
-	VehicleGroup.Add(Vehicle);
+	ChildVehicles.Add(Vehicle);
 	Vehicle->OnEntered.AddUniqueDynamic(this, &AVehicleBase::UpdateIgnoreList);
 	Vehicle->OnExited.AddUniqueDynamic(this, &AVehicleBase::UpdateIgnoreList);
 	IgnoreListUpdated.Broadcast();
@@ -366,7 +366,7 @@ void AVehicleBase::GetIgnoreActors(TArray<AActor*>& IgnoreActors)
 		if (AVehicleBase* ParentVehicle = Cast<AVehicleBase>(GetParentActor())) ParentVehicle->GetIgnoreActors(IgnoreActors);
 	} else
 	{
-		for (const auto Vehicle : VehicleGroup)
+		for (const auto Vehicle : ChildVehicles)
 		{
 			IgnoreActors.Add(Vehicle);
 			if (Vehicle && Vehicle->Pilot) IgnoreActors.Add(Vehicle->Pilot);
@@ -378,25 +378,26 @@ void AVehicleBase::GetIgnoreActors(TArray<AActor*>& IgnoreActors)
 
 float AVehicleBase::CustomTakeDamage_Implementation(float Damage, FVector Force, AController* EventInstigator, AActor* DamageCauser)
 {
-	HealthComponent->TakeDamage(Damage, Force, FVector(0,0,0), NAME_None, EventInstigator, DamageCauser);
+	GetHealthComponent()->TakeDamage(Damage, Force, FVector(0,0,0), NAME_None, EventInstigator, DamageCauser);
 	return Damage;
 }
 
 float AVehicleBase::CustomTakePointDamage_Implementation(float Damage, FVector Direction, const FHitResult& HitInfo, float Force, AController* EventInstigator, AActor* DamageCauser)
 {
-	HealthComponent->TakeDamage(Damage, Direction*Force, HitInfo.Location, HitInfo.BoneName, EventInstigator, DamageCauser);
+	GetHealthComponent()->TakeDamage(Damage, Direction*Force, HitInfo.Location, HitInfo.BoneName, EventInstigator, DamageCauser);
 	return Damage;
 }
 
 float AVehicleBase::CustomTakeRadialDamage_Implementation(FVector Origin, float Radius, float Force, const FHitResult& HitInfo, FRadialDamageEvent const& RadialDamageEvent, float MinimumRadius, AController* EventInstigator, AActor* DamageCauser)
 {
-
-	HealthComponent->TakeDamage(RadialDamageEvent.Params.BaseDamage, (GetActorLocation() - RadialDamageEvent.Origin).GetSafeNormal()*Force, this->GetActorLocation(), NAME_None, EventInstigator, DamageCauser);
+	if (IsChildActor()) return 0;
+	GetHealthComponent()->TakeDamage(RadialDamageEvent.Params.BaseDamage, (GetActorLocation() - RadialDamageEvent.Origin).GetSafeNormal()*Force, this->GetActorLocation(), NAME_None, EventInstigator, DamageCauser);
 	return RadialDamageEvent.Params.BaseDamage;
 }
 
 UHealthComponent* AVehicleBase::GetHealthComponent_Implementation()
 {
+	if (AVehicleBase* ParentVehicle = Cast<AVehicleBase>(GetParentActor())) return ParentVehicle->GetHealthComponent();
 	return HealthComponent;
 }
 

@@ -471,7 +471,7 @@ void ACharacterBase::MC_OnHealthDepleted_Implementation(float Damage, FVector Fo
 	
 	GetCapsuleComponent()->DestroyComponent();
 	SetRootComponent(GetMesh());
-	if (Force.Length() > 50000 || !DeathAnim || (HitBoxNameMap.Contains(HitBoneName) && HitBoxNameMap[HitBoneName]=="Head"))
+	if (Force.Length() > 50000 || !DeathAnim || bIsInVehicle || (HitBoxNameMap.Contains(HitBoneName) && HitBoxNameMap[HitBoneName]=="Head"))
 	{
 		GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		GetMesh()->SetSimulatePhysics(true);
