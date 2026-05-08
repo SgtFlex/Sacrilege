@@ -131,7 +131,7 @@ void ACharacterBase::SpawnLoadout()
 			}
 			if (ChosenLoadoutStruct.EquipmentClass)
 			{
-				
+				EquipmentClass = ChosenLoadoutStruct.EquipmentClass;
 			}
 		}
 	}
@@ -745,9 +745,10 @@ void ACharacterBase::ThrowGrenade(const int GrenadeTypeIndex)
 	// FTimerDelegate ThrowGrenadeTimerDelegate;
 	// ThrowGrenadeTimerDelegate.BindUObject(this, &ACharacterBase::SpawnGrenade, GrenadeInventory[GrenadeTypeIndex].GrenadeClass);
 	// GetWorldTimerManager().SetTimer(ThrowGrenadeDelayHandle, ThrowGrenadeTimerDelegate, 0.5f, false);
+	MulticastThrowGrenade(GrenadeInventory[GrenadeTypeIndex].GrenadeClass);
 	SpawnGrenade(GrenadeInventory[GrenadeTypeIndex].GrenadeClass);
 	SubtractGrenade(GrenadeTypeIndex);
-	MulticastThrowGrenade(GrenadeInventory[GrenadeTypeIndex].GrenadeClass);
+	
 }
 
 void ACharacterBase::SubtractGrenade(const int GrenadeTypeIndex)
