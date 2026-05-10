@@ -4,11 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "PickupInterface.h"
 #include "GameFramework/Actor.h"
 #include "EquipmentBase.generated.h"
 
+class UPickupComponent;
+
 UCLASS(Abstract)
-class HALOFLOODFANGAME01_API AEquipmentBase : public AActor
+class HALOFLOODFANGAME01_API AEquipmentBase : public AActor, public IPickupInterface
 {
 	GENERATED_BODY()
 	
@@ -18,6 +21,8 @@ public:
 
 	virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const { TagContainer = GameplayTags; return; }
 
+	
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -25,6 +30,11 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	virtual void Pickup(ACharacterBase* Character) override;
+
+	UFUNCTION(BlueprintCallable, BlueprintPUre)
+	UStaticMeshComponent* GetMesh();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameplayTags")
@@ -38,4 +48,12 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	FText Name;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UPickupComponent* PickupComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UStaticMeshComponent* Mesh;
+
+	
 };

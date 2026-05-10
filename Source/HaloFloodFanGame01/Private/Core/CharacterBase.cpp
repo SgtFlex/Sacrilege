@@ -1005,6 +1005,7 @@ void ACharacterBase::DrawEquippedWeapon()
 		UE_LOG(LogTemp, Warning, TEXT("No equipped weapon for: %s"), *GetName());
 		return;
 	}
+	
 	//EquippedWeapon->SetReplicateMovement(false);
 	EquippedWeapon->Mesh->SetSimulatePhysics(false);
 	EquippedWeapon->SetActorEnableCollision(false);
@@ -1024,7 +1025,7 @@ void ACharacterBase::DrawEquippedWeapon()
 void ACharacterBase::SetupViewmodel(const bool bFirstPerson)
 {
 	if (!EquippedWeapon) return;
-	EquippedWeapon->ForceNetUpdate();
+ 	EquippedWeapon->ForceNetUpdate();
 	if (bFirstPerson && IsLocallyViewed())
 	{
 		GetMesh1P()->bPauseAnims = false;
@@ -1038,6 +1039,7 @@ void ACharacterBase::SetupViewmodel(const bool bFirstPerson)
 	else
 	{
 		GetMesh1P()->bPauseAnims = true;
+		UE_LOG(LogTemp, Warning, TEXT("Attached to main mesh 3P"));
 		EquippedWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
 	}
 }

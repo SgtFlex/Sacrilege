@@ -172,6 +172,10 @@ void AVehicleBase::Enter_Implementation(ACharacterBase* NewPilot)
 	{
 		CL_Enter(NewPilot);
 	}
+	for (auto ChildVehicle : ChildVehicles)
+	{
+		if (ChildVehicle) ChildVehicle->AIDesired = true;
+	}
 	//TArray<AActor*> IgnoreActors;
 	//GetIgnoreActors(IgnoreActors);
 	//Pilot->EquippedWeapon->ActorsToIgnore.Append(IgnoreActors);

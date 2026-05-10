@@ -81,4 +81,7 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	uint8 DefaultTeam = 2;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool bAutoActivate = false;
+
 };

@@ -27,6 +27,7 @@ AAISpawner::AAISpawner()
 void AAISpawner::BeginPlay()
 {
 	Super::BeginPlay();
+	if (bAutoActivate) TriggerSpawn();
 }
 
 void AAISpawner::OnUnitKilled(UHealthComponent* HealthComponent)
@@ -60,6 +61,17 @@ void AAISpawner::TriggerSpawn()
 		SpawnDropship(Squad);
 	} else
 	{
+		for (auto elem : SquadVehicles)
+		{
+			for (int i = 0; i < elem.Value; ++i)
+			{
+				FVector Loc = UKismetMathLibrary::RandomPointInBoundingBox(GetActorLocation(), BoxExtents);
+				FRotator Rot = FRotator(0,0,0);
+				FActorSpawnParameters SpawnParams;
+				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+				GetWorld()->SpawnActor(elem.Key, &Loc, &Rot, SpawnParams);
+			}
+		}
 		for (auto elem : Squad)
 		{
 			for (int i = 0; i < elem.Value; ++i)
@@ -73,15 +85,7 @@ void AAISpawner::TriggerSpawn()
 				}
 			}
 		}
-		for (auto elem : SquadVehicles)
-		{
-			for (int i = 0; i < elem.Value; ++i)
-			{
-				FVector Loc = UKismetMathLibrary::RandomPointInBoundingBox(GetActorLocation(), BoxExtents);
-				FRotator Rot = FRotator(0,0,0);
-				GetWorld()->SpawnActor(elem.Key, &Loc, &Rot);
-			}
-		}
+		
 	}
 	OnAvailable.Broadcast(this);
 }
@@ -129,7 +133,7 @@ void AAISpawner::SpawnSquad(TMap<TSubclassOf<ACharacterBase>, int> SquadToSpawn,
 ACharacterBase* AAISpawner::SpawnUnit(TSubclassOf<ACharacterBase> Unit, FVector SpawnLoc, FRotator SpawnRot)
 {
 	FActorSpawnParameters ActorSpawnParameters;
-	ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+	ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 	ACharacterBase* Char = GetWorld()->SpawnActor<ACharacterBase>(Unit, SpawnLoc, SpawnRot);
 	if (!Char) return nullptr;
 	Char->SpawnDefaultController();

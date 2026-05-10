@@ -354,7 +354,9 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void LerpCamera(const FTransform& StartTransform, const FTransform& EndTransform);
-
+	
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void PickupEquipment(TSubclassOf<AEquipmentBase> NewEquipmentClass);
 
 protected:
 	// Called when the game starts or when spawned
@@ -385,6 +387,8 @@ protected:
 
 	virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override { TagContainer = GameplayTags; return; }
 
+
+	
 public:
 	//Delegates
 

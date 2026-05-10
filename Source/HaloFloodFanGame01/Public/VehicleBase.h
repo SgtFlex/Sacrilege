@@ -246,4 +246,10 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnIgnoreListUpdated IgnoreListUpdated;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	uint8 AIPriority = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool AIDesired = true;
+
 };
