@@ -3,9 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "DamageableInterface.h"
+#include "Interfaces/DamageableInterface.h"
 #include "GameplayTagAssetInterface.h"
-#include "InteractableInterface.h"
+#include "Interfaces/InteractableInterface.h"
 #include "GameFramework/Pawn.h"
 #include "VehicleBase.generated.h"
 

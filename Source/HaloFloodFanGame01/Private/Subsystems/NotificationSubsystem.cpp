@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "NotificationSubsystem.h"
+#include "Subsystems/NotificationSubsystem.h"
 
 void UNotificationSubsystem::PushNotificationText_Implementation(const FString& Text)
 {

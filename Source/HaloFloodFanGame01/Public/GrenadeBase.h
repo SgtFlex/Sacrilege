@@ -3,9 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "DamageableInterface.h"
+#include "Interfaces/DamageableInterface.h"
 #include "GameplayTagAssetInterface.h"
-#include "PickupInterface.h"
+#include "Interfaces/PickupInterface.h"
 #include "GameFramework/Actor.h"
 #include "GrenadeBase.generated.h"
 

@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "DamageableInterface.h"
+#include "Interfaces/DamageableInterface.h"
 
-#include "HealthComponent.h"
+#include "Components/HealthComponent.h"
 #include "Core/CharacterBase.h"
 #include "Engine/DamageEvents.h"
 #include "Kismet/GameplayStatics.h"

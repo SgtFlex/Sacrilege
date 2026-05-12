@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "PickupComponent.h"
+#include "Components/PickupComponent.h"
 
-#include "PickupInterface.h"
+#include "Interfaces/PickupInterface.h"
 #include "Components/BoxComponent.h"
 #include "HaloFloodFanGame01/PlayerCharacter.h"
 

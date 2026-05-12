@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "SoundCollisionComponent.h"
+#include "Components/SoundCollisionComponent.h"
 
 #include "NiagaraFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"

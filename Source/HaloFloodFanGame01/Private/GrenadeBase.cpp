@@ -3,13 +3,13 @@
 
 #include "GrenadeBase.h"
 
-#include "DamageableInterface.h"
+#include "Interfaces/DamageableInterface.h"
 #include "HaloGameState.h"
-#include "PlayerHUD.h"
-#include "MyCustomBlueprintFunctionLibrary.h"
+#include "UI/PlayerHUD.h"
+#include "FunctionLibraries/MyCustomBlueprintFunctionLibrary.h"
 #include "NiagaraFunctionLibrary.h"
-#include "PickupComponent.h"
-#include "WorldCleanupManager.h"
+#include "Components/PickupComponent.h"
+#include "Subsystems/WorldCleanupManager.h"
 #include "Components/DecalComponent.h"
 #include "Engine/DamageEvents.h"
 #include "Engine/DecalActor.h"

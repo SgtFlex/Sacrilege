@@ -3,7 +3,7 @@
 
 #include "EquipmentBase.h"
 
-#include "PickupComponent.h"
+#include "Components/PickupComponent.h"
 #include "Core/CharacterBase.h"
 
 // Sets default values

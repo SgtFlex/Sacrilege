@@ -2,7 +2,7 @@
 
 
 #include "FirefightGameState.h"
-#include "NotificationSubsystem.h"
+#include "Subsystems/NotificationSubsystem.h"
 #include "Net/UnrealNetwork.h"
 
 void AFirefightGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

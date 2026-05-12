@@ -4,8 +4,8 @@
 #include "VehicleBase.h"
 
 #include "AIControllerBase.h"
-#include "GrenadeWidget.h"
-#include "HealthComponent.h"
+#include "UI/GrenadeWidget.h"
+#include "Components/HealthComponent.h"
 #include "WeaponBase.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"

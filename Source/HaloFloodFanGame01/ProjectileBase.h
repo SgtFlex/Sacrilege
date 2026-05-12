@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagAssetInterface.h"
-#include "PhysicsInterface.h"
+#include "Interfaces/PhysicsInterface.h"
 #include "GameFramework/Actor.h"
 #include "ProjectileBase.generated.h"
 

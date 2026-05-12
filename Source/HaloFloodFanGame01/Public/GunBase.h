@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "InteractableInterface.h"
+#include "Interfaces/InteractableInterface.h"
 #include "WeaponBase.h"
 #include "GameFramework/Actor.h"
 #include "HaloFloodFanGame01/FGunAIBehavior.h"

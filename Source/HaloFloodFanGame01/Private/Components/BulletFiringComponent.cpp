@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "BulletFiringComponent.h"
+#include "Components/BulletFiringComponent.h"
 
 #include "Bullet.h"
-#include "MyCustomBlueprintFunctionLibrary.h"
+#include "FunctionLibraries/MyCustomBlueprintFunctionLibrary.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Engine/PointLight.h"
 #include "HaloFloodFanGame01/ProjectileBase.h"

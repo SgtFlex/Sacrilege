@@ -3,9 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "DamageableInterface.h"
+#include "Interfaces/DamageableInterface.h"
 #include "GameplayTagAssetInterface.h"
-#include "PhysicsInterface.h"
+#include "Interfaces/PhysicsInterface.h"
 #include "Components/TimelineComponent.h"
 #include "GameFramework/Character.h"
 #include "CharacterBase.generated.h"

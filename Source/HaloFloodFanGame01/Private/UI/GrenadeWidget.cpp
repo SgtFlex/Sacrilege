@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GrenadeWidget.h"
+#include "UI/GrenadeWidget.h"
 
 #include "GrenadeBase.h"
 #include "Components/Image.h"

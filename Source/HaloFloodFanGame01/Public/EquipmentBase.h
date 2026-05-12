@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
-#include "PickupInterface.h"
+#include "Interfaces/PickupInterface.h"
 #include "GameFramework/Actor.h"
 #include "EquipmentBase.generated.h"
 

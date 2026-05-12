@@ -1,13 +1,13 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MyCustomBlueprintFunctionLibrary.h"
+#include "FunctionLibraries/MyCustomBlueprintFunctionLibrary.h"
 
 #include "AudioDevice.h"
-#include "DamageableInterface.h"
+#include "Interfaces/DamageableInterface.h"
 #include "NiagaraEmitterHandle.h"
 #include "NiagaraFunctionLibrary.h"
-#include "PhysicsInterface.h"
+#include "Interfaces/PhysicsInterface.h"
 #include "AI/NavigationSystemBase.h"
 #include "Camera/CameraComponent.h"
 #include "Engine/DamageEvents.h"

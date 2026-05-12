@@ -7,7 +7,7 @@
 #include "GunBase.h"
 #include "HaloGameState.h"
 #include "HaloPlayerState.h"
-#include "NotificationSubsystem.h"
+#include "Subsystems/NotificationSubsystem.h"
 #include "PlayerControllerBase.h"
 #include "VehicleBase.h"
 #include "Core/CharacterBase.h"

@@ -2,12 +2,12 @@
 
 #include "ProjectileBase.h"
 
-#include "DamageableInterface.h"
+#include "Interfaces/DamageableInterface.h"
 #include "GunBase.h"
 #include "HaloGameState.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
-#include "WorldCleanupManager.h"
+#include "Subsystems/WorldCleanupManager.h"
 #include "Components/AudioComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"

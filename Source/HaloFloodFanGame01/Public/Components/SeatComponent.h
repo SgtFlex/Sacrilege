@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "InteractableInterface.h"
+#include "Interfaces/InteractableInterface.h"
 #include "Components/ActorComponent.h"
 #include "SeatComponent.generated.h"
 

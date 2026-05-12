@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "InfectionManager.h"
+#include "Subsystems/InfectionManager.h"
 
 #include "Core/CharacterBase.h"
 

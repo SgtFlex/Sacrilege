@@ -3,7 +3,7 @@
 
 #include "AISpawner.h"
 
-#include "HealthComponent.h"
+#include "Components/HealthComponent.h"
 #include "VehicleBase.h"
 #include "Core/CharacterBase.h"
 

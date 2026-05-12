@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "WeaponInfoHUD.h"
+#include "UI/WeaponInfoHUD.h"
 
 #include "GunBase.h"
 #include "Blueprint/WidgetTree.h"

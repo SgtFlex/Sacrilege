@@ -4,7 +4,7 @@
 #include "PlayerControllerBase.h"
 
 #include "AlertState.h"
-#include "PlayerHUD.h"
+#include "UI/PlayerHUD.h"
 #include "Core/CharacterBase.h"
 #include "GameFramework/GameModeBase.h"
 #include "HaloFloodFanGame01/FirefightGamemode.h"

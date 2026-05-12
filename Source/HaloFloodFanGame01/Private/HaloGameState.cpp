@@ -3,6 +3,6 @@
 
 #include "HaloGameState.h"
 
-#include "NotificationSubsystem.h"
+#include "Subsystems/NotificationSubsystem.h"
 #include "Net/UnrealNetwork.h"
 

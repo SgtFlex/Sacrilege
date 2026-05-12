@@ -4,7 +4,7 @@
 #include "AIControllerBase.h"
 
 #include "Bullet.h"
-#include "BulletFiringComponent.h"
+#include "Components/BulletFiringComponent.h"
 #include "GunBase.h"
 #include "SmartObject.h"
 #include "WeaponBase.h"
