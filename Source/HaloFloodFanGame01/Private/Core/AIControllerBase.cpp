@@ -6,7 +6,7 @@
 #include "Bullet.h"
 #include "Components/BulletFiringComponent.h"
 #include "Core/GunBase.h"
-#include "SmartObject.h"
+#include "Core/SmartObject.h"
 #include "Core/WeaponBase.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
