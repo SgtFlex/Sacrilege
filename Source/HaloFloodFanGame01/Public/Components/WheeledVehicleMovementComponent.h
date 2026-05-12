@@ -14,11 +14,14 @@ class HALOFLOODFANGAME01_API UWheeledVehicleMovementComponent : public UChaosWhe
 {
 	GENERATED_BODY()
 
-	//virtual void RequestPathMove(const FVector& MoveVelocity, bool bForceMaxSpeed) override;
+
+	virtual void RequestPathMove(const FVector& MoveInput) override;
 	
 	virtual void RequestDirectMove(const FVector& MoveVelocity, bool bForceMaxSpeed) override;
-
+	
 	virtual void StopActiveMovement() override;
+
+	virtual void StopMovementKeepPathing() override;
 
 	virtual void StopMovementImmediately() override;
 

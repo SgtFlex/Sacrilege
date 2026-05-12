@@ -6,23 +6,26 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 
-// void UWheeledVehicleMovementComponent::RequestPathMove(const FVector& MoveVelocity, bool bForceMaxSpeed)
-// {
-// 	//Super::RequestPathMove(MoveVelocity);
-//
-//
-// 	//ChaosVehicleMovementComponent->SetSteeringInput(GetOwner()->GetActorForwardVector().Dot(MoveVelocity));
-// 	SetBrakeInput(0.0f);
-// 	SetThrottleInput(1.0f);
-// }
+
+void UWheeledVehicleMovementComponent::RequestPathMove(const FVector& MoveInput)
+{
+	Super::RequestPathMove(MoveInput);
+	UE_LOG(LogTemp, Warning, TEXT("%s starting path move"), *GetOwner()->GetActorLabel())	
+
+	RequestDirectMove(MoveInput, true);
+}
 
 void UWheeledVehicleMovementComponent::RequestDirectMove(const FVector& MoveVelocity, bool bForceMaxSpeed)
 {
-	//Super::RequestDirectMove(MoveVelocity, bForceMaxSpeed);
-	//UE_LOG(LogTemp, Warning, TEXT("%s starting request move"), *GetOwner()->GetActorLabel())	
+	Super::RequestDirectMove(MoveVelocity, bForceMaxSpeed);
+	
+	
 	
 	const FVector Position = GetOwner()->GetActorLocation();
+	
 	const FVector Destination = Position + MoveVelocity * GetWorld()->GetDeltaSeconds();
+	DrawDebugLine(GetWorld(), Position, Destination, FColor::Yellow, false);
+	
 	const float DotProduct = GetOwner()->GetActorForwardVector().Dot(MoveVelocity.GetSafeNormal());
 	const FVector CrossProduct = FVector::CrossProduct(GetOwner()->GetActorForwardVector().GetSafeNormal(), MoveVelocity.GetSafeNormal());
 	float AngleDegrees = FMath::RadiansToDegrees(FMath::Acos(DotProduct));
@@ -50,15 +53,22 @@ void UWheeledVehicleMovementComponent::RequestDirectMove(const FVector& MoveVelo
 void UWheeledVehicleMovementComponent::StopActiveMovement()
 {
 	//Super::StopActiveMovement();
-
+	
 	SetThrottleInput(0.0f);
 	SetBrakeInput(1.0f);
 }
 
+void UWheeledVehicleMovementComponent::StopMovementKeepPathing()
+{
+	//Super::StopMovementKeepPathing();
+}
+
 void UWheeledVehicleMovementComponent::StopMovementImmediately()
 {
+	//@TODO This function gets called when falling off NavMesh, resulting in no movement
 	SetThrottleInput(0.0f);
 	SetBrakeInput(1.0f);
+	UE_LOG(LogTemp, Warning, TEXT("Stop"));
 }
 
 
