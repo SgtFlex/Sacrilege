@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "HaloPlayerState.h"
+#include "Gamemodes/HaloPlayerState.h"
 #include "FirefightPlayerState.generated.h"
 
 /**

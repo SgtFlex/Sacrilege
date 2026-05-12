@@ -1,15 +1,15 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "FirefightGamemode.h"
+#include "Gamemodes/FirefightGamemode.h"
 
 #include "AISpawner.h"
-#include "FirefightGameState.h"
-#include "GunBase.h"
-#include "HaloGameState.h"
-#include "HaloPlayerState.h"
+#include "Gamemodes/FirefightGameState.h"
+#include "Core/GunBase.h"
+#include "Gamemodes/HaloGameState.h"
+#include "Gamemodes/HaloPlayerState.h"
 #include "Subsystems/NotificationSubsystem.h"
-#include "PlayerControllerBase.h"
-#include "VehicleBase.h"
+#include "Core/PlayerControllerBase.h"
+#include "Core/VehicleBase.h"
 #include "Core/CharacterBase.h"
 #include "GameFramework/CheatManager.h"
 #include "GameFramework/GameSession.h"

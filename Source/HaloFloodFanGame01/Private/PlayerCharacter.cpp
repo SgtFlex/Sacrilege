@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "PlayerCharacter.h"
-#include "GunBase.h"
+#include "Core/GunBase.h"
 
 
 APlayerCharacter::APlayerCharacter()

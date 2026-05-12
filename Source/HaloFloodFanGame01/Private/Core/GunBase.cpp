@@ -1,17 +1,17 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GunBase.h"
+#include "Core/GunBase.h"
 
 #include "Bullet.h"
 #include "Components/BulletFiringComponent.h"
 #include "UI/GrenadeWidget.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
-#include "PlayerControllerBase.h"
+#include "Core/PlayerControllerBase.h"
 #include "Subsystems/WorldCleanupManager.h"
 #include "Components/Image.h"
-#include "HaloFloodFanGame01/PlayerCharacter.h"
-#include "HaloFloodFanGame01/ProjectileBase.h"
+#include "PlayerCharacter.h"
+#include "Core/ProjectileBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Perception/AISense_Hearing.h"

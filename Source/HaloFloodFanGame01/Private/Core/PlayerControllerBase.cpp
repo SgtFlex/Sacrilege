@@ -1,14 +1,14 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "PlayerControllerBase.h"
+#include "Core/PlayerControllerBase.h"
 
 #include "AlertState.h"
 #include "UI/PlayerHUD.h"
 #include "Core/CharacterBase.h"
 #include "GameFramework/GameModeBase.h"
-#include "HaloFloodFanGame01/FirefightGamemode.h"
-#include "HaloFloodFanGame01/PlayerCharacter.h"
+#include "Gamemodes/FirefightGamemode.h"
+#include "PlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
 
 APlayerControllerBase::APlayerControllerBase()

@@ -3,7 +3,7 @@
 
 #include "UI/GrenadeWidget.h"
 
-#include "GrenadeBase.h"
+#include "Core/GrenadeBase.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 

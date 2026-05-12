@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "HaloGameState.h"
+#include "Gamemodes/HaloGameState.h"
 #include "FirefightGameState.generated.h"
 class ACharacterBase;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWaveChanged, int, CurrentWave);

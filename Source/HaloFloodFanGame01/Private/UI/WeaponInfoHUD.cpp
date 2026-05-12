@@ -3,7 +3,7 @@
 
 #include "UI/WeaponInfoHUD.h"
 
-#include "GunBase.h"
+#include "Core/GunBase.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"

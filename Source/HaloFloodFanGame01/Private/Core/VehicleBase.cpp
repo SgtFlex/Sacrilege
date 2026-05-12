@@ -1,12 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "VehicleBase.h"
+#include "Core/VehicleBase.h"
 
-#include "AIControllerBase.h"
+#include "Core/AIControllerBase.h"
 #include "UI/GrenadeWidget.h"
 #include "Components/HealthComponent.h"
-#include "WeaponBase.h"
+#include "Core/WeaponBase.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Core/CharacterBase.h"

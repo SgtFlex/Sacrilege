@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "WeaponBase.h"
+#include "Core/WeaponBase.h"
 
 #include "Subsystems/WorldCleanupManager.h"
 #include "Camera/CameraComponent.h"

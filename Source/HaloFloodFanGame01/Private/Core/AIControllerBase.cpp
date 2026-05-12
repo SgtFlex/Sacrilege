@@ -1,13 +1,13 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "AIControllerBase.h"
+#include "Core/AIControllerBase.h"
 
 #include "Bullet.h"
 #include "Components/BulletFiringComponent.h"
-#include "GunBase.h"
+#include "Core/GunBase.h"
 #include "SmartObject.h"
-#include "WeaponBase.h"
+#include "Core/WeaponBase.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/KismetSystemLibrary.h"

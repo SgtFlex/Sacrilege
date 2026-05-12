@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "HaloGameMode.h"
+#include "Gamemodes/HaloGameMode.h"
 #include "FirefightGamemode.generated.h"
 
 class AFirefightGameState;

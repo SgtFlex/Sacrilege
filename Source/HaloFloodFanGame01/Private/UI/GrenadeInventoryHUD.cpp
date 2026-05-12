@@ -3,7 +3,7 @@
 
 #include "UI/GrenadeInventoryHUD.h"
 
-#include "GrenadeBase.h"
+#include "Core/GrenadeBase.h"
 #include "UI/GrenadeWidget.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"

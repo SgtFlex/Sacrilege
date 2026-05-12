@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "HaloFloodFanGame01/ProjectileBase.h"
+#include "Core/ProjectileBase.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "HaloWorldSubsystem.generated.h"
 

@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GrenadeBase.h"
+#include "Core/GrenadeBase.h"
 
 #include "Interfaces/DamageableInterface.h"
-#include "HaloGameState.h"
+#include "Gamemodes/HaloGameState.h"
 #include "UI/PlayerHUD.h"
 #include "FunctionLibraries/MyCustomBlueprintFunctionLibrary.h"
 #include "NiagaraFunctionLibrary.h"
@@ -14,7 +14,7 @@
 #include "Engine/DamageEvents.h"
 #include "Engine/DecalActor.h"
 #include "GameFramework/ProjectileMovementComponent.h"
-#include "HaloFloodFanGame01/PlayerCharacter.h"
+#include "PlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values

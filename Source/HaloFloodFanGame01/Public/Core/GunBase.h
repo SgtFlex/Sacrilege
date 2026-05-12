@@ -6,7 +6,7 @@
 #include "Interfaces/InteractableInterface.h"
 #include "WeaponBase.h"
 #include "GameFramework/Actor.h"
-#include "HaloFloodFanGame01/FGunAIBehavior.h"
+#include "FGunAIBehavior.h"
 #include "GunBase.generated.h"
 
 struct FGunAIBehavior;

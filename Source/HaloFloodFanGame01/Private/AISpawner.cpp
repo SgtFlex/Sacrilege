@@ -4,12 +4,12 @@
 #include "AISpawner.h"
 
 #include "Components/HealthComponent.h"
-#include "VehicleBase.h"
+#include "Core/VehicleBase.h"
 #include "Core/CharacterBase.h"
 
 #include "Components/BoxComponent.h"
 #include "Core/CharacterBase.h"
-#include "HaloFloodFanGame01/FirefightGamemode.h"
+#include "Gamemodes/FirefightGamemode.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 

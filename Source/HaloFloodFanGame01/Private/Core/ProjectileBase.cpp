@@ -1,10 +1,10 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "ProjectileBase.h"
+#include "Core/ProjectileBase.h"
 
 #include "Interfaces/DamageableInterface.h"
-#include "GunBase.h"
-#include "HaloGameState.h"
+#include "Core/GunBase.h"
+#include "Gamemodes/HaloGameState.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Subsystems/WorldCleanupManager.h"

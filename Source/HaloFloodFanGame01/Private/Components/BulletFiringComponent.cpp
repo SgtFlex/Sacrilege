@@ -7,7 +7,7 @@
 #include "FunctionLibraries/MyCustomBlueprintFunctionLibrary.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Engine/PointLight.h"
-#include "HaloFloodFanGame01/ProjectileBase.h"
+#include "Core/ProjectileBase.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values for this component's properties
