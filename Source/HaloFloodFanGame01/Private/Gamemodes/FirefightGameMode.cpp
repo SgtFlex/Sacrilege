@@ -296,6 +296,8 @@ void AFirefightGameMode::PlayerDied_Implementation(ACharacterBase* PlayerCharact
 		StartRespawnProcess(PlayerController, PlayerCharacter);
 	} else
 	{
+		FTimerHandle RespawnHandle;
+		CreateSpectator(PlayerCharacter, PlayerController, RespawnHandle);
 		EndGame();
 	}
 }

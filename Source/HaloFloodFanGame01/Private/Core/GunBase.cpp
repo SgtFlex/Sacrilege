@@ -113,7 +113,7 @@ void AGunBase::StartReload_Implementation()
 	if (bReloading || CurReserve <= 0 || CurMagazine == MaxMagazine) return;
 	ScopeOut();
 	bReloading = true;
-	if (BurstAmount > 0) GetWorldTimerManager().ClearTimer(FireHandle);
+	//if (BurstAmount > 0) GetWorldTimerManager().ClearTimer(FireHandle);
 	GetWorld()->GetTimerManager().SetTimer(ReloadTimer, this, &AGunBase::FinishReload, ReloadSpeed, false);
 	Multi_StartReload();
 }
@@ -133,7 +133,7 @@ void AGunBase::Multi_StartReload_Implementation()
 void AGunBase::PullTrigger_Implementation()
 {
 
-	if (GetWorldTimerManager().TimerExists(BurstRetriggerHandle) || CurMagazine <= 0 || bReloading)
+	if (GetWorldTimerManager().TimerExists(BurstRetriggerHandle))
 		return;
 	BulletsFired = 0;
 	GetWorldTimerManager().SetTimer(FireHandle, this, &AGunBase::Fire, 60/FireRate, true, 0);
@@ -394,7 +394,7 @@ void AGunBase::Fire_Implementation()
 {
 	if (!CanFire())
 	{
-		ReleaseTrigger();
+		//ReleaseTrigger();
 		return;
 	}
 	CurMagazine--;
@@ -403,6 +403,10 @@ void AGunBase::Fire_Implementation()
 	SpawnBullet();
 	OnAmmoUpdated.Broadcast();
 	OnFire.Broadcast();
+	if (CurMagazine <= 0)
+	{
+		StartReload();
+	}
 }
 
 void AGunBase::FinishReload_Implementation()

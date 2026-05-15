@@ -286,7 +286,6 @@ void AVehicleBase::MulticastDetachPilot_Implementation()
 {
 	if (IsValid(Pilot))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Called detach pilot on %d"), GetRemoteRole());
 		Pilot->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_NavWalking);
 		Pilot->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 		
@@ -294,8 +293,11 @@ void AVehicleBase::MulticastDetachPilot_Implementation()
 		Pilot->LerpCamera(GetCamera()->GetComponentTransform().GetRelativeTransform(Pilot->GetFirstPersonCameraComponent()->GetComponentTransform()), Pilot->GetFirstPersonCameraComponent()->GetRelativeTransform());
 		//Pilot->SetActorRotation(FRotator(0, 0, 0));
 		//PilotController->SetControlRotation(GetControlRotation());
-		Pilot->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		Pilot->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Vehicle, ECR_Block);
+		if (Pilot->GetCapsuleComponent())
+		{
+			Pilot->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			Pilot->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Vehicle, ECR_Block);
+		}
 		if (Pilot->VehicleAnimExitMontages.Contains(AnimType)) Pilot->GetMesh()->GetAnimInstance()->Montage_Stop(0, *Pilot->VehicleAnimExitMontages.Find(AnimType.GetValue()));
 		//Pilot->SetActorLocation(ExitPoint->GetComponentLocation(), false);
 		if (Pilot->EquippedWeapon) Pilot->EquippedWeapon->SetActorHiddenInGame(false);
