@@ -10,8 +10,6 @@
 void UWheeledVehicleMovementComponent::RequestPathMove(const FVector& MoveInput)
 {
 	Super::RequestPathMove(MoveInput);
-	UE_LOG(LogTemp, Warning, TEXT("%s starting path move"), *GetOwner()->GetActorLabel())	
-
 	RequestDirectMove(MoveInput, true);
 }
 
@@ -68,7 +66,6 @@ void UWheeledVehicleMovementComponent::StopMovementImmediately()
 	//@TODO This function gets called when falling off NavMesh, resulting in no movement
 	SetThrottleInput(0.0f);
 	SetBrakeInput(1.0f);
-	UE_LOG(LogTemp, Warning, TEXT("Stop"));
 }
 
 

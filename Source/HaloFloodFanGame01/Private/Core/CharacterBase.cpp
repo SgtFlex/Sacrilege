@@ -77,6 +77,11 @@ void ACharacterBase::ApplyPhysicsImpulse_Implementation(FVector Force, FVector L
 	}
 }
 
+bool ACharacterBase::IsAlliedToTeam(uint8 OtherTeam)
+{
+	return TeamId == OtherTeam;
+}
+
 // Called when the game starts or when spawned
 void ACharacterBase::BeginPlay()
 {

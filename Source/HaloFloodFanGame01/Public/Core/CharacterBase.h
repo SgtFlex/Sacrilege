@@ -358,6 +358,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void PickupEquipment(TSubclassOf<AEquipmentBase> NewEquipmentClass);
 
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	bool IsAlliedToTeam(uint8 OtherTeam);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
