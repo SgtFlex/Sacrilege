@@ -110,6 +110,10 @@ void AVehicleBase::SetDamageState_Implementation(EDamageState NewDamageState)
 void AVehicleBase::SetIsDestroyed(bool bNewIsDestroyed)
 {
 	bIsDestroyed = bNewIsDestroyed;
+	if (bNewIsDestroyed)
+		GetVehicleMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel4, ECR_Ignore);
+	else
+		GetVehicleMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel4, ECR_Block);
 }
 
 //This is a multicast function
@@ -221,6 +225,7 @@ void AVehicleBase::MulticastAttachPilot_Implementation()
 		Pilot->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 		Pilot->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		Pilot->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Vehicle, ECR_Ignore);
+		Pilot->GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel4, ECR_Ignore);
 		FName Socket = NAME_None;
 		if (GetVehicleMesh()->DoesSocketExist("Seat")) Socket = "Seat";
 		if (AnimType!=Passenger && Pilot->EquippedWeapon) Pilot->EquippedWeapon->SetActorHiddenInGame(true);
@@ -308,6 +313,7 @@ void AVehicleBase::MulticastDetachPilot_Implementation()
 		{
 			Pilot->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 			Pilot->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Vehicle, ECR_Block);
+			Pilot->GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel4, ECR_Block);
 		}
 		if (Pilot->VehicleAnimExitMontages.Contains(AnimType)) Pilot->GetMesh()->GetAnimInstance()->Montage_Stop(0, *Pilot->VehicleAnimExitMontages.Find(AnimType.GetValue()));
 		//Pilot->SetActorLocation(ExitPoint->GetComponentLocation(), false);

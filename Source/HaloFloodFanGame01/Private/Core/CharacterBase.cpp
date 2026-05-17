@@ -472,7 +472,8 @@ void ACharacterBase::MC_OnHealthDepleted_Implementation(float Damage, FVector Fo
 		//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(100, 100, 100), GetActorLocation(), FRotator(-90,0,0)));
 	if (DeathSound)
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), DeathSound, GetActorLocation());
-	
+
+	GetMesh()->SetCollisionResponseToChannel(ECC_GameTraceChannel4, ECR_Ignore);
 	GetCapsuleComponent()->DestroyComponent();
 	SetRootComponent(GetMesh());
 	if (Force.Length() > 50000 || !DeathAnim || bIsInVehicle || (HitBoxNameMap.Contains(HitBoneName) && HitBoxNameMap[HitBoneName]=="Head"))
@@ -1226,7 +1227,7 @@ void ACharacterBase::ServerSetCurrentInteractable_Implementation()
 	TArray<AActor*> ActorsToIgnore;
 	ActorsToIgnore.Add(this);
 	if (IsPlayerControlled())
-	UKismetSystemLibrary::SphereTraceSingle(GetWorld(), FirstPersonCameraComponent->GetComponentLocation(), FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector()*10000.0f, 20, UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Visibility), false, ActorsToIgnore, EDrawDebugTrace::None, PlayerAim, true, FLinearColor::Red, FLinearColor::Green, 5);
+	UKismetSystemLibrary::SphereTraceSingle(GetWorld(), FirstPersonCameraComponent->GetComponentLocation(), FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector()*10000.0f, 20, UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_GameTraceChannel4), false, ActorsToIgnore, EDrawDebugTrace::None, PlayerAim, true, FLinearColor::Red, FLinearColor::Green, 5);
 	AActor* FoundActor = nullptr;
 
 
@@ -1239,13 +1240,16 @@ void ACharacterBase::ServerSetCurrentInteractable_Implementation()
 	{
 		TArray<AActor*> Actors;
 		TArray<TEnumAsByte<EObjectTypeQuery>> Objects;
-		UKismetSystemLibrary::SphereOverlapActors(GetWorld(), GetActorLocation(), 300, Objects, AActor::StaticClass(), ActorsToIgnore, Actors);
+		//UKismetSystemLibrary::SphereOverlapActors(GetWorld(), GetActorLocation(), 300, Objects, AActor::StaticClass(), ActorsToIgnore, Actors);
+		TArray<FHitResult> HitResults;
+		UKismetSystemLibrary::SphereTraceMulti(GetWorld(), GetActorLocation(), GetActorLocation(), 300, UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_GameTraceChannel4), false, ActorsToIgnore, EDrawDebugTrace::None, HitResults, true, FLinearColor::Red, FLinearColor::Green, 5);
 		//InteractionSphere->GetOverlappingActors(Actors);
 		
-		if (!Actors.IsEmpty())
+
+		float ClosestDist = 0;
+		for (const auto Hit : HitResults)
 		{
-			float ClosestDist = 0;
-			for (const auto Actor : Actors)
+			if (AActor* Actor = Hit.GetActor())
 			{
 				if (Actor->Implements<UInteractableInterface>() && (ClosestDist == 0 || GetDistanceTo(Actor) < ClosestDist))
 				{

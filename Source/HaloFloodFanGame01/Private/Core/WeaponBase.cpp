@@ -22,6 +22,7 @@ AWeaponBase::AWeaponBase()
 	bReplicates = true;
 	Mesh->SetComponentTickEnabled(false);
 	Mesh->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
+	Mesh->SetCollisionResponseToChannel(ECC_GameTraceChannel4, ECR_Block);
 
 }
 
