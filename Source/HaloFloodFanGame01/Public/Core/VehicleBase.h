@@ -90,6 +90,12 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	void Exit();
 
+	UFUNCTION(Server, Reliable)
+	void ServerExit();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastExit();
+
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	void DoVehicleUnpossession();
 

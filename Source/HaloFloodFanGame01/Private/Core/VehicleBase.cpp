@@ -154,6 +154,7 @@ void AVehicleBase::UnPossessed()
 
 
 
+
 void AVehicleBase::Client_Unpossessed_Implementation()
 {
 	if (IsLocallyViewed())
@@ -231,13 +232,23 @@ void AVehicleBase::MulticastAttachPilot_Implementation()
 void AVehicleBase::Exit_Implementation()
 {
 	if (!Pilot) return;
+	ServerExit();
+	GetWorldTimerManager().SetTimer(ExitDelayHandle, this, &AVehicleBase::DoVehicleUnpossession, ExitTime, false);
+}
+
+void AVehicleBase::ServerExit_Implementation()
+{
+	MulticastExit();
+}
+
+void AVehicleBase::MulticastExit_Implementation()
+{
 	LerpToExit();
 	if (Pilot->VehicleAnimExitMontages.Contains(AnimType.GetValue()))
 	{
 		UAnimMontage* ExitMontage = *Pilot->VehicleAnimExitMontages.Find(AnimType.GetValue());
 		Pilot->GetMesh()->GetAnimInstance()->Montage_Play(ExitMontage, ExitMontage->GetPlayLength()/ExitTime);
 	}
-	GetWorldTimerManager().SetTimer(ExitDelayHandle, this, &AVehicleBase::DoVehicleUnpossession, ExitTime, false);
 }
 
 void AVehicleBase::DoVehicleUnpossession_Implementation()
