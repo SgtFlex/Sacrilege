@@ -54,7 +54,7 @@ void UFlyingVehicleMovementComponent::TurnToTargetRotation()
 	const FVector AngularVelocity = ((FVector(AngleDifference.Roll, 0, AngleDifference.Yaw))
 		- (CurrentAngularVelocity * TorqueDamping)) * TorqueForce;
 	
-	PrimitiveComponent->AddTorqueInDegrees(DeltaQuat.Vector() - CurrentAngularVelocity, NAME_None, true);
+	PrimitiveComponent->AddTorqueInDegrees(AngularVelocity, NAME_None, true);
 }
 
 void UFlyingVehicleMovementComponent::RequestDirectMove(const FVector& MoveVelocity, bool bForceMaxSpeed)

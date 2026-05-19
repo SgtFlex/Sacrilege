@@ -538,23 +538,30 @@ void ACharacterBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 	if (OtherComp)
 	{
 		UAISense_Touch::ReportTouchEvent(GetWorld(), this, OtherActor, Hit.Location);
-		const float VelocityDifference = FMath::Abs(OtherComp->GetComponentVelocity().Length() - this->GetVelocity().Length());
-		const FVector ForceVector = OtherComp->GetComponentVelocity() - this->GetVelocity();
-		//Dotproduct doesnt work correctly if we're standing still
-		const float DotProduct = FMath::Abs(Hit.Normal.Dot(ForceVector.GetSafeNormal()));
-		
-		//const float OtherCompMass = OtherComp->GetMass();
-		//UE_LOG(LogTemp, Warning, TEXT("Dot: %f"), DotProduct);
-		//const float DamageCalculation = FMath::Pow(VelocityDifference, 1.0f / 3.0f) * (OtherCompMass/300);
-		const float DamageCalculation = (VelocityDifference/25) * DotProduct;
-		if (DamageCalculation > 5)
-		{
-			//@TODO Review collision damage
-			//CustomTakeDamage(DamageCalculation, NormalImpulse, nullptr, nullptr);
-			//float DecalSize = 100;
-			//UGameplayStatics::SpawnDecalAtLocation(GetWorld(), BloodDecalMaterial, FVector(DecalSize, DecalSize, DecalSize), GetMesh()->GetComponentLocation() + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), 0), FRotator(-90,0,FMath::RandRange(-180, 180)));
-		}
+		TakePhysicsDamage(HitComponent, OtherActor, OtherComp, NormalImpulse, Hit);
 	}
+}
+
+float ACharacterBase::TakePhysicsDamage(UPrimitiveComponent* HitComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	const float VelocityDifference = FMath::Abs(OtherComp->GetComponentVelocity().Length() - this->GetVelocity().Length());
+	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red,FString::Printf(TEXT("Velocity Difference: %f"), VelocityDifference));
+	const FVector ForceVector = OtherComp->GetComponentVelocity() - this->GetVelocity();
+	//Dotproduct doesnt work correctly if we're standing still
+	const float DotProduct = FMath::Abs(Hit.Normal.Dot(ForceVector.GetSafeNormal()));
+	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red,FString::Printf(TEXT("Dot : %f"), DotProduct));
+
+	//const float OtherCompMass = OtherComp->GetMass();
+	//UE_LOG(LogTemp, Warning, TEXT("Dot: %f"), DotProduct);
+	//const float DamageCalculation = FMath::Pow(VelocityDifference, 1.0f / 3.0f) * (OtherCompMass/300);
+	const float DamageCalculation = (FMath::Pow(VelocityDifference, 2)/ 10000) * DotProduct;
+	if (DamageCalculation > 5)
+	{
+		//@TODO Review collision damage
+		return CustomTakeDamage(DamageCalculation, NormalImpulse, nullptr, OtherActor);
+	}
+	return 0;
 }
 
 void ACharacterBase::SetSmartObject(ASmartObject* NewSmartObject)
