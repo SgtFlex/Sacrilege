@@ -44,17 +44,12 @@ void UFlyingVehicleMovementComponent::Decelerate()
 //@TODO Try using vectors purely instead of rotators? could be what's causing issues when aiming certain directions
 void UFlyingVehicleMovementComponent::TurnToTargetRotation()
 {
-	FRotator AngleDifference = UKismetMathLibrary::NormalizedDeltaRotator(TargetRotation, CurrentRotation);
-	FQuat NewRotation = FQuat::MakeFromRotator(TargetRotation);
-	FQuat DeltaQuat = FQuat::MakeFromRotator(UKismetMathLibrary::NormalizedDeltaRotator(TargetRotation, CurrentRotation));
-	//const FRotator DeltaRotation = UKismetMathLibrary::NormalizedDeltaRotator(TargetRotation, CurrentRotation);
+	const FRotator AngleDifference = UKismetMathLibrary::NormalizedDeltaRotator(TargetRotation, CurrentRotation);
 	const FVector CurrentAngularVelocity = PrimitiveComponent->GetPhysicsAngularVelocityInDegrees();
-	//const FVector TorqueToAdd = (FVector(0, 0, DeltaRotation.Yaw) - (CurrentAngularVelocity * TorqueDamping)) * TorqueForce;
-
-	const FVector AngularVelocity = ((FVector(AngleDifference.Roll, 0, AngleDifference.Yaw))
+	const FVector NewAngularVelocity = ((FVector(AngleDifference.Roll, AngleDifference.Pitch, AngleDifference.Yaw))
 		- (CurrentAngularVelocity * TorqueDamping)) * TorqueForce;
 	
-	PrimitiveComponent->AddTorqueInDegrees(AngularVelocity, NAME_None, true);
+	PrimitiveComponent->AddTorqueInDegrees(NewAngularVelocity, NAME_None, true);
 }
 
 void UFlyingVehicleMovementComponent::RequestDirectMove(const FVector& MoveVelocity, bool bForceMaxSpeed)

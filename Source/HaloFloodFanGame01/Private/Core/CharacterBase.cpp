@@ -546,11 +546,11 @@ float ACharacterBase::TakePhysicsDamage(UPrimitiveComponent* HitComponent, AActo
 	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	const float VelocityDifference = FMath::Abs(OtherComp->GetComponentVelocity().Length() - this->GetVelocity().Length());
-	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red,FString::Printf(TEXT("Velocity Difference: %f"), VelocityDifference));
+	//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red,FString::Printf(TEXT("Velocity Difference: %f"), VelocityDifference));
 	const FVector ForceVector = OtherComp->GetComponentVelocity() - this->GetVelocity();
 	//Dotproduct doesnt work correctly if we're standing still
 	const float DotProduct = FMath::Abs(Hit.Normal.Dot(ForceVector.GetSafeNormal()));
-	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red,FString::Printf(TEXT("Dot : %f"), DotProduct));
+	//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red,FString::Printf(TEXT("Dot : %f"), DotProduct));
 
 	//const float OtherCompMass = OtherComp->GetMass();
 	//UE_LOG(LogTemp, Warning, TEXT("Dot: %f"), DotProduct);
