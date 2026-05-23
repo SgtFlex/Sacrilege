@@ -132,6 +132,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void RemoveControls();
 
+	
+
 	virtual FVector GetNavAgentLocation() const override;
 
 	UFUNCTION()
@@ -176,6 +178,8 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	UCameraComponent* GetCamera();
+
+	virtual FVector GetPawnViewLocation() const override;
 
 	//IInteractableInterface
 

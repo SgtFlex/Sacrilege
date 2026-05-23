@@ -538,7 +538,7 @@ void ACharacterBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 	if (OtherComp)
 	{
 		UAISense_Touch::ReportTouchEvent(GetWorld(), this, OtherActor, Hit.Location);
-		TakePhysicsDamage(HitComponent, OtherActor, OtherComp, NormalImpulse, Hit);
+		//TakePhysicsDamage(HitComponent, OtherActor, OtherComp, NormalImpulse, Hit);
 	}
 }
 

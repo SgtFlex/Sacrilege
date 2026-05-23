@@ -44,10 +44,14 @@ void UFlyingVehicleMovementComponent::Decelerate()
 //@TODO Try using vectors purely instead of rotators? could be what's causing issues when aiming certain directions
 void UFlyingVehicleMovementComponent::TurnToTargetRotation()
 {
-	const FRotator AngleDifference = UKismetMathLibrary::NormalizedDeltaRotator(TargetRotation, CurrentRotation);
+	const FQuat CurrentQuat = PrimitiveComponent->GetComponentQuat();
+	//TargetQuat = TargetRotation.Quaternion();
+	
+	const FQuat AngleDifference = (TargetQuat * CurrentQuat.Inverse()).GetNormalized();
 	const FVector CurrentAngularVelocity = PrimitiveComponent->GetPhysicsAngularVelocityInDegrees();
-	const FVector NewAngularVelocity = ((FVector(AngleDifference.Roll, AngleDifference.Pitch, AngleDifference.Yaw))
+	const FVector NewAngularVelocity = ((FVector(AngleDifference.X, AngleDifference.Y, AngleDifference.Z)*100)
 		- (CurrentAngularVelocity * TorqueDamping)) * TorqueForce;
+	//GEngine->AddOnScreenDebugMessage(1, 1, FColor::Cyan, FString::Printf(TEXT("%s"), *TargetQuat.ToString()));
 	
 	PrimitiveComponent->AddTorqueInDegrees(NewAngularVelocity, NAME_None, true);
 }
@@ -57,9 +61,9 @@ void UFlyingVehicleMovementComponent::RequestDirectMove(const FVector& MoveVeloc
 	Super::RequestDirectMove(MoveVelocity, bForceMaxSpeed);
 	const FVector VehicleLocation = GetOwner()->GetActorLocation();
 	const FVector Destination = VehicleLocation + MoveVelocity * GetWorld()->GetDeltaSeconds();
-	DrawDebugSphere(GetWorld(), Destination, 100, 5, FColor::Blue, false, 1);
-	DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), Destination, FColor::Red, false, 0.1f, 0, 3.f);
-	DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), VehicleLocation + (MoveVelocity - (PrimitiveComponent->GetPhysicsLinearVelocity()*20)).GetSafeNormal() * 500, FColor::Green, false, 0.1f, 0, 3.f);
+	//DrawDebugSphere(GetWorld(), Destination, 100, 5, FColor::Blue, false, 1);
+	//DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), Destination, FColor::Red, false, 0.1f, 0, 3.f);
+	//DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), VehicleLocation + (MoveVelocity - (PrimitiveComponent->GetPhysicsLinearVelocity()*20)).GetSafeNormal() * 500, FColor::Green, false, 0.1f, 0, 3.f);
 	TargetDirection = (MoveVelocity - PrimitiveComponent->GetPhysicsLinearVelocity()*30).GetSafeNormal();
 }
 

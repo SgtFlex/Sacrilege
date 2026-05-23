@@ -48,6 +48,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void UpdateTargetedEnemy(AActor* Actor);
 
+	UFUNCTION(BlueprintCallable)
+	void TargetKilled(ACharacterBase* KilledCharacter, AController* InstigatorController, AActor* Causer);
+
 	UFUNCTION()
 	void HearingStimulusUpdated(AActor* Actor, FAIStimulus Stimulus);
 

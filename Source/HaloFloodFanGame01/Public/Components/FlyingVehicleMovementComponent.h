@@ -48,6 +48,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, Replicated)
 	FRotator TargetRotation;
+
+	UPROPERTY(BlueprintReadWrite, Replicated)
+	FQuat TargetQuat;
 	
 	FRotator CurrentRotation;
 	

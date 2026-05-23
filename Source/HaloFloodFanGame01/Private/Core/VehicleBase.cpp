@@ -238,11 +238,14 @@ void AVehicleBase::Exit_Implementation()
 {
 	if (!Pilot) return;
 	ServerExit();
-	GetWorldTimerManager().SetTimer(ExitDelayHandle, this, &AVehicleBase::DoVehicleUnpossession, ExitTime, false);
+	// if (Pilot && Pilot->GetHealthComponent()->IsAlive())
+		GetWorldTimerManager().SetTimer(ExitDelayHandle, this, &AVehicleBase::DoVehicleUnpossession, ExitTime, false);
 }
 
 void AVehicleBase::ServerExit_Implementation()
 {
+	if (AAIControllerBase* AIController = Cast<AAIControllerBase>(GetController()))
+		AIController->UnPossess();
 	MulticastExit();
 }
 
@@ -279,16 +282,10 @@ void AVehicleBase::ServerResetPilot_Implementation()
 {
 	if (!Pilot) return;
 	if (GetController())
-	{
-		Pilot->SetActorRotation(GetControlRotation());
 		GetController()->UnPossess();
-		if (Pilot->GetHealthComponent()->IsAlive())
-		{
-			
-			PilotController->Possess(Pilot);
-			
-		}
-	}
+	Pilot->SetActorRotation(GetControlRotation());
+	if (Pilot->GetHealthComponent()->IsAlive())
+		PilotController->Possess(Pilot);
 	Pilot->bIsInVehicle = false;
 	Pilot->OccupiedVehicle = nullptr;
 	Pilot->OnKilled.RemoveDynamic(this, &AVehicleBase::OnPilotKilled);
@@ -347,6 +344,11 @@ void AVehicleBase::MulticastDetachPilot_Implementation()
 // 		VehicleHUD = nullptr;
 // 	}
 // }
+
+FVector AVehicleBase::GetPawnViewLocation() const
+{
+	return Super::GetPawnViewLocation();
+}
 
 FVector AVehicleBase::GetNavAgentLocation() const
 {

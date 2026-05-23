@@ -213,11 +213,12 @@ void AAIControllerBase::UpdateTargetedEnemy(AActor* Actor)
 			//BlackboardComp->SetValueAsEnum(TEXT("AlertState"), EAlertState::Alerted);
 			SetAlertState(Alerted);
 			BlackboardComp->SetValueAsObject(TEXT("Enemy"), ClosestEnemy);
-			// if (ACharacterBase* EnemyChar = Cast<ACharacterBase>(ClosestEnemy))
-			// {
-			// 	EnemyChar->OnKilled.AddDynamic(this, &AAIControllerBase::UpdateTargetedEnemy);
-			// }
+			if (ACharacterBase* EnemyChar = Cast<ACharacterBase>(ClosestEnemy))
+			{
+				EnemyChar->OnKilled.AddDynamic(this, &AAIControllerBase::TargetKilled);
+			}
 			BlackboardComp->SetValueAsVector(TEXT("StimulusLocation"), ClosestEnemy->GetActorLocation());
+			
 			OnEnemyUpdated.Broadcast();
 			return;
 		}
@@ -227,6 +228,13 @@ void AAIControllerBase::UpdateTargetedEnemy(AActor* Actor)
 	SetAlertState(Suspicious);
 	BlackboardComp->SetValueAsObject(TEXT("Enemy"), nullptr);
 	
+}
+
+void AAIControllerBase::TargetKilled(ACharacterBase* KilledCharacter, AController* InstigatorController, AActor* Causer)
+{
+	if (KilledCharacter) BlackboardComp->SetValueAsVector(TEXT("StimulusLocation"), KilledCharacter->GetActorLocation());
+	SetAlertState(Suspicious);
+	BlackboardComp->SetValueAsObject(TEXT("Enemy"), nullptr);
 }
 
 void AAIControllerBase::HearingStimulusUpdated(AActor* Actor, FAIStimulus Stimulus)
