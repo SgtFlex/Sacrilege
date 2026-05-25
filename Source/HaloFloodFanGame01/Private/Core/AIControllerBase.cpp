@@ -10,6 +10,7 @@
 #include "Core/WeaponBase.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Components/HealthComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Core/CharacterBase.h"
 #include "Perception/AISenseConfig.h"
@@ -26,13 +27,13 @@ AAIControllerBase::AAIControllerBase()
 	BehaviorTreeComp = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("Behavior Tree"));
 	Sight = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("Sight Config"));
 	Hearing = CreateDefaultSubobject<UAISenseConfig_Hearing>(TEXT("Hearing Config"));
-	Damage = CreateDefaultSubobject<UAISenseConfig_Damage>(TEXT("Damage Config"));
+	DamageSense = CreateDefaultSubobject<UAISenseConfig_Damage>(TEXT("Damage Config"));
 	Team = CreateDefaultSubobject<UAISenseConfig_Team>(TEXT("Team Config"));
 	Touch = CreateDefaultSubobject<UAISenseConfig_Touch>(TEXT("Touch Config"));
 
 	AIPerceptionComponent->ConfigureSense(*Sight);
 	AIPerceptionComponent->ConfigureSense(*Hearing);
-	AIPerceptionComponent->ConfigureSense(*Damage);
+	AIPerceptionComponent->ConfigureSense(*DamageSense);
 	AIPerceptionComponent->ConfigureSense(*Team);
 	AIPerceptionComponent->ConfigureSense(*Touch);
 	AIPerceptionComponent->SetDominantSense(*Sight->GetSenseImplementation());
@@ -213,9 +214,9 @@ void AAIControllerBase::UpdateTargetedEnemy(AActor* Actor)
 			//BlackboardComp->SetValueAsEnum(TEXT("AlertState"), EAlertState::Alerted);
 			SetAlertState(Alerted);
 			BlackboardComp->SetValueAsObject(TEXT("Enemy"), ClosestEnemy);
-			if (ACharacterBase* EnemyChar = Cast<ACharacterBase>(ClosestEnemy))
+			if (ClosestEnemy->Implements<UDamageableInterface>())
 			{
-				EnemyChar->OnKilled.AddDynamic(this, &AAIControllerBase::TargetKilled);
+				IDamageableInterface::Execute_GetHealthComponent(ClosestEnemy)->OnHealthDepleted.AddDynamic(this, &AAIControllerBase::TargetKilled);
 			}
 			BlackboardComp->SetValueAsVector(TEXT("StimulusLocation"), ClosestEnemy->GetActorLocation());
 			
@@ -230,9 +231,10 @@ void AAIControllerBase::UpdateTargetedEnemy(AActor* Actor)
 	
 }
 
-void AAIControllerBase::TargetKilled(ACharacterBase* KilledCharacter, AController* InstigatorController, AActor* Causer)
+void AAIControllerBase::TargetKilled(float Damage, FVector Force, FVector HitLocation,
+											  FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
-	if (KilledCharacter) BlackboardComp->SetValueAsVector(TEXT("StimulusLocation"), KilledCharacter->GetActorLocation());
+	//if (KilledCharacter) BlackboardComp->SetValueAsVector(TEXT("StimulusLocation"), KilledCharacter->GetActorLocation());
 	SetAlertState(Suspicious);
 	BlackboardComp->SetValueAsObject(TEXT("Enemy"), nullptr);
 }

@@ -62,4 +62,7 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float TorqueDamping = 0.5f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bUseJetMovement = false;
 };

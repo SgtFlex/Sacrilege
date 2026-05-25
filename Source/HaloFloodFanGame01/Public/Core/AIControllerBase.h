@@ -49,7 +49,7 @@ public:
 	void UpdateTargetedEnemy(AActor* Actor);
 
 	UFUNCTION(BlueprintCallable)
-	void TargetKilled(ACharacterBase* KilledCharacter, AController* InstigatorController, AActor* Causer);
+	void TargetKilled(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser);
 
 	UFUNCTION()
 	void HearingStimulusUpdated(AActor* Actor, FAIStimulus Stimulus);
@@ -108,7 +108,7 @@ public:
 	UPROPERTY()
 	class UAISenseConfig_Hearing* Hearing;
 	UPROPERTY()
-	class UAISenseConfig_Damage* Damage;
+	class UAISenseConfig_Damage* DamageSense;
 	UPROPERTY()
 	class UAISenseConfig_Team* Team;
 	UPROPERTY()
