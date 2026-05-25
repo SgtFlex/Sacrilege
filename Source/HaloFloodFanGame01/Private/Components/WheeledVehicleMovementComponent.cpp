@@ -22,7 +22,7 @@ void UWheeledVehicleMovementComponent::RequestDirectMove(const FVector& MoveVelo
 	const FVector Position = GetOwner()->GetActorLocation();
 	
 	const FVector Destination = Position + MoveVelocity * GetWorld()->GetDeltaSeconds();
-	DrawDebugLine(GetWorld(), Position, Destination, FColor::Yellow, false);
+	//DrawDebugLine(GetWorld(), Position, Destination, FColor::Yellow, false);
 	
 	const float DotProduct = GetOwner()->GetActorForwardVector().Dot(MoveVelocity.GetSafeNormal());
 	const FVector CrossProduct = FVector::CrossProduct(GetOwner()->GetActorForwardVector().GetSafeNormal(), MoveVelocity.GetSafeNormal());
