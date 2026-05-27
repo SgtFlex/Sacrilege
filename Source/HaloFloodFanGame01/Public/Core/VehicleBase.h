@@ -23,7 +23,7 @@ enum EDamageState : uint8
 };
 
 UENUM(BlueprintType)
-enum EAnimType {
+enum EVehicleAnimType {
 	Turret,
 	Driver,
 	Passenger,
@@ -231,7 +231,7 @@ public:
 	float ExitTime = 1.0f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	TEnumAsByte<EAnimType> AnimType = EAnimType::Driver;
+	TEnumAsByte<EVehicleAnimType> AnimType = EVehicleAnimType::Driver;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FVector LeftHandIKLocation;

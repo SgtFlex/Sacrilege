@@ -32,15 +32,7 @@ class HALOFLOODFANGAME01_API AWeaponBase : public AActor, public IInteractableIn
 public:	
 	// Sets default values for this actor's properties
 	AWeaponBase();
-
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
+	
 	virtual void Pickup(ACharacterBase* Char);
 
 	virtual void Equip();
@@ -87,53 +79,26 @@ public:
 
 	UFUNCTION(NetMulticast, Unreliable)
 	void MulticastDoMeleeHit(const FHitResult MeleeHit); 
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	bool ScopeIn();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void ScopeOut();
 
 	virtual void OnInteract_Implementation(ACharacterBase* Character) override;
-
-	// virtual void GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon, ACharacterBase* InteractingCharacter) override;
-
+	
+	virtual void GetInteractInfo_Implementation(FText& ActionText, FText& ObjectText, UTexture2D*& Icon, ACharacterBase* InteractingCharacter) override;
+	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void Reload();
 
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Mesh)
+	UPROPERTY(BlueprintReadWrite)
 	USkeletalMeshComponent* Mesh;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
-	float DrawSpeed = 1;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
-	float HolsterSpeed = 1;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="HUD"))
-	UTexture2D* CrosshairTexture;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="HUD"))
-	UTexture2D* WeaponIcon;
-
-	UPROPERTY()
-	FText InteractText = FText::FromString("Pickup");
-
-	UPROPERTY()
-	UTexture2D* InteractIcon = WeaponIcon;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (Category="Animations"))
-	UAnimMontage* DrawAnimation1P;
-	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (Category="Animations"))
-	UAnimMontage* HolsterAnimation1P;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (Category="Animations"))
-	UAnimMontage* MeleeAnimation1P;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (Category="Animations"))
-	USoundBase* MeleeMissSound;
-	
-	UPROPERTY(EditDefaultsOnly, meta = (Category="Sound Effects"))
-	USoundBase* DrawSFX;
-
 	UPROPERTY(BlueprintReadOnly)
 	APawn* OwningPawn;
 
@@ -142,49 +107,110 @@ public:
 
 	UPROPERTY(BlueprintReadWrite)
 	TArray<AActor*> ActorsToIgnore;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes | General"))
+	float DrawSpeed = 1;
 
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes | General"))
+	float HolsterSpeed = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Art | HUD"))
+	UTexture2D* CrosshairTexture;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Art | HUD"))
+	UTexture2D* WeaponIcon;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName Name = "Unnamed Weapon";
+
+	UPROPERTY()
+	FText InteractText = FText::FromString("Pickup");
+
+	UPROPERTY()
+	UTexture2D* InteractIcon = WeaponIcon;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (Category="Art | Animations"))
+	UAnimMontage* DrawAnimation1P;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (Category="Art | Animations"))
+	UAnimMontage* HolsterAnimation1P;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (Category="Art | Animations"))
+	UAnimMontage* MeleeAnimation1P;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (Category="Art | Animations"))
+	USoundBase* MeleeMissSound;
+	
+	UPROPERTY(EditDefaultsOnly, meta = (Category="Art | Effects"))
+	USoundBase* DrawSFX;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, meta=(Category="Art | General"))
 	TEnumAsByte<EHoldType> HoldType = EHoldType::Pistol;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Melee"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes | Melee"))
 	float MeleeDamage = 50;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Melee"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes | Melee"))
 	float MeleeForce = 100000;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Melee"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes | Melee"))
 	float MeleeDamageRange = 300;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Melee"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes | Melee"))
 	float MeleeLungeRange = 600;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Melee"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes | Melee"))
 	float MeleeDelay = 0.1;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Melee"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes | Melee"))
 	float MeleeCooldownRate = 1;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, meta=(Category="Art | Effects"))
 	TMap<TEnumAsByte<EPhysicalSurface>, TSubclassOf<ADecalActor>> MeleeImpactFX;
+	
+	UPROPERTY(EditDefaultsOnly, meta=(Category="Art | Effects"))
+	TMap<TEnumAsByte<EPhysicalSurface>, USoundBase*> MeleeImpactSFX;
 
 	UPROPERTY(BlueprintAssignable)
 	FOnWeaponDropped OnWeaponDropped;
 
 	UPROPERTY(BlueprintAssignable)
-	FOnWeaponPickedUp OnWeaponPickedUp;
+	FOnWeaponPickedUp OnWeaponPickedUp;	
 
-private:
+	UPROPERTY(BlueprintReadOnly)
+	bool ScopeActive = false;
 
 protected:
-	UPROPERTY(BlueprintReadWrite)
-	FTimerHandle DrawHandle;
+	
+	UPROPERTY(EditAnywhere, meta = (Category="Art | General"))
+	TSubclassOf<class UUserWidget> ScopeWidget;
+	
+	UPROPERTY(EditDefaultsOnly, meta = (Category="Art | Effects"))
+	USoundBase* ScopeInSFX;
 
-	UPROPERTY(BlueprintReadWrite)
-	FTimerHandle HolsterHandle;
+	UPROPERTY(EditDefaultsOnly, meta = (Category="Art | Effects"))
+	USoundBase* ScopeOutSFX;
 
-	UPROPERTY(BlueprintReadWrite)
-	FTimerHandle MeleeHitDelayHandle;
-
+	//Affects how far we zoom in
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (Category="Attributes | Gun"))
+	float ScopeFOV = 0;
+	
 	UPROPERTY(BlueprintReadWrite)
 	FTimerHandle MeleeCooldownHandle1;
+
+private:
+	
+	UPROPERTY()
+	UUserWidget* ScopeOverlay;
+	
+	UPROPERTY()
+	FTimerHandle DrawHandle;
+
+	UPROPERTY()
+	FTimerHandle HolsterHandle;
+
+	UPROPERTY()
+	FTimerHandle MeleeHitDelayHandle;
+
+	
 };

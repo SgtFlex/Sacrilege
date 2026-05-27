@@ -4,11 +4,10 @@
 #include "Core/WeaponBase.h"
 
 #include "Subsystems/WorldCleanupManager.h"
-#include "Camera/CameraComponent.h"
 #include "Core/CharacterBase.h"
-#include "Engine/DecalActor.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "Blueprint/UserWidget.h"
 
 // Sets default values
 AWeaponBase::AWeaponBase()
@@ -23,23 +22,9 @@ AWeaponBase::AWeaponBase()
 	Mesh->SetComponentTickEnabled(false);
 	Mesh->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
 	Mesh->SetCollisionResponseToChannel(ECC_GameTraceChannel4, ECR_Block);
-
-}
-
-// Called when the game starts or when spawned
-void AWeaponBase::BeginPlay()
-{
-	Super::BeginPlay();
-	
 }
 
 // Called every frame
-void AWeaponBase::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
 void AWeaponBase::Pickup(ACharacterBase* Char)
 {
 	SetOwner(Char);
@@ -178,14 +163,51 @@ void AWeaponBase::ServerMeleeHit_Implementation(const FHitResult MeleeHit)
 
 void AWeaponBase::MulticastDoMeleeHit_Implementation(const FHitResult MeleeHit)
 {
-	if (MeleeImpactFX.Contains(MeleeHit.PhysMaterial->SurfaceType))
+	if (MeleeImpactSFX.Contains(MeleeHit.PhysMaterial->SurfaceType))
 	{
-		if (TSubclassOf<ADecalActor> MeleeImpactClass = *MeleeImpactFX.Find(MeleeHit.PhysMaterial->SurfaceType))
+		if (USoundBase* MeleeSFX = *MeleeImpactSFX.Find(MeleeHit.PhysMaterial->SurfaceType))
 		{
-			const FVector Loc = MeleeHit.Location;
-			const FRotator Rot =  MeleeHit.ImpactNormal.Rotation() + FRotator(-90,0,0);
-			GetWorld()->SpawnActor(MeleeImpactClass, &Loc, &Rot);
+			UGameplayStatics::SpawnSoundAtLocation(GetWorld(), MeleeSFX, MeleeHit.Location);
 		}
+		// if (TSubclassOf<ADecalActor> MeleeImpactClass = *MeleeImpactFX.Find(MeleeHit.PhysMaterial->SurfaceType))
+		// {
+		// 	
+		// 	const FVector Loc = MeleeHit.Location;
+		// 	const FRotator Rot =  MeleeHit.ImpactNormal.Rotation() + FRotator(-90,0,0);
+		// 	AActor* Decal = GetWorld()->SpawnActor(MeleeImpactClass, &Loc, &Rot);
+		// 	Decal->AttachToComponent(MeleeHit.GetComponent(), FAttachmentTransformRules::KeepWorldTransform);
+		// }
+		
+	}
+}
+
+bool AWeaponBase::ScopeIn_Implementation()
+{
+	if (ScopeActive || ScopeFOV == 0) return false;
+	if (CharacterOwner)
+	{
+		ScopeActive = true;
+		// ScopeOverlay = CreateWidget<class UUserWidget>(CharacterOwner->PlayerController, ScopeWidget);
+		// ScopeOverlay->AddToPlayerScreen();
+		CharacterOwner->ScopeSensitivityMultiplier = (ScopeFOV/90);
+		//PlayerChar->GetFirstPersonCameraComponent()->SetFieldOfView(10);
+		if (ScopeInSFX) UGameplayStatics::PlaySound2D(GetWorld(), ScopeInSFX);
+	}
+	return true;
+}
+
+void AWeaponBase::ScopeOut_Implementation()
+{
+	if (!ScopeActive) return;
+	
+	if (ScopeOverlay) ScopeOverlay->RemoveFromParent();
+	//PlayerChar->GetFirstPersonCameraComponent()->SetFieldOfView(90);
+	ScopeActive = false;
+	
+	if (CharacterOwner)
+	{
+		CharacterOwner->ScopeSensitivityMultiplier = 1;
+		if (ScopeOutSFX) UGameplayStatics::PlaySound2D(GetWorld(), ScopeOutSFX);
 	}
 }
 
@@ -205,6 +227,17 @@ void AWeaponBase::OnInteract_Implementation(ACharacterBase* Character)
 	IInteractableInterface::OnInteract_Implementation(Character);
 	Character->PickupWeapon(this);
 }
+
+void AWeaponBase::GetInteractInfo_Implementation(FText& ActionText, FText& ObjectText, UTexture2D*& Icon,
+	ACharacterBase* InteractingCharacter)
+{
+	if (!InteractingCharacter->GameplayTags.HasTag(FGameplayTag::RequestGameplayTag(FName("Character.CanUseWeapons")))) return;
+	
+	ActionText = FText::FromString("Pickup");
+	ObjectText = FText::FromName(Name);
+	Icon = WeaponIcon;
+}
+
 
 // void AWeaponBase::GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon, ACharacterBase* InteractingCharacter)
 // {

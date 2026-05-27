@@ -4,12 +4,9 @@
 
 #include "Bullet.h"
 #include "Components/BulletFiringComponent.h"
-#include "UI/GrenadeWidget.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Core/PlayerControllerBase.h"
-#include "Subsystems/WorldCleanupManager.h"
-#include "Components/Image.h"
 #include "PlayerCharacter.h"
 #include "Core/ProjectileBase.h"
 #include "Kismet/GameplayStatics.h"
@@ -22,59 +19,10 @@ AGunBase::AGunBase()
 {
 	BulletFiringComponent = CreateDefaultSubobject<UBulletFiringComponent>("BulletFiringComponent");
 	BulletFiringComponent->SetupAttachment(Mesh, "Muzzle");
-	
-}
-
-// Called when the game starts or when spawned
-void AGunBase::BeginPlay()
-{
-	Super::BeginPlay();
 	CurMagazine = MaxMagazine;
 	CurReserve = MaxReserve;
 	InteractIcon = WeaponIcon;
-}
-
-// Called every frame
-void AGunBase::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
-
-void AGunBase::Pickup(ACharacterBase* Char)
-{
-	Super::Pickup(Char);
-	SetOwner(Char);
-	CharacterOwner = Char;
 	
-	GetWorld()->GetSubsystem<UWorldCleanupManager>()->StopManagingWeapon(this);
-	//Cast<AHaloGameState>(GetWorld()->GetGameState())->StopManagingWeapon(this);
-}
-
-void AGunBase::Equip()
-{
-	Super::Equip();
-	// if (DrawSFX) UGameplayStatics::PlaySoundAtLocation(GetWorld(), DrawSFX, GetActorLocation());
-}
-
-void AGunBase::Drop()
-{
-	Super::Drop();
-	GetWorldTimerManager().ClearTimer(ReloadTimer);
-	ScopeOut();
-	bReloading = false;
-	if (CurMagazine + CurReserve <= 0)
-	{
-		//Disable collision query responses to prevent being picked up.
-		Mesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
-	}
-}
-
-void AGunBase::Holster()
-{
-	Super::Holster();
-	if (ScopeActive) ScopeOut();
-	GetWorldTimerManager().ClearTimer(ReloadTimer);
-	bReloading = false;
 }
 
 void AGunBase::SecondaryFire_Start_Implementation()
@@ -84,7 +32,7 @@ void AGunBase::SecondaryFire_Start_Implementation()
 	if (ScopeActive)
 	{
 		ScopeOut();
-	} else if (!ScopeActive && ZoomFOV != 0.0f)
+	} else if (!ScopeActive && ScopeFOV != 0.0f)
 	{
 		ScopeIn();
 	}
@@ -358,36 +306,6 @@ void AGunBase::SpawnMuzzleFX_Implementation()
 		UGameplayStatics::SpawnSoundAttached(FiringSound, GetRootComponent());
 	if (Mesh->DoesSocketExist("Muzzle") && MuzzlePFX && !ScopeActive)
 		UNiagaraFunctionLibrary::SpawnSystemAttached(MuzzlePFX, Mesh, "Muzzle", FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
-}
-
-bool AGunBase::ScopeIn_Implementation()
-{
-	if (ScopeActive || ZoomFOV == 0) return false;
-	if (CharacterOwner)
-	{
-		ScopeActive = true;
-		ScopeOverlay = CreateWidget<UUserWidget>(CharacterOwner->PlayerController, ScopeWidget);
-		ScopeOverlay->AddToPlayerScreen();
-		CharacterOwner->ScopeSensitivityMultiplier = (ZoomFOV/90);
-		//PlayerChar->GetFirstPersonCameraComponent()->SetFieldOfView(10);
-		if (ScopeInSFX) UGameplayStatics::PlaySound2D(GetWorld(), ScopeInSFX);
-	}
-	return true;
-}
-
-void AGunBase::ScopeOut_Implementation()
-{
-	if (!ScopeActive) return;
-	
-	ScopeOverlay->RemoveFromParent();
-	//PlayerChar->GetFirstPersonCameraComponent()->SetFieldOfView(90);
-	ScopeActive = false;
-	
-	if (CharacterOwner)
-	{
-		CharacterOwner->ScopeSensitivityMultiplier = 1;
-		if (ScopeOutSFX) UGameplayStatics::PlaySound2D(GetWorld(), ScopeOutSFX);
-	}
 }
 
 void AGunBase::Fire_Implementation()

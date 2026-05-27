@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Interfaces/InteractableInterface.h"
 #include "WeaponBase.h"
 #include "GameFramework/Actor.h"
 #include "FGunAIBehavior.h"
@@ -29,22 +28,7 @@ public:
 	// Sets default values for this actor's properties
 	AGunBase();
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
 public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	virtual void Pickup(ACharacterBase* Char) override;
-
-	virtual void Equip() override;
-
-	virtual void Drop() override;
-
-	virtual void Holster() override;
-
 	virtual void SecondaryFire_Start_Implementation() override;
 
 	virtual void PrimaryFire_Start_Implementation() override;
@@ -99,11 +83,7 @@ public:
 	// UFUNCTION(NetMulticast, Reliable, WithValidation)
 	// void Multi_Fire();
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	bool ScopeIn();
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void ScopeOut();
+	
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void StartReload();
@@ -134,23 +114,11 @@ public:
 	//
 	// UFUNCTION(NetMulticast, Reliable)
 	// void Multi_ReleaseTrigger();
-	
-	// virtual void OnInteract_Implementation(ACharacterBase* Character) override;
-
-	// virtual void GetInteractInfo_Implementation(FText& Text, UTexture2D*& Icon, ACharacterBase* InteractingCharacter) override;
 
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	FGunAIBehavior GunAIBehavior;
-
-	UPROPERTY()
-	FVector AimOffset;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=Bullets)
-	UBulletFiringComponent* BulletFiringComponent;
-
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 	FOnFire OnFire;
 
@@ -158,15 +126,11 @@ public:
 	FOnReload OnReload;
 
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
-	FOnAmmoUpdated OnAmmoUpdated;
+	FOnAmmoUpdated OnAmmoUpdated;	
 	
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<UCameraShakeBase> FiringCameraShake;
-
-	//Actor that will be spawned from the barrel of the gun. Otherwise uses hitscan properties below
-	UPROPERTY(EditAnywhere, meta = (Category="Attributes"))
-	TSubclassOf<AActor> ProjectileClass;
-
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Attributes | Gun")
+	UBulletFiringComponent* BulletFiringComponent;
+	
 	// //Damage of the hitscan applied to the hit actor
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes|Hitscan", EditCondition="!ProjectileClass", DeprecatedProperty))
 	// float Damage = 15;
@@ -176,44 +140,25 @@ public:
 	// float Force = 1000;
 
 	//Fire rate of the gun in bullets per minute
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes | Gun"))
 	float FireRate = 500;
 
 	//Amount of hitscan/projectiles that are fired simultaneously
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes | Gun"))
 	int32 MultiShot = 1;
 
 	//Controls how many bullets are fired when the trigger is pulled. 0 means full auto, 1 means semi auto, 2+ is burst fire of whatever amount is provided
-	UPROPERTY(EditAnywhere, meta = (Category="Attributes"))
+	UPROPERTY(EditAnywhere, meta = (Category="Attributes | Gun"))
 	int32 BurstAmount = 0; 
 
 	//The minimum delay between bursts if BurstAmount >= 2
-	UPROPERTY(EditAnywhere, meta = (Category="Attributes"))
+	UPROPERTY(EditAnywhere, meta = (Category="Attributes | Gun"))
 	float BurstRetriggerDelay = 0.15f;
 
 	//Amount of seconds required to reload the gun
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes | Gun"))
 	float ReloadSpeed = 3;
-
-	//How far left/right the gun jumps when firing a bullet
-	UPROPERTY(EditAnywhere, meta = (Category="Attributes"))
-	float HorizontalRecoil = 1;
-
-	//How far up/down the gun jumps when firing a bullet
-	UPROPERTY(EditAnywhere, meta = (Category="Attributes"))
-	float VerticalRecoil = 1;
-
-	//The degrees of horizontal spread of projectiles/hitscan. 90 means anywhere from the left to the front to the right.
-	UPROPERTY(EditAnywhere, meta = (Category="Attributes"))
-	float HorizontalSpread = 0;
-
-	//The degrees of vertical spread of projectiles/hitscan. 90 means anywhere from the down to the front to the up.
-	UPROPERTY(EditAnywhere, meta = (Category="Attributes"))
-	float VerticalSpread = 0;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FName Name = "";
-
+	
 	// //Range of the hitscan trace
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes|Hitscan", EditCondition="!ProjectileClass", DeprecatedProperty))
 	// float Range = 5000;
@@ -222,48 +167,86 @@ public:
 	// UCurveFloat* FalloffCurve;
 
 	//The maximum bullets in a magazine
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes | Gun"))
 	int32 MaxMagazine = 32;
 
 	//The amount of bullets the weapon spawns with in a magazine
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"), ReplicatedUsing=UpdateMagazineElements)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes | Gun"), ReplicatedUsing=UpdateMagazineElements)
 	int32 CurMagazine = MaxMagazine;
 
 	//The maximum amount of bullets the weapon can have in reserve.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes | Gun"))
 	int32 MaxReserve = 160;
 
 	//The amount of bullets this weapon spawns with in reserve
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes"), ReplicatedUsing=UpdateMagazineElements)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes | Gun"), ReplicatedUsing=UpdateMagazineElements)
 	int32 CurReserve = MaxReserve;
 	
-	UPROPERTY(EditAnywhere, meta = (Category="SFX"))
+	UPROPERTY(EditDefaultsOnly, meta = (Category="Art | General"))
+	TSubclassOf<UUserWidget> BulletWidget;
+
+protected:
+	
+	UPROPERTY(EditAnywhere, meta = (Category="Attributes | Gun"))
+	FGunAIBehavior GunAIBehavior;
+	
+	//Actor that will be spawned from the barrel of the gun. Otherwise uses hitscan properties below
+	UPROPERTY(EditAnywhere, meta = (Category="Attributes | Gun"))
+	TSubclassOf<AActor> ProjectileClass;
+	
+	//How far left/right the gun jumps when firing a bullet
+	UPROPERTY(EditAnywhere, meta = (Category="Attributes | Gun"))
+	float HorizontalRecoil = 1;
+
+	//How far up/down the gun jumps when firing a bullet
+	UPROPERTY(EditAnywhere, meta = (Category="Attributes | Gun"))
+	float VerticalRecoil = 1;
+
+	//The degrees of horizontal spread of projectiles/hitscan. 90 means anywhere from the left to the front to the right.
+	UPROPERTY(EditAnywhere, meta = (Category="Attributes | Gun"))
+	float HorizontalSpread = 0;
+
+	//The degrees of vertical spread of projectiles/hitscan. 90 means anywhere from the down to the front to the up.
+	UPROPERTY(EditAnywhere, meta = (Category="Attributes | Gun"))
+	float VerticalSpread = 0;
+	
+	UPROPERTY(EditDefaultsOnly, meta = (Category="Art | Effects"))
 	USoundBase* FiringSound;
 
-	UPROPERTY(EditAnywhere, meta = (Category="SFX"))
+	UPROPERTY(EditDefaultsOnly, meta = (Category="Art | Effects"))
 	USoundBase* ReloadSound;
 
-	UPROPERTY(EditAnywhere, meta = (Category="SFX"))
+	UPROPERTY(EditDefaultsOnly, meta = (Category="Art | Effects"))
 	USoundBase* HitSound;
 
-	UPROPERTY(EditAnywhere, meta = (Category="HUD"))
-	TSubclassOf<UUserWidget> ScopeWidget;
+	UPROPERTY(EditDefaultsOnly, meta = (Category="Art | Effects"))
+	class UNiagaraSystem* MuzzlePFX;
 
-	UPROPERTY()
-	UUserWidget* ScopeOverlay;
+	UPROPERTY(EditDefaultsOnly, meta = (Category="Art | Effects"))
+	class UNiagaraSystem* TrailPFX;
+	
+		
 
-	UPROPERTY(BlueprintReadOnly)
-	bool ScopeActive = false;
+	UPROPERTY(EditDefaultsOnly, meta = (Category="Art | Animations"))
+	UAnimMontage* FireAnimation1P;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	USoundBase* ScopeInSFX;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	USoundBase* ScopeOutSFX;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	float ZoomFOV = 0;
-
+	UPROPERTY(EditDefaultsOnly, meta = (Category="Art | Animations"))
+	UAnimMontage* ReloadAnimation1P;
+	
+	UPROPERTY(EditDefaultsOnly, meta = (Category="Art | Effects"))
+	UForceFeedbackEffect* FireFeedback;
+	
+	UPROPERTY(EditDefaultsOnly, meta = (Category="Art | Effects"))
+	TSubclassOf<UCameraShakeBase> FiringCameraShake;
+	
+	UPROPERTY(EditDefaultsOnly, meta = (Category="Art | Effects"))
+	TMap<TEnumAsByte<EPhysicalSurface>, TSubclassOf<AActor>> ImpactFXMap;
+	
+	UPROPERTY(EditDefaultsOnly, meta = (Category="Art | Effects"))
+	TSubclassOf<AActor> ImpactDecal;	
+	
+private:
+	
 	int32 BulletsFired;
 	
 	UPROPERTY()
@@ -276,32 +259,7 @@ public:
 
 	UPROPERTY(Replicated)
 	bool bFiring = false;
-
-	UPROPERTY(EditAnywhere)
-	class UNiagaraSystem* MuzzlePFX;
-
-	UPROPERTY(EditAnywhere)
-	class UNiagaraSystem* TrailPFX;
 	
-	UPROPERTY(EditDefaultsOnly, meta = (Category="HUD"))
-	TSubclassOf<UUserWidget> BulletWidget;	
-
-	UPROPERTY(EditDefaultsOnly, meta = (Category="Animations"))
-	UAnimMontage* FireAnimation1P;
-
-	UPROPERTY(EditDefaultsOnly, meta = (Category="Animations"))
-	UAnimMontage* ReloadAnimation1P;
-
 	UPROPERTY()
 	FTimerHandle ReloadTimer;
-
-	UPROPERTY(EditDefaultsOnly)
-	UForceFeedbackEffect* FireFeedback;
-	
-	UPROPERTY(EditDefaultsOnly)
-	TMap<TEnumAsByte<EPhysicalSurface>, TSubclassOf<AActor>> ImpactFXMap;
-	
-private:
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<AActor> ImpactDecal;	
 };

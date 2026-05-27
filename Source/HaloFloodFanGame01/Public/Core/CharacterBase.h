@@ -10,8 +10,8 @@
 #include "GameFramework/Character.h"
 #include "CharacterBase.generated.h"
 
-enum EAnimType : int;
-class AVehicleBase;
+enum EVehicleAnimType : int;
+class AVehicleBase; 
 class AGunBase;
 class AEquipmentBase;
 class APlayerControllerBase;
@@ -24,7 +24,6 @@ class ASmartObject;
 class AGrenadeBase;
 class ADecalActor;
 class AWeaponBase;
-class AWeaponBase;
 class UHealthComponent;
 
 //player class
@@ -34,7 +33,6 @@ class IInteractableInterface;
 class USphereComponent;
 class UBoxComponent;
 class UPlayerHUD;
-class AGrenadeBase;
 class UInputComponent;
 class USkeletalMeshComponent;
 class USceneComponent;
@@ -559,10 +557,10 @@ public:
 	UAnimMontage* ThrowGrenadeAnimation;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TMap<TEnumAsByte<EAnimType>, UAnimMontage*> VehicleAnimEnterMontages;
+	TMap<TEnumAsByte<EVehicleAnimType>, UAnimMontage*> VehicleAnimEnterMontages;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TMap<TEnumAsByte<EAnimType>, UAnimMontage*> VehicleAnimExitMontages;
+	TMap<TEnumAsByte<EVehicleAnimType>, UAnimMontage*> VehicleAnimExitMontages;
 	
 	UPROPERTY()
 	TArray<AActor*> InteractableActors;
