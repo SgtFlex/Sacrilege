@@ -28,6 +28,7 @@
 #include "Components/DecalComponent.h"
 #include "Engine/DecalActor.h"
 #include "GameFramework/InputDeviceSubsystem.h"
+#include "GameFramework/PawnMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISense_Damage.h"
@@ -318,6 +319,7 @@ void ACharacterBase::MulticastSpawnBloodFX_Implementation(FVector Direction, con
 		{			
 			UGameplayStatics::SpawnDecalAttached(BloodSplatterMat, FVector(10,10,10), GetMesh(),
 			HitInfo.BoneName, HitInfo.Location, HitInfo.Normal.Rotation() + FRotator(-90, 0, FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition, 0);
+			
 		}
 		if (BloodDecalMaterial)
 		{
@@ -326,12 +328,28 @@ void ACharacterBase::MulticastSpawnBloodFX_Implementation(FVector Direction, con
 			FCollisionQueryParams QueryParams;
 			QueryParams.AddIgnoredActor(this);
 			GetWorld()->LineTraceSingleByChannel(HitResult, HitInfo.Location, HitInfo.Location + (Direction * 4000),ECollisionChannel::ECC_Visibility, QueryParams);
+			UDecalComponent* BloodDecal;
 			if (HitResult.bBlockingHit)
 			{
-				UDecalComponent* BloodDecal = UGameplayStatics::SpawnDecalAttached(BloodDecalMaterial, FVector(20,DecalSize,DecalSize), HitResult.GetComponent(), HitResult.BoneName, HitResult.Location, HitResult.Normal.Rotation() + FRotator(-180,0,FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition);
+				BloodDecal = UGameplayStatics::SpawnDecalAttached(BloodDecalMaterial, FVector(20,DecalSize,DecalSize), HitResult.GetComponent(), HitResult.BoneName, HitResult.Location, HitResult.Normal.Rotation() + FRotator(-180,0,FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition);
+
 				// UMaterialInstanceDynamic* DynamicMat = BloodDecal->CreateDynamicMaterialInstance();
 				// DynamicMat->SetScalarParameterValue("Mask", 3);
 				GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageDecal(BloodDecal);
+
+				//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAttached(BloodDecalMaterial, FVector(DecalSize,DecalSize,DecalSize), HitResult.GetComponent(), HitResult.BoneName, HitResult.Location, HitResult.Normal.Rotation() + FRotator(-180,0,FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition));
+			}
+			FVector FrontDecalNormal = HitInfo.Normal;
+			FrontDecalNormal.Z = FMath::RandRange(-0.5f, 0.0f);
+			GetWorld()->LineTraceSingleByChannel(HitResult, HitInfo.Location, HitInfo.Location + (FrontDecalNormal)*500,ECollisionChannel::ECC_Visibility, QueryParams);
+			if (HitResult.bBlockingHit)
+			{
+				BloodDecal = UGameplayStatics::SpawnDecalAttached(BloodDecalMaterial, FVector(20,DecalSize,DecalSize), HitResult.GetComponent(), HitResult.BoneName, HitResult.Location, HitResult.Normal.Rotation() + FRotator(-180,0,FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition);
+
+				// UMaterialInstanceDynamic* DynamicMat = BloodDecal->CreateDynamicMaterialInstance();
+				// DynamicMat->SetScalarParameterValue("Mask", 3);
+				GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageDecal(BloodDecal);
+
 				//Cast<AHaloGameState>(GetWorld()->GetGameState())->ManageDecal(UGameplayStatics::SpawnDecalAttached(BloodDecalMaterial, FVector(DecalSize,DecalSize,DecalSize), HitResult.GetComponent(), HitResult.BoneName, HitResult.Location, HitResult.Normal.Rotation() + FRotator(-180,0,FMath::RandRange(-180, 180)), EAttachLocation::KeepWorldPosition));
 			}
 		}
@@ -476,7 +494,7 @@ void ACharacterBase::MC_OnHealthDepleted_Implementation(float Damage, FVector Fo
 	GetMesh()->SetCollisionResponseToChannel(ECC_GameTraceChannel4, ECR_Ignore);
 	GetCapsuleComponent()->DestroyComponent();
 	SetRootComponent(GetMesh());
-	if (Force.Length() > 50000 || !DeathAnim || bIsInVehicle || (HitBoxNameMap.Contains(HitBoneName) && HitBoxNameMap[HitBoneName]=="Head"))
+	if (Force.Length() > 50000 || !DeathAnim || bIsInVehicle || GetMovementComponent()->IsFalling() || (HitBoxNameMap.Contains(HitBoneName) && HitBoxNameMap[HitBoneName]=="Head"))
 	{
 		GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		GetMesh()->SetSimulatePhysics(true);

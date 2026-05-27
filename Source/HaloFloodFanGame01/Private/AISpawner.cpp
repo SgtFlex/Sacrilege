@@ -61,6 +61,7 @@ void AAISpawner::TriggerSpawn()
 		SpawnDropship(Squad);
 	} else
 	{
+		TArray<AVehicleBase*> SpawnedVehicles;
 		for (auto elem : SquadVehicles)
 		{
 			for (int i = 0; i < elem.Value; ++i)
@@ -69,7 +70,8 @@ void AAISpawner::TriggerSpawn()
 				FRotator Rot = FRotator(0,0,0);
 				FActorSpawnParameters SpawnParams;
 				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-				GetWorld()->SpawnActor(elem.Key, &Loc, &Rot, SpawnParams);
+				AVehicleBase* SpawnedVehicle = Cast<AVehicleBase>(GetWorld()->SpawnActor(elem.Key, &Loc, &Rot, SpawnParams));
+				if (SpawnedVehicle) SpawnedVehicles.Add(SpawnedVehicle);
 			}
 		}
 		for (auto elem : Squad)
@@ -82,6 +84,23 @@ void AAISpawner::TriggerSpawn()
 				if (Char)
 				{
 					Spawned.Add(Char);
+					//@TODO I think we can optimize this whole thing a lot better. Perhaps vehicles can have a priority system for each seat (like a int->seat map) that we can reference here?
+					for (AVehicleBase* SpawnedVehicle : SpawnedVehicles)
+					{
+						if (!SpawnedVehicle->Pilot)
+						{
+							SpawnedVehicle->Enter(Char);
+							break;
+						}
+						for (auto ChildVehicle : SpawnedVehicle->ChildVehicles)
+						{
+							if (!ChildVehicle->Pilot)
+							{
+								ChildVehicle->Enter(Char);
+								break;
+							}
+						}
+					}
 				}
 			}
 		}
