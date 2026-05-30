@@ -136,6 +136,18 @@ void AGunBase::ReleaseTrigger_Implementation()
 // 	
 // }
 
+void AGunBase::SetCurrentMagazine(const int32 NewMagazine)
+{
+	CurMagazine = NewMagazine;
+	OnAmmoUpdated.Broadcast();
+}
+
+void AGunBase::SetCurrentReserve(const int32 NewReserve)
+{
+	CurReserve = NewReserve;
+	OnAmmoUpdated.Broadcast();
+}
+
 void AGunBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -332,8 +344,8 @@ void AGunBase::FinishReload_Implementation()
 	bReloading = false;
 	int32 AmountNeed = MaxMagazine - CurMagazine; //32 - 27 gives 5 for example
 	int32 AmountGrabbed = FMath::Min(AmountNeed, CurReserve);
-	CurMagazine = CurMagazine + AmountGrabbed;
-	CurReserve = CurReserve - AmountGrabbed;
-	OnAmmoUpdated.Broadcast();
+	SetCurrentMagazine(CurMagazine + AmountGrabbed);
+	SetCurrentReserve(CurReserve - AmountGrabbed);
+	
 	OnReload.Broadcast();
 }

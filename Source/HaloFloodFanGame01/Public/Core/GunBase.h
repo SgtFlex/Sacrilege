@@ -97,6 +97,12 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void FinishReload();
 
+	UFUNCTION(BlueprintCallable)
+	void SetCurrentMagazine(int32 NewMagazine);
+
+	UFUNCTION(BlueprintCallable)
+	void SetCurrentReserve(int32 NewReserve);
+
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void PullTrigger();
 

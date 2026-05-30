@@ -1130,8 +1130,13 @@ void ACharacterBase::Server_PickupWeapon_Implementation(AWeaponBase* Gun)
 		EquippedWeapon = Gun;
 	} else if (!HolsteredWeapon)
 	{
+		
 		HolsteredWeapon = Gun;
 		Gun->SetActorHiddenInGame(true);
+		auto TempGun = EquippedWeapon;
+		EquippedWeapon = HolsteredWeapon;
+		HolsteredWeapon = TempGun;
+		DrawEquippedWeapon();
 	} else
 	{
 		DropEquippedWeapon();
