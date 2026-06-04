@@ -7,8 +7,8 @@
 #include "AlertState.h"
 #include "SmartObject.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCommandStarted);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCommandComplete);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnCommandStarted, AController*, Controller, APawn*, Pawn, ASmartObject*, SmartObject);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnCommandComplete, AController*, Controller, APawn*, Pawn, ASmartObject*, SmartObject);
 
 class UBehaviorTree;
 UCLASS(Abstract)
