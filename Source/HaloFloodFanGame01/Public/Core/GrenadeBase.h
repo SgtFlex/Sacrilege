@@ -63,9 +63,6 @@ public:
 	USoundBase* PickupSFX;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	USphereComponent* CollisionMesh;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UStaticMeshComponent* Mesh;
 
 	FTimerHandle FuseTimer;
