@@ -26,9 +26,11 @@
 #include "Blueprint/UserWidget.h"
 #include "Camera/CameraComponent.h"
 #include "Components/DecalComponent.h"
+#include "Components/SphereComponent.h"
 #include "Engine/DecalActor.h"
 #include "GameFramework/InputDeviceSubsystem.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISense_Damage.h"
@@ -814,8 +816,11 @@ void ACharacterBase::SpawnGrenade(const TSubclassOf<AGrenadeBase>& GrenadeType)
 		//UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Grenade->ThrowSFX, Grenade->GetActorLocation());
 		FVector Direction = GetFirstPersonCameraComponent()->GetForwardVector() + FVector(0,0,0.15);
 		Direction.Normalize();
-		Grenade->Mesh->AddImpulse(Direction*2000.0f, NAME_None, true);
-		Grenade->Mesh->AddAngularImpulseInDegrees(Grenade->GetActorRightVector().GetSafeNormal()*1000 , NAME_None, true);
+		//Grenade->Mesh->AddImpulse(Direction*2000.0f, NAME_None, true);
+		//Grenade->Mesh->AddAngularImpulseInDegrees(Grenade->GetActorRightVector().GetSafeNormal()*1000 , NAME_None, true);
+		
+		Grenade->ProjectileMovementComponent->Velocity = Direction*2000.0f;
+		
 	}
 }
 

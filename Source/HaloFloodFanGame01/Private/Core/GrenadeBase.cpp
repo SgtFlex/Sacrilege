@@ -19,9 +19,14 @@ AGrenadeBase::AGrenadeBase()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	//CollisionMesh = CreateDefaultSubobject<USphereComponent>(FName("CollisionMesh"));
+	//CollisionMesh->SetSimulatePhysics(true);
+	
+	
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
-	Mesh->SetSimulatePhysics(true);
+	//Mesh->SetSimulatePhysics(true);
 	SetRootComponent(Mesh);
+	//Mesh->SetupAttachment(CollisionMesh);
 	
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>("ProjectileMovementComp");
 	PickupComponent = CreateDefaultSubobject<UPickupComponent>("PickupComp");
@@ -88,6 +93,11 @@ void AGrenadeBase::SetArmed_Implementation(bool NewArmed)
 	if (NewArmed)
 	{
 		Mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_PhysicsBody, ECollisionResponse::ECR_Block);
+		Mesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		Mesh->SetSimulatePhysics(false);
+		ProjectileMovementComponent->Activate();
+		ProjectileMovementComponent->bSimulationEnabled = true;
+		
 	} else
 	{
 		Mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_PhysicsBody, ECollisionResponse::ECR_Ignore);
