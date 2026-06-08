@@ -154,7 +154,7 @@ void AWeaponBase::ServerMeleeHit_Implementation(const FHitResult MeleeHit)
 			{
 				FVector ForceVector = (HitComp->GetComponentLocation() - GetActorLocation());
 				ForceVector.Normalize();
-				HitComp->AddImpulse(ForceVector*MeleeForce);
+				HitComp->AddImpulseAtLocation(ForceVector*MeleeForce, MeleeHit.ImpactPoint, MeleeHit.BoneName);
 			}
 		}
 		MulticastDoMeleeHit(MeleeHit);

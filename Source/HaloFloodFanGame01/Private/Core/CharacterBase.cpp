@@ -121,17 +121,18 @@ void ACharacterBase::SpawnLoadout()
 		if (Loadouts.Num() > 0)
 		{
 			FLoadoutStruct ChosenLoadoutStruct = Loadouts[FMath::RandRange(0, Loadouts.Num() - 1)];
+			if (ChosenLoadoutStruct.SecondaryWeaponClass)
+			{
+				AWeaponBase* Gun = GetWorld()->SpawnActor<AWeaponBase>(ChosenLoadoutStruct.SecondaryWeaponClass);
+				PickupWeapon(Gun);
+			}
 			if (ChosenLoadoutStruct.PrimaryWeaponClass)
 			{
 				AWeaponBase* Gun = GetWorld()->SpawnActor<AWeaponBase>(ChosenLoadoutStruct.PrimaryWeaponClass);
 				PickupWeapon(Gun);
 		
 			}
-			if (ChosenLoadoutStruct.SecondaryWeaponClass)
-			{
-				AWeaponBase* Gun = GetWorld()->SpawnActor<AWeaponBase>(ChosenLoadoutStruct.SecondaryWeaponClass);
-				PickupWeapon(Gun);
-			}
+			
 			if (!ChosenLoadoutStruct.Grenades.IsEmpty())
 			{
 				GrenadeInventory = ChosenLoadoutStruct.Grenades;

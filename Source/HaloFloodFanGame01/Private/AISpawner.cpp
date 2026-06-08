@@ -155,6 +155,12 @@ ACharacterBase* AAISpawner::SpawnUnit(TSubclassOf<ACharacterBase> Unit, FVector 
 	ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 	ACharacterBase* Char = GetWorld()->SpawnActor<ACharacterBase>(Unit, SpawnLoc, SpawnRot, ActorSpawnParameters);
 	if (!Char) return nullptr;
+	if (SmartObj)
+	{
+		//Maybe reenable in the future? Unsure if needed
+		//Char->TeamId = DefaultTeam;
+		Char->SmartObject = SmartObj;
+	}
 	Char->SpawnDefaultController();
 	Char->GetHealthComponent()->OnHealthUpdate.AddDynamic(this, &AAISpawner::OnUnitKilled);
 	if (AFirefightGameMode* FirefightGameMode = Cast<AFirefightGameMode>(GetWorld()->GetAuthGameMode()))
@@ -163,12 +169,7 @@ ACharacterBase* AAISpawner::SpawnUnit(TSubclassOf<ACharacterBase> Unit, FVector 
 	}
 	
 	SpawnedChars.Add(Char);
-	if (SmartObj)
-	{
-		//Maybe reenable in the future? Unsure if needed
-		//Char->TeamId = DefaultTeam;
-		Char->SmartObject = SmartObj;
-	}
+	
 	// if (UseDropPod)
 	// {
 	// 	RequestDropPod(Char, SpawnLoc);

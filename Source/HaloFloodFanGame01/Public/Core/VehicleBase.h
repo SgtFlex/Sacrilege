@@ -59,6 +59,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SpawnDefaultControllerWithTeam(uint8 TeamId);
+
+	void SpawnDefaultController() override;
 	
 	UFUNCTION(BlueprintCallable)
 	void UpdateDamageState();

@@ -10,6 +10,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Core/CharacterBase.h"
+#include "Core/SmartObject.h"
 #include "Engine/DamageEvents.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -61,9 +62,21 @@ void AVehicleBase::SpawnDefaultControllerWithTeam(uint8 TeamId)
 	SpawnDefaultController();
 	if (AAIControllerBase* AIC = Cast<AAIControllerBase>(GetController()))
 	{
+		
+		AIC->SetGenericTeamId(TeamId);
+	}
+}
+
+void AVehicleBase::SpawnDefaultController()
+{
+	
+	Super::SpawnDefaultController();
+	if (AAIControllerBase* AIC = Cast<AAIControllerBase>(GetController()))
+	{
 		AAIControllerBase* PilotAIC = Cast<AAIControllerBase>(PilotController);
 		AIC->SetSmartObject(PilotAIC->SmartObject);
-		AIC->SetGenericTeamId(TeamId);
+		//@TODO this returns invalid, so smart object not being set fast enough in AIControllerBase?
+		//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, FString::Printf(TEXT("%s"), *PilotAIC->SmartObject->GetActorLabel()));
 	}
 }
 

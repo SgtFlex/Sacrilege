@@ -103,6 +103,11 @@ void AAIControllerBase::OnPossess(APawn* InPawn)
 		PawnChar = Char;
 		GetBlackboardComponent()->SetValueAsObject("Character", Char);
 		SetGenericTeamId(Char->TeamId);
+		SetGenericTeamId(FGenericTeamId(Char->TeamId));
+		if (ASmartObject* SmartObj = Char->SmartObject) {
+			SetSmartObject(SmartObj);
+		}
+		
 	} else
 	{
 		SetGenericTeamId(FGenericTeamId(TeamNumber));
