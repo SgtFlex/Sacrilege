@@ -219,10 +219,10 @@ void AAIControllerBase::UpdateTargetedEnemy(AActor* Actor)
 			//BlackboardComp->SetValueAsEnum(TEXT("AlertState"), EAlertState::Alerted);
 			SetAlertState(Alerted);
 			BlackboardComp->SetValueAsObject(TEXT("Enemy"), ClosestEnemy);
-			if (ClosestEnemy->Implements<UDamageableInterface>())
-			{
-				IDamageableInterface::Execute_GetHealthComponent(ClosestEnemy)->OnHealthDepleted.AddDynamic(this, &AAIControllerBase::TargetKilled);
-			}
+			if (APawn* ClosestPawn = Cast<APawn>(ClosestEnemy))
+				ClosestPawn->ReceiveControllerChangedDelegate.AddDynamic(this, &AAIControllerBase::TargetKilled);
+			else if (ClosestEnemy->Implements<UDamageableInterface>())
+				IDamageableInterface::Execute_GetHealthComponent(ClosestEnemy)->OnHealthDepleted.AddDynamic(this, &AAIControllerBase::TargetsHealthDepleted);
 			BlackboardComp->SetValueAsVector(TEXT("StimulusLocation"), ClosestEnemy->GetActorLocation());
 			
 			OnEnemyUpdated.Broadcast();
@@ -236,10 +236,16 @@ void AAIControllerBase::UpdateTargetedEnemy(AActor* Actor)
 	
 }
 
-void AAIControllerBase::TargetKilled(float Damage, FVector Force, FVector HitLocation,
-											  FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
+void AAIControllerBase::TargetKilled(APawn* KilledPawn, AController* OldController, AController* NewController)
 {
 	//if (KilledCharacter) BlackboardComp->SetValueAsVector(TEXT("StimulusLocation"), KilledCharacter->GetActorLocation());
+	SetAlertState(Suspicious);
+	BlackboardComp->SetValueAsObject(TEXT("Enemy"), nullptr);
+}
+
+void AAIControllerBase::TargetsHealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName,
+	AController* EventInstigator, AActor* DamageCauser)
+{
 	SetAlertState(Suspicious);
 	BlackboardComp->SetValueAsObject(TEXT("Enemy"), nullptr);
 }

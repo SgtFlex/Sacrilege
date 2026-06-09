@@ -49,7 +49,10 @@ public:
 	void UpdateTargetedEnemy(AActor* Actor);
 
 	UFUNCTION(BlueprintCallable)
-	void TargetKilled(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser);
+	void TargetKilled(APawn* KilledPawn, AController* OldController, AController* NewController);
+	
+	UFUNCTION(BlueprintCallable)
+	void TargetsHealthDepleted(float Damage, FVector Force, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser);
 
 	UFUNCTION()
 	void HearingStimulusUpdated(AActor* Actor, FAIStimulus Stimulus);

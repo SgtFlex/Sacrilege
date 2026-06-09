@@ -251,8 +251,13 @@ void AVehicleBase::Exit_Implementation()
 {
 	if (!Pilot) return;
 	ServerExit();
-	// if (Pilot && Pilot->GetHealthComponent()->IsAlive())
-		GetWorldTimerManager().SetTimer(ExitDelayHandle, this, &AVehicleBase::DoVehicleUnpossession, ExitTime, false);
+	if (Pilot)
+		if (Pilot->GetHealthComponent()->IsAlive())
+			GetWorldTimerManager().SetTimer(ExitDelayHandle, this, &AVehicleBase::DoVehicleUnpossession, ExitTime, false);
+		else
+		{
+			DoVehicleUnpossession();
+		}
 }
 
 void AVehicleBase::ServerExit_Implementation()
@@ -264,6 +269,7 @@ void AVehicleBase::ServerExit_Implementation()
 
 void AVehicleBase::MulticastExit_Implementation()
 {
+	if (!Pilot->GetHealthComponent()->IsAlive()) return;
 	LerpToExit();
 	if (Pilot->VehicleAnimExitMontages.Contains(AnimType.GetValue()))
 	{
