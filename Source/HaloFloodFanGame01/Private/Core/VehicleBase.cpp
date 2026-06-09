@@ -300,9 +300,10 @@ void AVehicleBase::CL_Exit_Implementation()
 void AVehicleBase::ServerResetPilot_Implementation()
 {
 	if (!Pilot) return;
+	Pilot->SetActorRotation(GetControlRotation());
 	if (GetController())
 		GetController()->UnPossess();
-	Pilot->SetActorRotation(GetControlRotation());
+	
 	if (Pilot->GetHealthComponent()->IsAlive())
 		PilotController->Possess(Pilot);
 	Pilot->bIsInVehicle = false;
@@ -324,7 +325,7 @@ void AVehicleBase::MulticastDetachPilot_Implementation()
 		//below should be on client only
 		Pilot->LerpCamera(GetCamera()->GetComponentTransform().GetRelativeTransform(Pilot->GetFirstPersonCameraComponent()->GetComponentTransform()), Pilot->GetFirstPersonCameraComponent()->GetRelativeTransform());
 		//Pilot->SetActorRotation(FRotator(0, 0, 0));
-		//PilotController->SetControlRotation(GetControlRotation());
+		
 		if (Pilot->GetCapsuleComponent())
 		{
 			Pilot->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
