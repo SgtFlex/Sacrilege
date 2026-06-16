@@ -57,7 +57,7 @@ void UMyCustomBlueprintFunctionLibrary::FireHitScanBullet(FHitResult& Hit, const
 		}
 		if (Hit.GetComponent() && Hit.GetComponent()->IsSimulatingPhysics())
 		{
-			Hit.GetComponent()->AddImpulse(HitDir*Force);
+			Hit.GetComponent()->AddImpulseAtLocation(HitDir*Force, Hit.ImpactPoint, Hit.BoneName);
 		}
 	}
 	
@@ -116,6 +116,7 @@ void UMyCustomBlueprintFunctionLibrary::FireExplosion(TArray<AActor*> ActorsToIg
 				{
 					//We only want to hit once per object
 					ActorsToIgnore.AddUnique(Hit.GetActor());
+					//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Cyan, FString::Printf(TEXT("%s"), *HitActor->GetActorLabel()));
 					if (HitActor->Implements<UDamageableInterface>())
 					{
 						// (HitDist - MinRange)/(MaxRange - MinRange)

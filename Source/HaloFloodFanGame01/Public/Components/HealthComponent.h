@@ -15,6 +15,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnHealthDepleted, float, Damage, F
                                               FName, HitBoneName, AController*, EventInstigator, AActor*, DamageCauser);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthUpdate, UHealthComponent*, HealthComp);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthDamaged, float, Health);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChanged, float, NewHealth, float, OldHealth);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnShieldChanged, float, NewShields, float, OldShields);
+
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnShieldDamaged, float, Shields);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShieldBreak);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShieldStartRegen);
