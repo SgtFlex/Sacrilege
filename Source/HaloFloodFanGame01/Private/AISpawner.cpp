@@ -69,6 +69,7 @@ void AAISpawner::TriggerSpawn()
 				FVector Loc = UKismetMathLibrary::RandomPointInBoundingBox(GetActorLocation(), BoxExtents);
 				FRotator Rot = FRotator(0,0,0);
 				FActorSpawnParameters SpawnParams;
+				SpawnParams.Owner = this;
 				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 				AVehicleBase* SpawnedVehicle = Cast<AVehicleBase>(GetWorld()->SpawnActor(elem.Key, &Loc, &Rot, SpawnParams));
 				if (SpawnedVehicle) SpawnedVehicles.Add(SpawnedVehicle);
@@ -141,6 +142,7 @@ void AAISpawner::SpawnSquad(TMap<TSubclassOf<ACharacterBase>, int> SquadToSpawn,
 				FVector Loc = UKismetMathLibrary::RandomPointInBoundingBox(GetActorLocation(), BoxExtents);
 				FRotator Rot = FRotator(0,0,0);
 				FActorSpawnParameters ActorSpawnParameters;
+				ActorSpawnParameters.Owner = this;
 				ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 				GetWorld()->SpawnActor(elem.Key, &Loc, &Rot, ActorSpawnParameters);
 			}
@@ -152,6 +154,7 @@ void AAISpawner::SpawnSquad(TMap<TSubclassOf<ACharacterBase>, int> SquadToSpawn,
 ACharacterBase* AAISpawner::SpawnUnit(TSubclassOf<ACharacterBase> Unit, FVector SpawnLoc, FRotator SpawnRot)
 {
 	FActorSpawnParameters ActorSpawnParameters;
+	ActorSpawnParameters.Owner = this;
 	ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 	ACharacterBase* Char = GetWorld()->SpawnActor<ACharacterBase>(Unit, SpawnLoc, SpawnRot, ActorSpawnParameters);
 	if (!Char) return nullptr;

@@ -121,14 +121,17 @@ void ACharacterBase::SpawnLoadout()
 		if (Loadouts.Num() > 0)
 		{
 			FLoadoutStruct ChosenLoadoutStruct = Loadouts[FMath::RandRange(0, Loadouts.Num() - 1)];
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.Owner = this;
 			if (ChosenLoadoutStruct.SecondaryWeaponClass)
 			{
-				AWeaponBase* Gun = GetWorld()->SpawnActor<AWeaponBase>(ChosenLoadoutStruct.SecondaryWeaponClass);
+				
+				AWeaponBase* Gun = GetWorld()->SpawnActor<AWeaponBase>(ChosenLoadoutStruct.SecondaryWeaponClass, SpawnParams);
 				PickupWeapon(Gun);
 			}
 			if (ChosenLoadoutStruct.PrimaryWeaponClass)
 			{
-				AWeaponBase* Gun = GetWorld()->SpawnActor<AWeaponBase>(ChosenLoadoutStruct.PrimaryWeaponClass);
+				AWeaponBase* Gun = GetWorld()->SpawnActor<AWeaponBase>(ChosenLoadoutStruct.PrimaryWeaponClass, SpawnParams);
 				PickupWeapon(Gun);
 		
 			}
