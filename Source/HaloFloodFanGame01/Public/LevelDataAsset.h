@@ -16,11 +16,11 @@ class HALOFLOODFANGAME01_API ULevelDataAsset : public UDataAsset
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FString LevelPath;
+	TSoftObjectPtr<UWorld> Level;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FText LevelName;
+	FText ExposedLevelName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	UTexture2D* LevelThumbnail;
+	UTexture2D* ExposedLevelThumbnail;
 };

@@ -40,6 +40,9 @@ public:
 	void TriggerSpawn();
 
 	UFUNCTION(BlueprintCallable)
+	AVehicleBase* FindEmptyVehicle(ACharacterBase* Character, const TArray<AVehicleBase*>& Vehicles);
+
+	UFUNCTION(BlueprintCallable)
 	void SpawnSquad(TMap<TSubclassOf<ACharacterBase>, int> SquadToSpawn, TMap<TSubclassOf<AVehicleBase>, int> Vehicles);
 
 	UFUNCTION(BlueprintCallable)

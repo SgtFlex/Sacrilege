@@ -86,22 +86,7 @@ void AAISpawner::TriggerSpawn()
 				{
 					Spawned.Add(Char);
 					//@TODO I think we can optimize this whole thing a lot better. Perhaps vehicles can have a priority system for each seat (like a int->seat map) that we can reference here?
-					for (AVehicleBase* SpawnedVehicle : SpawnedVehicles)
-					{
-						if (!SpawnedVehicle->Pilot)
-						{
-							SpawnedVehicle->Enter(Char);
-							break;
-						}
-						for (auto ChildVehicle : SpawnedVehicle->ChildVehicles)
-						{
-							if (!ChildVehicle->Pilot)
-							{
-								ChildVehicle->Enter(Char);
-								break;
-							}
-						}
-					}
+					FindEmptyVehicle(Char, SpawnedVehicles);
 				}
 			}
 		}
@@ -109,6 +94,32 @@ void AAISpawner::TriggerSpawn()
 	}
 	OnAvailable.Broadcast(this);
 }
+
+AVehicleBase* AAISpawner::FindEmptyVehicle(ACharacterBase* Character, const TArray<AVehicleBase*>& Vehicles)
+{
+	for (AVehicleBase* SpawnedVehicle : Vehicles)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Checking %s for pilot"), *SpawnedVehicle->GetActorLabel())
+		if (!SpawnedVehicle->Pilot)
+		{
+			SpawnedVehicle->Enter(Character);
+			UE_LOG(LogTemp, Warning, TEXT("%s entering %s"), *Character->GetActorLabel(), *SpawnedVehicle->GetActorLabel())
+			return SpawnedVehicle;
+		}
+		for (AVehicleBase* ChildVehicle : SpawnedVehicle->ChildVehicles)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Checking %s for pilot"), *ChildVehicle->GetActorLabel())
+			if (!ChildVehicle->Pilot)
+			{
+				ChildVehicle->Enter(Character);
+				UE_LOG(LogTemp, Warning, TEXT("%s entering %s"), *Character->GetActorLabel(), *ChildVehicle->GetActorLabel())
+				return ChildVehicle;
+			}
+		}
+	}
+	return nullptr;
+}
+
 
 void AAISpawner::SpawnSquad(TMap<TSubclassOf<ACharacterBase>, int> SquadToSpawn, TMap<TSubclassOf<AVehicleBase>, int> Vehicles)
 {
