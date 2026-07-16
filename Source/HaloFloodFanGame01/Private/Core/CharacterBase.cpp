@@ -425,7 +425,7 @@ UHealthComponent* ACharacterBase::GetHealthComponent_Implementation()
 
 void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector DamageForce, FVector HitLocation, FName HitBoneName, AController* EventInstigator, AActor* DamageCauser)
 {
-	OnKilled.Broadcast(this, EventInstigator, DamageCauser);
+	
 	if (EventInstigator)
 		UE_LOG(LogTemp, Warning, TEXT("%s killed %s"), *EventInstigator->GetName(), *GetName())
 	SV_OnHealthDepleted(Damage, DamageForce, HitLocation, HitBoneName, EventInstigator, DamageCauser);
@@ -460,6 +460,7 @@ void ACharacterBase::OnHealthDepleted_Implementation(float Damage, FVector Damag
 	//
 	// 	Cast<AFirefightGameMode>(GetWorld()->GetAuthGameMode())->OnPlayerCharDied.Broadcast(this, Cast<APlayerControllerBase>(PC));
 	// }
+	OnKilled.Broadcast(this, EventInstigator, DamageCauser);
 }
 
 void ACharacterBase::SV_OnHealthDepleted_Implementation(float Damage, FVector Force, FVector HitLocation,

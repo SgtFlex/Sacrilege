@@ -377,6 +377,7 @@ FVector AVehicleBase::GetNavAgentLocation() const
 
 void AVehicleBase::OnPilotKilled(ACharacterBase* Character, AController* Killer, AActor* Causer)
 {
+	//UE_LOG(LogTemp, Warning, TEXT("%hhd"), Pilot->bIsInVehicle);
 	Exit();
 }
 
