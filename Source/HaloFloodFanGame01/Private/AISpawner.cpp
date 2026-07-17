@@ -99,20 +99,20 @@ AVehicleBase* AAISpawner::FindEmptyVehicle(ACharacterBase* Character, const TArr
 {
 	for (AVehicleBase* SpawnedVehicle : Vehicles)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Checking %s for pilot"), *SpawnedVehicle->GetActorLabel())
+		//UE_LOG(LogTemp, Warning, TEXT("Checking %s for pilot"), *SpawnedVehicle->GetActorLabel())
 		if (!SpawnedVehicle->Pilot)
 		{
 			SpawnedVehicle->Enter(Character);
-			UE_LOG(LogTemp, Warning, TEXT("%s entering %s"), *Character->GetActorLabel(), *SpawnedVehicle->GetActorLabel())
+			//UE_LOG(LogTemp, Warning, TEXT("%s entering %s"), *Character->GetActorLabel(), *SpawnedVehicle->GetActorLabel())
 			return SpawnedVehicle;
 		}
 		for (AVehicleBase* ChildVehicle : SpawnedVehicle->ChildVehicles)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Checking %s for pilot"), *ChildVehicle->GetActorLabel())
+			//UE_LOG(LogTemp, Warning, TEXT("Checking %s for pilot"), *ChildVehicle->GetActorLabel())
 			if (!ChildVehicle->Pilot)
 			{
 				ChildVehicle->Enter(Character);
-				UE_LOG(LogTemp, Warning, TEXT("%s entering %s"), *Character->GetActorLabel(), *ChildVehicle->GetActorLabel())
+				//UE_LOG(LogTemp, Warning, TEXT("%s entering %s"), *Character->GetActorLabel(), *ChildVehicle->GetActorLabel())
 				return ChildVehicle;
 			}
 		}
