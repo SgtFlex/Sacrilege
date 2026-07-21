@@ -8,6 +8,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/HealthComponent.h"
+#include "FunctionLibraries/MyCustomBlueprintFunctionLibrary.h"
 
 // Sets default values
 AWeaponBase::AWeaponBase()
@@ -119,9 +121,10 @@ void AWeaponBase::ServerWeaponMelee_Implementation()
 	MulticastWeaponMelee();
 	if (MeleeHit.GetActor() && MeleeHit.Distance < MeleeLungeRange)
 	{
-		if (const ACharacterBase* MeleeChar = Cast<ACharacterBase>(MeleeHit.GetActor()))
+		if (ACharacterBase* MeleeChar = Cast<ACharacterBase>(MeleeHit.GetActor()))
 		{
-			CharacterOwner->Lunge(MeleeHit.GetActor(), MeleeHit.ImpactPoint);
+			if (MeleeChar->GetHealthComponent()->IsAlive())
+				CharacterOwner->Lunge(MeleeHit.GetActor(), MeleeHit.ImpactPoint);
 		}
 	}
 }
@@ -218,7 +221,8 @@ void AWeaponBase::GetMeleeHit(FHitResult& MeleeHit)
 	FVector AimDir;
 	GetAim(AimLoc, AimDir);
 	ActorsToIgnore.Add(CharacterOwner);
-	UKismetSystemLibrary::LineTraceSingle(GetWorld(), AimLoc, AimLoc + (AimDir*MeleeLungeRange), UEngineTypes::ConvertToTraceType(ECC_Visibility), true, ActorsToIgnore, EDrawDebugTrace::None, MeleeHit, true);
+	UMyCustomBlueprintFunctionLibrary::GetHitMagnetized(MeleeHit, ActorsToIgnore, AimLoc, AimDir, MeleeLungeRange, MeleeLungeRadius);
+	//UKismetSystemLibrary::LineTraceSingle(GetWorld(), AimLoc, AimLoc + (AimDir*MeleeLungeRange), UEngineTypes::ConvertToTraceType(ECC_Visibility), true, ActorsToIgnore, EDrawDebugTrace::None, MeleeHit, true);
 }
 
 void AWeaponBase::OnInteract_Implementation(ACharacterBase* Character)

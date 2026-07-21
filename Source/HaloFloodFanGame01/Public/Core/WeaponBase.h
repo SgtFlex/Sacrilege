@@ -158,6 +158,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes | Melee"))
 	float MeleeLungeRange = 600;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes | Melee"))
+	float MeleeLungeRadius = 50;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Category="Attributes | Melee"))
 	float MeleeDelay = 0.1;

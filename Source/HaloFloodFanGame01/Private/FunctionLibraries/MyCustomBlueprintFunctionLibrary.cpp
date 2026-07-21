@@ -27,23 +27,7 @@ void UMyCustomBlueprintFunctionLibrary::FireHitScanBullet(FHitResult& Hit, const
 {
 	UWorld* World = GEngine->GameViewport->GetWorld();
 	
-	FHitResult HitThin;
-	UKismetSystemLibrary::LineTraceSingle(World, StartLocation, StartLocation + (Direction*Range), TraceTypeQuery1, true, ActorsToIgnore, EDrawDebugTrace::None, HitThin, true);
-	if (HitThin.bBlockingHit && HitThin.GetActor()->Implements<UDamageableInterface>())
-	{
-		Hit = HitThin;
-	} else
-	{
-		FHitResult HitMagnetized;
-		UKismetSystemLibrary::SphereTraceSingle(World, StartLocation, StartLocation + (Direction * Range), MagnetizeRadius, TraceTypeQuery1, true, ActorsToIgnore, EDrawDebugTrace::None, HitMagnetized, true);
-		if (HitMagnetized.bBlockingHit && HitMagnetized.GetActor()->Implements<UDamageableInterface>())
-		{
-			Hit = HitMagnetized;
-		} else
-		{
-			Hit = HitThin;
-		}
-	}
+	GetHitMagnetized(Hit, ActorsToIgnore, StartLocation, Direction, Range, MagnetizeRadius);
 
 	if (Hit.bBlockingHit && Hit.GetActor())
 	{
@@ -61,6 +45,30 @@ void UMyCustomBlueprintFunctionLibrary::FireHitScanBullet(FHitResult& Hit, const
 		}
 	}
 	
+}
+
+void UMyCustomBlueprintFunctionLibrary::GetHitMagnetized(FHitResult& Hit, const TArray<AActor*>& ActorsToIgnore,
+	const FVector StartLocation, const FVector Direction, const float Range, const float MagnetizeRadius)
+{
+	UWorld* World = GEngine->GameViewport->GetWorld();
+	
+	FHitResult HitThin;
+	UKismetSystemLibrary::LineTraceSingle(World, StartLocation, StartLocation + (Direction*Range), TraceTypeQuery1, true, ActorsToIgnore, EDrawDebugTrace::None, HitThin, true);
+	if (HitThin.bBlockingHit && HitThin.GetActor()->Implements<UDamageableInterface>())
+	{
+		Hit = HitThin;
+	} else
+	{
+		FHitResult HitMagnetized;
+		UKismetSystemLibrary::SphereTraceSingle(World, StartLocation, StartLocation + (Direction * Range), MagnetizeRadius, TraceTypeQuery1, true, ActorsToIgnore, EDrawDebugTrace::None, HitMagnetized, true);
+		if (HitMagnetized.bBlockingHit && HitMagnetized.GetActor()->Implements<UDamageableInterface>())
+		{
+			Hit = HitMagnetized;
+		} else
+		{
+			Hit = HitThin;
+		}
+	}
 }
 
 AActor* UMyCustomBlueprintFunctionLibrary::FireProjectile(FVector StartLocation,
