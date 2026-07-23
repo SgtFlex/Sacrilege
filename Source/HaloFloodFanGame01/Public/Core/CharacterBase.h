@@ -153,6 +153,8 @@ public:
 	
 	UFUNCTION(BlueprintNativeEvent)
 	void DropGrenades();
+
+	virtual FVector GetPawnViewLocation() const override;
 	
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit );

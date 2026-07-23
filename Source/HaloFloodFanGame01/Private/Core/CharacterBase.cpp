@@ -555,6 +555,14 @@ void ACharacterBase::DropGrenades_Implementation()
 	}
 }
 
+FVector ACharacterBase::GetPawnViewLocation() const
+{
+	if (!IsPlayerControlled())
+		return Super::GetPawnViewLocation();
+	else
+		return GetFirstPersonCameraComponent()->GetComponentLocation();
+}
+
 void ACharacterBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
                            FVector NormalImpulse, const FHitResult& Hit)
 {

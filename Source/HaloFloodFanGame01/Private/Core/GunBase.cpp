@@ -29,10 +29,10 @@ void AGunBase::SecondaryFire_Start_Implementation()
 {
 	Super::SecondaryFire_Start_Implementation();
 
-	if (ScopeActive)
+	if (bScopeActive)
 	{
 		ScopeOut();
-	} else if (!ScopeActive && ScopeFOV != 0.0f)
+	} else if (!bScopeActive && ScopeFOV != 0.0f)
 	{
 		ScopeIn();
 	}
@@ -198,6 +198,18 @@ void AGunBase::UpdateMagazineElements()
 	OnAmmoUpdated.Broadcast();
 }
 
+void AGunBase::Holster()
+{
+	ScopeOut();
+	Super::Holster();
+}
+
+void AGunBase::Drop()
+{
+	ScopeOut();
+	Super::Drop();
+}
+
 void AGunBase::PlayFireFX_Implementation()
 {
 	if (CharacterOwner)
@@ -210,8 +222,9 @@ void AGunBase::PlayFireFX_Implementation()
 
 void AGunBase::SpawnTrailFX_Implementation(FHitResult Hit)
 {
+	
 	K2_SpawnTrailFX(Hit);
-	if (Mesh->DoesSocketExist("Muzzle") && TrailPFX)
+	if (!bScopeActive && Mesh->DoesSocketExist("Muzzle") && TrailPFX)
 	{
 		FVector TrailEnd = (Hit.bBlockingHit) ? Hit.ImpactPoint : Hit.TraceEnd;
 		UNiagaraComponent* TrailPFXComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(TrailPFX, Mesh, "Muzzle", FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
@@ -316,7 +329,7 @@ void AGunBase::SpawnMuzzleFX_Implementation()
 			Cast<APlayerController>(CharacterOwner->GetController())->PlayerCameraManager->StartCameraShake(FiringCameraShake, 1, ECameraShakePlaySpace::CameraLocal);
 	if (FiringSound)
 		UGameplayStatics::SpawnSoundAttached(FiringSound, GetRootComponent());
-	if (Mesh->DoesSocketExist("Muzzle") && MuzzlePFX && !ScopeActive)
+	if (Mesh->DoesSocketExist("Muzzle") && MuzzlePFX && !bScopeActive)
 		UNiagaraFunctionLibrary::SpawnSystemAttached(MuzzlePFX, Mesh, "Muzzle", FVector(0,0,0), FRotator(0,0,0), EAttachLocation::SnapToTarget, true);
 }
 

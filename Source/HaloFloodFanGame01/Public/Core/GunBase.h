@@ -83,6 +83,9 @@ public:
 	// UFUNCTION(NetMulticast, Reliable, WithValidation)
 	// void Multi_Fire();
 
+	void Holster() override;
+
+	void Drop() override;
 	
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)

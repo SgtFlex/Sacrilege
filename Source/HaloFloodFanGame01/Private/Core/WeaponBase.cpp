@@ -5,6 +5,7 @@
 
 #include "Subsystems/WorldCleanupManager.h"
 #include "Core/CharacterBase.h"
+#include "Core/PlayerControllerBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Blueprint/UserWidget.h"
@@ -43,7 +44,8 @@ void AWeaponBase::Equip()
 
 void AWeaponBase::Drop()
 {
-	PrimaryFire_End();
+	if (bIsFiring)
+		PrimaryFire_End();
 	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	SetActorEnableCollision(true);
 	Mesh->SetSimulatePhysics(true);
@@ -56,7 +58,7 @@ void AWeaponBase::Drop()
 
 void AWeaponBase::Holster()
 {
-	PrimaryFire_End();
+	if (bIsFiring) PrimaryFire_End();
 	//SetActorHiddenInGame(true);
 }
 
@@ -186,12 +188,14 @@ void AWeaponBase::MulticastDoMeleeHit_Implementation(const FHitResult MeleeHit)
 
 bool AWeaponBase::ScopeIn_Implementation()
 {
-	if (ScopeActive || ScopeFOV == 0) return false;
+	if (bScopeActive || ScopeFOV == 0) return false;
 	if (CharacterOwner)
 	{
-		ScopeActive = true;
-		// ScopeOverlay = CreateWidget<class UUserWidget>(CharacterOwner->PlayerController, ScopeWidget);
-		// ScopeOverlay->AddToPlayerScreen();
+		bScopeActive = true;
+
+		//IMPORTANT: PlayerControllerBase.h must be included for CreateWidget to work despite Rider thinking it doesn't. Make sure its included to compile!
+		ScopeOverlay = CreateWidget<UUserWidget>(CharacterOwner->PlayerController, ScopeWidget);
+		ScopeOverlay->AddToPlayerScreen();
 		CharacterOwner->ScopeSensitivityMultiplier = (ScopeFOV/90);
 		//PlayerChar->GetFirstPersonCameraComponent()->SetFieldOfView(10);
 		if (ScopeInSFX) UGameplayStatics::PlaySound2D(GetWorld(), ScopeInSFX);
@@ -201,11 +205,11 @@ bool AWeaponBase::ScopeIn_Implementation()
 
 void AWeaponBase::ScopeOut_Implementation()
 {
-	if (!ScopeActive) return;
+	if (!bScopeActive) return;
 	
 	if (ScopeOverlay) ScopeOverlay->RemoveFromParent();
 	//PlayerChar->GetFirstPersonCameraComponent()->SetFieldOfView(90);
-	ScopeActive = false;
+	bScopeActive = false;
 	
 	if (CharacterOwner)
 	{

@@ -181,7 +181,10 @@ public:
 	FOnWeaponPickedUp OnWeaponPickedUp;	
 
 	UPROPERTY(BlueprintReadOnly)
-	bool ScopeActive = false;
+	bool bScopeActive = false;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsFiring = false;
 
 protected:
 	
