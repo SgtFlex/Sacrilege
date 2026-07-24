@@ -412,7 +412,7 @@ float ACharacterBase::CustomTakePointDamage_Implementation(float Damage, FVector
 	}
 	
 	
-	OnTakeCustomPointDamage.Broadcast(Damage);
+	OnTakeCustomPointDamage.Broadcast(Damage, Force, HitInfo, EventInstigator, DamageCauser);
 	return x;
 }
 

@@ -74,7 +74,7 @@ struct FLoadoutStruct
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractableChanged, AActor*, Interactable);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPickupWeapon);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDropWeapon);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTakeCustomPointDamage, float, Damage);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FOnTakeCustomPointDamage, float, Damage, float, Force, FHitResult, Hit, AController*, EventInstigator, AActor*, DamageCauser);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponsUpdated, AWeaponBase*, NewGun, AWeaponBase*, OldGun);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnKilled, ACharacterBase*, Character, AController*, Instigator, AActor*, Causer);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrenadeInvetoryUpdated, TArray<FGrenadeStruct>&, UpdatedGrenadeInventory);
