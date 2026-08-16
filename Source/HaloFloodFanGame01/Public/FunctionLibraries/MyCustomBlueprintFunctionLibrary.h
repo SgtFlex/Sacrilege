@@ -23,7 +23,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, meta=(WorldContext="WorldContextObject", AutoCreateRefTerm = "ActorsToIgnore"))
 	static void GetHitMagnetized(FHitResult& Hit, const TArray<AActor*>& ActorsToIgnore, FVector StartLocation = FVector(0,0,0), FVector Direction = FVector(0,0,0), float Range = 5000, float MagnetizeRadius = 20);
-	
+
 	UFUNCTION(BlueprintCallable, meta=(WorldContext="WorldContextObject"))
 	static AActor* FireProjectile(FVector StartLocation, FVector Direction, TSubclassOf<AActor> ActorToSpawn);
 

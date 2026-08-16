@@ -88,7 +88,7 @@ AActor* UMyCustomBlueprintFunctionLibrary::FireProjectile(FVector StartLocation,
 	return Actor;
 }
 
-
+//@TODO We may be able to optimize this a bit more. 2 Arrays and lots of hits.
 void UMyCustomBlueprintFunctionLibrary::FireExplosion(TArray<AActor*> ActorsToIgnore, FVector Location, float BaseDamage, float MinimumDamage, float OuterRadius, float InnerRadius, float DamageFalloff, float Force, AActor* DamageCauser, AController* EventInstigator)
 {
 	UWorld* World = GEngine->GameViewport->GetWorld();
@@ -110,6 +110,7 @@ void UMyCustomBlueprintFunctionLibrary::FireExplosion(TArray<AActor*> ActorsToIg
 	//UKismetSystemLibrary::SphereTraceMulti(World, Location, Location, OuterRadius, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, OutHits, true);
 	//UKismetSystemLibrary::SphereOverlapActors(World, Location, OuterRadius, Objects, AActor::StaticClass(), ActorsToIgnore, HitActors);
 	ActorsToIgnore.Add(DamageCauser);
+	const TArray<AActor*> LOSActorsIgnore = ActorsToIgnore;
 	for (FHitResult Hit : OutHits)
 	{
 		if (AActor* HitActor = Hit.GetActor())
@@ -123,14 +124,16 @@ void UMyCustomBlueprintFunctionLibrary::FireExplosion(TArray<AActor*> ActorsToIg
 				//Previously our LOSCheck would *just* fall short of our ExplosionHit (Im not entirely sure why), so I added a safe extension amount. This made explosions affect actors much more reliably.
 				constexpr float ExtensionAmount = 30.0f;
 				const FVector LOSExtension = (Hit.ImpactPoint - Location).GetSafeNormal() * ExtensionAmount;
-				UKismetSystemLibrary::LineTraceSingle(World, Location, Hit.ImpactPoint + LOSExtension, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::None, LOSCheck, false);
+				
+				UKismetSystemLibrary::LineTraceSingle(World, Location, Hit.ImpactPoint + LOSExtension, TraceTypeQuery1, false, LOSActorsIgnore, EDrawDebugTrace::ForDuration, LOSCheck, false);
 
 				//@TODO When doing an LOSCheck, we should first check to the center of mass. If it doesn't hit, then we should fallback to wherever our SphereMultiHit collided. Or we should just apply the force at the center for physics-simulated objects.
 				if (LOSCheck.GetActor() == HitActor)
 				{
 					//We only want to hit once per object
+					//@TODO I think by adding each actor to ActorsToIgnore is causing some traces to go through walls because the walls are being added to the IgnoreList. Fix required
 					ActorsToIgnore.AddUnique(Hit.GetActor());
-					//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, FString::Printf(TEXT("%s"), *HitActor->GetActorLabel()));
+					//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, FString::Printf(TEXT("%s added to ignore list"), *HitActor->GetActorLabel()));
 					if (HitActor->Implements<UDamageableInterface>())
 					{
 						// (HitDist - MinRange)/(MaxRange - MinRange)
@@ -149,7 +152,7 @@ void UMyCustomBlueprintFunctionLibrary::FireExplosion(TArray<AActor*> ActorsToIg
 						if (PrimComponent->IsSimulatingPhysics() && PrimComponent->GetCollisionEnabled() ==
 							ECollisionEnabled::QueryAndPhysics)
 						{
-							PrimComponent->AddImpulseAtLocation(((Hit.ImpactPoint - Location).GetSafeNormal() * Force), Hit.ImpactPoint);
+							PrimComponent->AddImpulseAtLocation(((Hit.ImpactPoint - Location).GetSafeNormal() * Force), PrimComponent->GetCenterOfMass());
 							//PrimComponent->AddImpulse((HitActor->GetActorLocation() - Location).GetSafeNormal() * FMath::Lerp(0, Force, (FVector::Distance(HitActor->GetActorLocation(), Location)) + InnerRadius));
 						}
 					}
