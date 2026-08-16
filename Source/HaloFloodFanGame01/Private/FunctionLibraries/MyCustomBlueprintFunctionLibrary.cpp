@@ -65,7 +65,7 @@ void UMyCustomBlueprintFunctionLibrary::GetHitMagnetized(FHitResult& Hit, const 
 		UKismetSystemLibrary::SphereTraceSingle(World, StartLocation, StartLocation + (Direction.GetSafeNormal() * Range), MagnetizeRadius, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::None, HitMagnetized, true);
 		if (HitMagnetized.bBlockingHit && HitMagnetized.GetActor()->Implements<UDamageableInterface>())
 		{
-			Hit = HitThin;
+			Hit = HitMagnetized;
 		} else
 		{
 			Hit = HitThin;
