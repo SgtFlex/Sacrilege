@@ -73,6 +73,7 @@ void AGrenadeBase::SV_Explode_Implementation()
 {
 	
 	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(this);
 	UMyCustomBlueprintFunctionLibrary::FireExplosion(ActorsToIgnore, GetActorLocation(), MaxExplosionDamage, MinExplosionDamage, OuterExplosionRadius, InnerExplosionRadius, ExplosionDamageFalloff, ExplosionForce, this, GetInstigatorController());
 	MC_Explode();
 }

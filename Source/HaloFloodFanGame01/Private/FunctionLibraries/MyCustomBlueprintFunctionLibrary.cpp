@@ -60,10 +60,12 @@ void UMyCustomBlueprintFunctionLibrary::GetHitMagnetized(FHitResult& Hit, const 
 	} else
 	{
 		FHitResult HitMagnetized;
-		UKismetSystemLibrary::SphereTraceSingle(World, StartLocation, StartLocation + (Direction * Range), MagnetizeRadius, TraceTypeQuery1, true, ActorsToIgnore, EDrawDebugTrace::None, HitMagnetized, true);
+		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, FString::Printf(TEXT("%s"), *Direction.ToString()));
+		//We were previously using TraceComplex on this spheretrace, but doing so caused a hitch and IsNearlyEqual error to be thrown if the length of the trace was too short proportionally to the Range (but it would only happen once per session)
+		UKismetSystemLibrary::SphereTraceSingle(World, StartLocation, StartLocation + (Direction.GetSafeNormal() * Range), MagnetizeRadius, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::None, HitMagnetized, true);
 		if (HitMagnetized.bBlockingHit && HitMagnetized.GetActor()->Implements<UDamageableInterface>())
 		{
-			Hit = HitMagnetized;
+			Hit = HitThin;
 		} else
 		{
 			Hit = HitThin;
@@ -91,13 +93,11 @@ void UMyCustomBlueprintFunctionLibrary::FireExplosion(TArray<AActor*> ActorsToIg
 {
 	UWorld* World = GEngine->GameViewport->GetWorld();
 
-	TArray<AActor*> Actors;
 
 
 	FRadialDamageEvent RadialDamageEvent;
 	RadialDamageEvent.Params = FRadialDamageParams(BaseDamage, MinimumDamage, InnerRadius, OuterRadius, DamageFalloff);
 	RadialDamageEvent.Origin = Location;
-	TArray<TEnumAsByte<EObjectTypeQuery>> Objects;
 	TArray<AActor*> HitActors;
 
 	TArray<FHitResult> OutHits;
@@ -114,17 +114,23 @@ void UMyCustomBlueprintFunctionLibrary::FireExplosion(TArray<AActor*> ActorsToIg
 	{
 		if (AActor* HitActor = Hit.GetActor())
 		{
+			//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("%s"), *Hit.GetActor()->GetActorLabel()));
 			if (!ActorsToIgnore.Contains(HitActor))
 			{
 				
 				//TODO - Maybe use a "ForceInterface" for characters, projectiles, and others instead of casting?
 				FHitResult LOSCheck;
-				UKismetSystemLibrary::LineTraceSingle(World, Location, Hit.ImpactPoint, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::None, LOSCheck, true);
+				//Previously our LOSCheck would *just* fall short of our ExplosionHit (Im not entirely sure why), so I added a safe extension amount. This made explosions affect actors much more reliably.
+				constexpr float ExtensionAmount = 30.0f;
+				const FVector LOSExtension = (Hit.ImpactPoint - Location).GetSafeNormal() * ExtensionAmount;
+				UKismetSystemLibrary::LineTraceSingle(World, Location, Hit.ImpactPoint + LOSExtension, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::None, LOSCheck, false);
+
+				//@TODO When doing an LOSCheck, we should first check to the center of mass. If it doesn't hit, then we should fallback to wherever our SphereMultiHit collided. Or we should just apply the force at the center for physics-simulated objects.
 				if (LOSCheck.GetActor() == HitActor)
 				{
 					//We only want to hit once per object
 					ActorsToIgnore.AddUnique(Hit.GetActor());
-					//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Cyan, FString::Printf(TEXT("%s"), *HitActor->GetActorLabel()));
+					//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, FString::Printf(TEXT("%s"), *HitActor->GetActorLabel()));
 					if (HitActor->Implements<UDamageableInterface>())
 					{
 						// (HitDist - MinRange)/(MaxRange - MinRange)

@@ -280,7 +280,6 @@ void AGunBase::SpawnBullet_Implementation()
 		} else
 		{
 			FHitResult Hit;
-			FRotator EyeRotation;
 			FVector AimLocation;
 			FVector AimDirection;
 			GetAim(AimLocation, AimDirection);
@@ -288,7 +287,7 @@ void AGunBase::SpawnBullet_Implementation()
 			{
 				EventInstigator = CharacterOwner->GetController();
 			}
-			EyeRotation = AimDirection.Rotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
+			const FRotator EyeRotation = AimDirection.Rotation() + FRotator(FMath::RandRange(-VerticalSpread, VerticalSpread), FMath::RandRange(-HorizontalSpread, HorizontalSpread),0);
 			
 			ActorsToIgnore.Add(this);
 			ActorsToIgnore.Add(GetOwner());
