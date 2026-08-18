@@ -125,7 +125,7 @@ void UMyCustomBlueprintFunctionLibrary::FireExplosion(TArray<AActor*> ActorsToIg
 				constexpr float ExtensionAmount = 30.0f;
 				const FVector LOSExtension = (Hit.ImpactPoint - Location).GetSafeNormal() * ExtensionAmount;
 				
-				UKismetSystemLibrary::LineTraceSingle(World, Location, Hit.ImpactPoint + LOSExtension, TraceTypeQuery1, false, LOSActorsIgnore, EDrawDebugTrace::ForDuration, LOSCheck, false);
+				UKismetSystemLibrary::LineTraceSingle(World, Location, Hit.ImpactPoint + LOSExtension, TraceTypeQuery1, false, LOSActorsIgnore, EDrawDebugTrace::None, LOSCheck, false);
 
 				//@TODO When doing an LOSCheck, we should first check to the center of mass. If it doesn't hit, then we should fallback to wherever our SphereMultiHit collided. Or we should just apply the force at the center for physics-simulated objects.
 				if (LOSCheck.GetActor() == HitActor)

@@ -9,6 +9,7 @@
 #include "GameFramework/Pawn.h"
 #include "VehicleBase.generated.h"
 
+class USpringArmComponent;
 class UCameraComponent;
 class ACharacterBase;
 class UHealthComponent;
@@ -210,6 +211,12 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	USkeletalMeshComponent* VehicleSkeletalMesh;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	UCameraComponent* Camera;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USpringArmComponent* SpringArm;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	USceneComponent* ExitPoint;
