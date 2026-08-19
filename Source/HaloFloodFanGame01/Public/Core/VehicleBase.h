@@ -179,7 +179,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, BlueprintPure)
 	UHealthComponent* GetHealthComponent();
 
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure)
 	UCameraComponent* GetCamera();
 
 	virtual FVector GetPawnViewLocation() const override;

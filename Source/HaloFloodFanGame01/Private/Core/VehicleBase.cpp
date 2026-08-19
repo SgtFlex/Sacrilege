@@ -13,6 +13,7 @@
 #include "Core/SmartObject.h"
 #include "Engine/DamageEvents.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values
@@ -26,6 +27,10 @@ AVehicleBase::AVehicleBase()
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>("HealthComponent");
 	ExitPoint = CreateDefaultSubobject<USceneComponent>("ExitPoint");
 	ExitPoint->SetupAttachment(GetVehicleMesh());
+	SpringArm = CreateDefaultSubobject<USpringArmComponent>("SpringArmComponent");
+	SpringArm->SetupAttachment(GetRootComponent());
+	Camera = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
+	Camera->SetupAttachment(SpringArm);
 }
 
 // Called when the game starts or when spawned
@@ -364,6 +369,11 @@ void AVehicleBase::MulticastDetachPilot_Implementation()
 // 		VehicleHUD = nullptr;
 // 	}
 // }
+
+UCameraComponent* AVehicleBase::GetCamera_Implementation()
+{
+	return Camera;
+}
 
 FVector AVehicleBase::GetPawnViewLocation() const
 {
