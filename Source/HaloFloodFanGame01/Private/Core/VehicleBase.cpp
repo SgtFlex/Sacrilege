@@ -28,7 +28,7 @@ AVehicleBase::AVehicleBase()
 	ExitPoint = CreateDefaultSubobject<USceneComponent>("ExitPoint");
 	ExitPoint->SetupAttachment(GetVehicleMesh());
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>("SpringArmComponent");
-	SpringArm->SetupAttachment(GetRootComponent());
+	SpringArm->SetupAttachment(GetVehicleMesh());
 	Camera = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
 	Camera->SetupAttachment(SpringArm);
 }
