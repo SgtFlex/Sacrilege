@@ -207,7 +207,7 @@ public:
 	void ThrowEquippedGrenade();
 	
 	UFUNCTION(BlueprintCallable)
-	void ThrowGrenade(int GrenadeTypeIndex);
+	void ThrowGrenade(int GrenadeTypeIndex, const FVector& Direction);
 
 	UFUNCTION(BlueprintCallable)
 	void SubtractGrenade(int GrenadeTypeIndex);
@@ -216,10 +216,10 @@ public:
 	void RemoveGrenadeStruct(int GrenadeTypeIndex);
 
 	UFUNCTION(Server, Reliable)
-	void ServerThrowGrenade(int GrenadeTypeIndex);
+	void ServerThrowGrenade(int GrenadeTypeIndex, const FVector& Direction);
 
 	UFUNCTION()
-	void SpawnGrenade(const TSubclassOf<AGrenadeBase>& GrenadeType);
+	void SpawnGrenade(const TSubclassOf<AGrenadeBase>& GrenadeType, const FVector& Direction);
 
 	UFUNCTION(BlueprintCallable, NetMulticast, Unreliable)
 	void MulticastThrowGrenade(TSubclassOf<AGrenadeBase> GrenadeType);

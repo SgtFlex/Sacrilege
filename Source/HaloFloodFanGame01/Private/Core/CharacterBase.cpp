@@ -775,24 +775,24 @@ void ACharacterBase::ThrowEquippedGrenade()
 {
 	if (!bCanUseGrenades) return;
 	if (GetGrenadeInventory().IsEmpty()) return;
-	ThrowGrenade(GetGrenadeTypeIndex());
+	ThrowGrenade(GetGrenadeTypeIndex(), GetFirstPersonCameraComponent()->GetForwardVector());
 }
 
-void ACharacterBase::ThrowGrenade(const int GrenadeTypeIndex)
+void ACharacterBase::ThrowGrenade(const int GrenadeTypeIndex, const FVector& Direction)
 {
 	if (GetGrenadeInventory().IsEmpty()) return;
 	ThrowGrenadeFX(GetSelectedGrenadeType());
 	if (GetLocalRole()!=ROLE_Authority)
 	{
 		//If we are a client, play the throw grenade FX and animation and send an RPC to the server to throw the actual grenade
-		ServerThrowGrenade(GrenadeTypeIndex);
+		ServerThrowGrenade(GrenadeTypeIndex, Direction);
 		return;
 	}
 	// FTimerDelegate ThrowGrenadeTimerDelegate;
 	// ThrowGrenadeTimerDelegate.BindUObject(this, &ACharacterBase::SpawnGrenade, GrenadeInventory[GrenadeTypeIndex].GrenadeClass);
 	// GetWorldTimerManager().SetTimer(ThrowGrenadeDelayHandle, ThrowGrenadeTimerDelegate, 0.5f, false);
 	MulticastThrowGrenade(GrenadeInventory[GrenadeTypeIndex].GrenadeClass);
-	SpawnGrenade(GrenadeInventory[GrenadeTypeIndex].GrenadeClass);
+	SpawnGrenade(GrenadeInventory[GrenadeTypeIndex].GrenadeClass, Direction);
 	SubtractGrenade(GrenadeTypeIndex);
 	
 }
@@ -814,9 +814,9 @@ void ACharacterBase::RemoveGrenadeStruct(int GrenadeTypeIndex)
 		SetGrenadeTypeIndex(GrenadeTypeIndex % GrenadeInventory.Num());
 }
 
-void ACharacterBase::SpawnGrenade(const TSubclassOf<AGrenadeBase>& GrenadeType)
+void ACharacterBase::SpawnGrenade(const TSubclassOf<AGrenadeBase>& GrenadeType, const FVector& Direction)
 {
-	const FTransform SpawnTransform = FTransform(GetFirstPersonCameraComponent()->GetForwardVector().Rotation(), GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*300);
+	const FTransform SpawnTransform = FTransform(Direction.Rotation(), GetFirstPersonCameraComponent()->GetComponentLocation() + GetFirstPersonCameraComponent()->GetForwardVector()*300);
 	FActorSpawnParameters ActorSpawnParameters;
 	ActorSpawnParameters.Instigator = this;
 	ActorSpawnParameters.Owner = this;
@@ -838,9 +838,9 @@ void ACharacterBase::SpawnGrenade(const TSubclassOf<AGrenadeBase>& GrenadeType)
 }
 
 
-void ACharacterBase::ServerThrowGrenade_Implementation(const int GrenadeTypeIndex)
+void ACharacterBase::ServerThrowGrenade_Implementation(const int GrenadeTypeIndex, const FVector& Direction)
 {
-	ThrowGrenade(GrenadeTypeIndex);
+	ThrowGrenade(GrenadeTypeIndex, Direction);
 }
 
 void ACharacterBase::MulticastThrowGrenade_Implementation(const TSubclassOf<AGrenadeBase> GrenadeType)
