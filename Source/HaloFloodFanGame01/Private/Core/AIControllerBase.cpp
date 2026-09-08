@@ -219,6 +219,7 @@ void AAIControllerBase::UpdateTargetedEnemy(AActor* Actor)
 			//BlackboardComp->SetValueAsEnum(TEXT("AlertState"), EAlertState::Alerted);
 			SetAlertState(Alerted);
 			BlackboardComp->SetValueAsObject(TEXT("Enemy"), ClosestEnemy);
+			CurEnemy = ClosestEnemy;
 			if (APawn* ClosestPawn = Cast<APawn>(ClosestEnemy))
 				ClosestPawn->ReceiveControllerChangedDelegate.AddDynamic(this, &AAIControllerBase::TargetKilled);
 			else if (ClosestEnemy->Implements<UDamageableInterface>())

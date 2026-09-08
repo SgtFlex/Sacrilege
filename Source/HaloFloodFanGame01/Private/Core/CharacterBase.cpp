@@ -827,8 +827,8 @@ void ACharacterBase::SpawnGrenade(const TSubclassOf<AGrenadeBase>& GrenadeType, 
 		Grenade->FinishSpawning(SpawnTransform);
 		Grenade->SetArmed(true);
 		//UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Grenade->ThrowSFX, Grenade->GetActorLocation());
-		FVector Direction = GetFirstPersonCameraComponent()->GetForwardVector() + FVector(0,0,0.15);
-		Direction.Normalize();
+		// FVector Direction = GetFirstPersonCameraComponent()->GetForwardVector() + FVector(0,0,0.15);
+		// Direction.Normalize();
 		//Grenade->Mesh->AddImpulse(Direction*2000.0f, NAME_None, true);
 		//Grenade->Mesh->AddAngularImpulseInDegrees(Grenade->GetActorRightVector().GetSafeNormal()*1000 , NAME_None, true);
 		

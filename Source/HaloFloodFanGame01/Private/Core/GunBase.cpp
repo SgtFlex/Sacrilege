@@ -4,6 +4,7 @@
 
 #include "Bullet.h"
 #include "Components/BulletFiringComponent.h"
+#include "Core/AIControllerBase.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Core/PlayerControllerBase.h"
@@ -315,6 +316,15 @@ AActor* AGunBase::SpawnProjectile_Implementation(TSubclassOf<AActor> ProjToSpawn
 	if (CharacterOwner)
 	{
 		EventInstigator = CharacterOwner->GetController();
+		
+		if (const AAIControllerBase* AIC = Cast<AAIControllerBase>(CharacterOwner->GetController()))
+		{
+			if (AIC->CurEnemy)
+			{
+				AimDirection = ((AIC->CurEnemy->GetActorLocation() + AIC->CurEnemy->GetVelocity()*0.5f) - AimLocation).GetSafeNormal();
+			}
+				
+		}
 	}
 	//TArray<AActor*> ActorsToIgnore;
 	return BulletFiringComponent->FireProjectile(TSubclassOf<AProjectileBase>(ProjToSpawn), AimDirection, this, EventInstigator, ActorsToIgnore);
