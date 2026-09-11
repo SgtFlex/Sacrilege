@@ -775,7 +775,7 @@ void ACharacterBase::ThrowEquippedGrenade()
 {
 	if (!bCanUseGrenades) return;
 	if (GetGrenadeInventory().IsEmpty()) return;
-	ThrowGrenade(GetGrenadeTypeIndex(), GetFirstPersonCameraComponent()->GetForwardVector());
+	ThrowGrenade(GetGrenadeTypeIndex(), (GetFirstPersonCameraComponent()->GetForwardVector() + FVector(0,0,0.15)).GetSafeNormal());
 }
 
 void ACharacterBase::ThrowGrenade(const int GrenadeTypeIndex, const FVector& Direction)
