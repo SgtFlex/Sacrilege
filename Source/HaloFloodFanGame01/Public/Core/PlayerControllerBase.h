@@ -28,7 +28,7 @@ public:
 	UFUNCTION()
 	void OnControlledCharacterDied(ACharacterBase* DeadCharacter, AController* Inst, AActor* Causer);
 
-	UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	FTimerHandle StartRespawnDelayed(float Delay);
 	
 	//----------------------------------------------------------------------//
