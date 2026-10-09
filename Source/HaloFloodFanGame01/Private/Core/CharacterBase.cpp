@@ -1073,24 +1073,29 @@ void ACharacterBase::DrawEquippedWeapon()
 
 void ACharacterBase::SetupViewmodel(const bool bFirstPerson)
 {
+	ClientSetupViewmodel(bFirstPerson);
+}
+
+void ACharacterBase::ClientSetupViewmodel_Implementation(bool bFirstPerson)
+{
 	if (!EquippedWeapon) return;
- 	EquippedWeapon->ForceNetUpdate();
-	if (bFirstPerson && IsLocallyViewed())
-	{
-		GetMesh1P()->bPauseAnims = false;
-		if (EquippedWeapon->DrawSFX) UGameplayStatics::PlaySoundAtLocation(GetWorld(), EquippedWeapon->DrawSFX, GetActorLocation());
-		EquippedWeapon->AttachToComponent(GetMesh1P(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
-		if (EquippedWeapon->DrawAnimation1P)
-		{
-			GetMesh1P()->GetAnimInstance()->Montage_Play(EquippedWeapon->DrawAnimation1P, EquippedWeapon->DrawAnimation1P->GetPlayLength() / EquippedWeapon->DrawSpeed);
-		}
-	}
-	else
-	{
-		GetMesh1P()->bPauseAnims = true;
-		UE_LOG(LogTemp, Warning, TEXT("Attached to main mesh 3P"));
-		EquippedWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
-	}
+     	EquippedWeapon->ForceNetUpdate();
+    	if (bFirstPerson && IsLocallyViewed())
+    	{
+    		GetMesh1P()->bPauseAnims = false;
+    		if (EquippedWeapon->DrawSFX) UGameplayStatics::PlaySoundAtLocation(GetWorld(), EquippedWeapon->DrawSFX, GetActorLocation());
+    		EquippedWeapon->AttachToComponent(GetMesh1P(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
+    		if (EquippedWeapon->DrawAnimation1P)
+    		{
+    			GetMesh1P()->GetAnimInstance()->Montage_Play(EquippedWeapon->DrawAnimation1P, EquippedWeapon->DrawAnimation1P->GetPlayLength() / EquippedWeapon->DrawSpeed);
+    		}
+    	}
+    	else
+    	{
+    		GetMesh1P()->bPauseAnims = true;
+    		UE_LOG(LogTemp, Warning, TEXT("Attached to main mesh 3P"));
+    		EquippedWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "GripPoint");
+    	}
 }
 
 void ACharacterBase::MulticastHolsterEquippedWeapon_Implementation()
@@ -1218,7 +1223,7 @@ void ACharacterBase::DropEquippedWeapon()
 
 void ACharacterBase::DropWeapon(AWeaponBase* Gun)
 {
-	//Gun->SetReplicateMovement(true);
+	Gun->SetReplicateMovement(true);
 	if (!Gun) return;
 	Gun->Drop();
 	Gun->Mesh->AddImpulse(GetControlRotation().Vector() * 300, NAME_None, true);

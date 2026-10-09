@@ -208,6 +208,8 @@ void AGunBase::Holster()
 void AGunBase::Drop()
 {
 	ScopeOut();
+	ReleaseTrigger();
+	ReloadTimer.Invalidate();
 	Super::Drop();
 }
 

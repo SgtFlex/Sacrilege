@@ -305,6 +305,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void SetupViewmodel(bool bFirstPerson);
 
+	UFUNCTION(Client, Reliable)
+	void ClientSetupViewmodel(bool bFirstPerson);
+
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void MulticastHolsterEquippedWeapon();
 
