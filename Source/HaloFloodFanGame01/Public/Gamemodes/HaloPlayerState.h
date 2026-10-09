@@ -33,6 +33,9 @@ public:
 	UFUNCTION(BlueprintSetter, Server, Reliable)
 	void SetPlayerScore(int NewScore);
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastSetPlayerScore(int NewScore);
+
 	UFUNCTION(BlueprintGetter)
 	int GetPlayerScore();
 
@@ -44,6 +47,9 @@ public:
 
 	UFUNCTION(BlueprintSetter, Server, Reliable)
 	void SetPlayerResource(int NewResource);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastSetPlayerResource(int NewResource);
 
 	UFUNCTION(BlueprintGetter)
 	int GetPlayerResource();
