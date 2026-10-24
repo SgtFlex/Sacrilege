@@ -36,7 +36,7 @@ public:
 	//----------------------------------------------------------------------//
 	
 public:
-	
+	UFUNCTION(BlueprintCallable)
 	virtual void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
 	
 	virtual FGenericTeamId GetGenericTeamId() const override { return TeamID; }

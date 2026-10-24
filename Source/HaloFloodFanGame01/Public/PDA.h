@@ -21,7 +21,7 @@ struct FBuyable
 	FText DisplayName;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TSubclassOf<AActor> SpawnableActor;
+	TSoftClassPtr<AActor> SpawnableActor;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int Cost = 0;

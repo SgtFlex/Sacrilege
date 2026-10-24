@@ -45,9 +45,9 @@ void UFlyingVehicleMovementComponent::Decelerate()
 void UFlyingVehicleMovementComponent::TurnToTargetRotation()
 {
 	const FQuat CurrentQuat = PrimitiveComponent->GetComponentQuat();
-	//TargetQuat = TargetRotation.Quaternion();
-	
-	const FQuat AngleDifference = (TargetQuat * CurrentQuat.Inverse()).GetNormalized();
+	//TargetQuat = TargetRotation.Quaternion();-
+	FQuat AngleDifference = (TargetQuat * CurrentQuat.Inverse()).GetNormalized();
+	if (AngleDifference.GetAngle() > 179.9) AngleDifference.W -= 360;
 	const FVector CurrentAngularVelocity = PrimitiveComponent->GetPhysicsAngularVelocityInDegrees();
 	const FVector NewAngularVelocity = ((FVector(AngleDifference.X, AngleDifference.Y, AngleDifference.Z)*100)
 		- (CurrentAngularVelocity * TorqueDamping)) * TorqueForce;

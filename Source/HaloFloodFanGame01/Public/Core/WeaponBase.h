@@ -96,7 +96,7 @@ public:
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	USkeletalMeshComponent* Mesh;
 	
 	UPROPERTY(BlueprintReadOnly)

@@ -38,4 +38,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	static TArray<USoundMix*> GetCurrentSoundMixModifiers();
+	
+	UFUNCTION(BlueprintCallable)
+	static FString GetGameVersion();
 };

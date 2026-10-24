@@ -197,3 +197,14 @@ TArray<USoundMix*> UMyCustomBlueprintFunctionLibrary::GetCurrentSoundMixModifier
 
 	return SoundMixModifiers;
 }
+
+FString UMyCustomBlueprintFunctionLibrary::GetGameVersion()
+{
+	FString Version;
+	GConfig->GetString(TEXT("/Script/EngineSettings.GeneralProjectSettings"), 
+			TEXT("ProjectVersion"), 
+			Version, 
+			GGameIni
+		);
+	return Version;
+}
