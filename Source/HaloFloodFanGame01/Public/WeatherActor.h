@@ -29,10 +29,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	USceneComponent* SceneComponent;
 	
-	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	UDirectionalLightComponent* DirectionalLight;
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	USkyLightComponent* SkyLight;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)

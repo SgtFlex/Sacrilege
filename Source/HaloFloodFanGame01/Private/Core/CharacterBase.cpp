@@ -126,12 +126,12 @@ void ACharacterBase::SpawnLoadout()
 			if (ChosenLoadoutStruct.SecondaryWeaponClass)
 			{
 				
-				AWeaponBase* Gun = GetWorld()->SpawnActor<AWeaponBase>(ChosenLoadoutStruct.SecondaryWeaponClass, SpawnParams);
+				AWeaponBase* Gun = GetWorld()->SpawnActor<AWeaponBase>(ChosenLoadoutStruct.SecondaryWeaponClass.LoadSynchronous(), SpawnParams);
 				PickupWeapon(Gun);
 			}
 			if (ChosenLoadoutStruct.PrimaryWeaponClass)
 			{
-				AWeaponBase* Gun = GetWorld()->SpawnActor<AWeaponBase>(ChosenLoadoutStruct.PrimaryWeaponClass, SpawnParams);
+				AWeaponBase* Gun = GetWorld()->SpawnActor<AWeaponBase>(ChosenLoadoutStruct.PrimaryWeaponClass.LoadSynchronous(), SpawnParams);
 				PickupWeapon(Gun);
 		
 			}
@@ -143,7 +143,7 @@ void ACharacterBase::SpawnLoadout()
 			}
 			if (ChosenLoadoutStruct.EquipmentClass)
 			{
-				EquipmentClass = ChosenLoadoutStruct.EquipmentClass;
+				EquipmentClass = ChosenLoadoutStruct.EquipmentClass.LoadSynchronous();
 			}
 		}
 	}
@@ -643,7 +643,7 @@ void ACharacterBase::MeleeUpdate(float Alpha)
 
 bool ACharacterBase::CanMelee_Implementation()
 {
-	if (GetWorld()->GetTimerManager().TimerExists(MeleeTimer)) return false;
+	if (GetWorld()->GetTimerManager().TimerExists(MeleeTimer) || !EquippedWeapon) return false;
 	return true;
 }
 

@@ -16,10 +16,6 @@ AWeatherActor::AWeatherActor()
 	PrimaryActorTick.bCanEverTick = true;
 	SceneComponent = CreateDefaultSubobject<USceneComponent>("SceneComponent");
 	SetRootComponent(SceneComponent);
-	DirectionalLight = CreateDefaultSubobject<UDirectionalLightComponent>("Directional Light");
-	DirectionalLight->SetupAttachment(RootComponent);
-	SkyLight = CreateDefaultSubobject<USkyLightComponent>("Sky Light");
-	SkyLight->SetupAttachment(RootComponent);
 }
 
 // Called when the game starts or when spawned
