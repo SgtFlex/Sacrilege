@@ -54,7 +54,7 @@ void UMyCustomBlueprintFunctionLibrary::GetHitMagnetized(FHitResult& Hit, const 
 	
 	FHitResult HitThin;
 	UKismetSystemLibrary::LineTraceSingle(World, StartLocation, StartLocation + (Direction*Range), TraceTypeQuery1, true, ActorsToIgnore, EDrawDebugTrace::None, HitThin, true);
-	if (HitThin.bBlockingHit && HitThin.GetActor()->Implements<UDamageableInterface>())
+	if (HitThin.bBlockingHit && HitThin.GetActor() && HitThin.GetActor()->Implements<UDamageableInterface>())
 	{
 		Hit = HitThin;
 	} else
@@ -63,7 +63,7 @@ void UMyCustomBlueprintFunctionLibrary::GetHitMagnetized(FHitResult& Hit, const 
 		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, FString::Printf(TEXT("%s"), *Direction.ToString()));
 		//We were previously using TraceComplex on this spheretrace, but doing so caused a hitch and IsNearlyEqual error to be thrown if the length of the trace was too short proportionally to the Range (but it would only happen once per session)
 		UKismetSystemLibrary::SphereTraceSingle(World, StartLocation, StartLocation + (Direction.GetSafeNormal() * Range), MagnetizeRadius, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::None, HitMagnetized, true);
-		if (HitMagnetized.bBlockingHit && HitMagnetized.GetActor()->Implements<UDamageableInterface>())
+		if (HitMagnetized.bBlockingHit && HitMagnetized.GetActor() && HitMagnetized.GetActor()->Implements<UDamageableInterface>())
 		{
 			Hit = HitMagnetized;
 		} else
