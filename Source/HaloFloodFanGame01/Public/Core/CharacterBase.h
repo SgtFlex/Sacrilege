@@ -59,10 +59,10 @@ struct FLoadoutStruct
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSoftClassPtr<AWeaponBase> PrimaryWeaponClass;
+	TSubclassOf<AWeaponBase> PrimaryWeaponClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSoftClassPtr<AWeaponBase> SecondaryWeaponClass;
+	TSubclassOf<AWeaponBase> SecondaryWeaponClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSoftClassPtr<AEquipmentBase> EquipmentClass;

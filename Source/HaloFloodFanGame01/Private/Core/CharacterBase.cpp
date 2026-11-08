@@ -126,12 +126,12 @@ void ACharacterBase::SpawnLoadout()
 			if (ChosenLoadoutStruct.SecondaryWeaponClass)
 			{
 				
-				AWeaponBase* Gun = GetWorld()->SpawnActor<AWeaponBase>(ChosenLoadoutStruct.SecondaryWeaponClass.LoadSynchronous(), SpawnParams);
+				AWeaponBase* Gun = GetWorld()->SpawnActor<AWeaponBase>(ChosenLoadoutStruct.SecondaryWeaponClass, SpawnParams);
 				PickupWeapon(Gun);
 			}
 			if (ChosenLoadoutStruct.PrimaryWeaponClass)
 			{
-				AWeaponBase* Gun = GetWorld()->SpawnActor<AWeaponBase>(ChosenLoadoutStruct.PrimaryWeaponClass.LoadSynchronous(), SpawnParams);
+				AWeaponBase* Gun = GetWorld()->SpawnActor<AWeaponBase>(ChosenLoadoutStruct.PrimaryWeaponClass, SpawnParams);
 				PickupWeapon(Gun);
 		
 			}
