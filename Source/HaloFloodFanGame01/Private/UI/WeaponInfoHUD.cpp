@@ -74,10 +74,10 @@ void UWeaponInfoHUD::SetMagazineReserveCounter_Implementation(int32 MagazineCoun
 	MagazineCounter->SetText(FText::AsNumber(MagazineCount));
 }
 
-
+//@TODO 19.7.1 This causes crashes for non-guns like the energy sword
 void UWeaponInfoHUD::UpdateHUDMagazineElements()
 {
-	if (!PlayerCharacter || !PlayerCharacter->EquippedWeapon) return;
+	if (!PlayerCharacter || !EquippedGun) return;
 	SetMagazineReserveCounter(EquippedGun->CurMagazine);
 	SetAmmoReserveCounter(EquippedGun->CurReserve);
 	SetAmmoGridBullets(EquippedGun->CurMagazine, EquippedGun->MaxMagazine);
@@ -86,7 +86,9 @@ void UWeaponInfoHUD::UpdateHUDMagazineElements()
 //@TODO We can potentially change this later to not use casting
 void UWeaponInfoHUD::UpdateHUDWeaponData(AWeaponBase* EquippedWeapon, AWeaponBase* HolsteredWeapon)
 {
+	if (!EquippedWeapon) return;
 	EquippedGun = Cast<AGunBase>(EquippedWeapon);
+	EquippedGunWidget->SetBrushFromTexture(EquippedWeapon->WeaponIcon);
 	if (EquippedGun)
 	{
 		//SetCrosshairTexture(EquippedGun->CrosshairTexture);
@@ -94,7 +96,6 @@ void UWeaponInfoHUD::UpdateHUDWeaponData(AWeaponBase* EquippedWeapon, AWeaponBas
 		AmmoReserveCounter->SetVisibility(ESlateVisibility::Visible);
 		AmmoGrid->SetVisibility(ESlateVisibility::Visible);
 		SetAmmoReserveCounter(EquippedGun->CurReserve);
-		EquippedGunWidget->SetBrushFromTexture(EquippedGun->WeaponIcon);
 		ConstructAmmoGrid(EquippedGun);
 		UpdateHUDMagazineElements();
 		MagazineTotal->SetText(FText::AsNumber(EquippedGun->MaxMagazine));

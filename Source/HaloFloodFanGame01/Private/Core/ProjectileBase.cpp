@@ -95,7 +95,10 @@ void AProjectileBase::OnProjectileOverlapped_Implementation(UPrimitiveComponent*
 		//@TODO Perhaps keep decals separate from actors and have them managed by the cleanup system
 		//ADecalActor* ImpactDecal = GetWorld()->SpawnActor<ADecalActor>(ImpactDecalClass, SpawnTransform);
 		//ImpactDecal->AttachToComponent(OtherComp, FAttachmentTransformRules::KeepWorldTransform);
-		GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageDecal(UGameplayStatics::SpawnDecalAttached(ImpactDecalMaterial, FVector(100,100,100) * FMath::RandRange(0.1f, 1.0f), OtherComp, NAME_None, SweepResult.ImpactPoint, SweepResult.Normal.Rotation() + FRotator(-90, FMath::RandRange(-180, 180), 0), EAttachLocation::KeepWorldPosition));
+		const float RandomRotation = FMath::RandRange(-180, 180);
+		const float RandomScale = FMath::RandRange(0.1f, 1.0f);
+		UDecalComponent* ImpactDecal = UGameplayStatics::SpawnDecalAttached(ImpactDecalMaterial, FVector(100,100,100) * RandomScale, OtherComp, NAME_None, SweepResult.ImpactPoint, SweepResult.Normal.Rotation() + FRotator(0, 0, RandomRotation), EAttachLocation::KeepWorldPosition);
+		GetWorld()->GetSubsystem<UWorldCleanupManager>()->ManageDecal(ImpactDecal);
 	}
 	IdleSoundComponent->Stop();	
 	CollisionComp->Deactivate();

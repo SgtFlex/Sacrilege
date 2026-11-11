@@ -654,7 +654,7 @@ void ACharacterBase::EquipGrenadeType_Implementation(TSubclassOf<AGrenadeBase> G
 
 void ACharacterBase::Melee_Implementation()
 {
-	if (!bCanMelee) return;
+	if (!CanMelee()) return;
 	SV_Melee();
 }
 
