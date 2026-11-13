@@ -433,7 +433,7 @@ public:
 	UPROPERTY(BlueprintReadWrite, meta = (DisplayPriority=0, ExposeOnSpawn=true), Replicated)
 	TArray<FGrenadeStruct> GrenadeInventory;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Replicated)
 	TSubclassOf<AEquipmentBase> EquipmentClass;
 
 	UPROPERTY(BlueprintReadOnly, Replicated, ReplicatedUsing=OnRep_EquippedWeapon)
