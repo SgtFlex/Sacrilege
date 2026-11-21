@@ -9,6 +9,7 @@ void UHoverMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	PrimitiveComponent = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
+	
 }
 
 void UHoverMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
