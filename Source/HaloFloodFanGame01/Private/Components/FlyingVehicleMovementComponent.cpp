@@ -82,5 +82,6 @@ void UFlyingVehicleMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetim
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(UFlyingVehicleMovementComponent, TargetRotation);
+	DOREPLIFETIME(UFlyingVehicleMovementComponent, TargetQuat);
 	DOREPLIFETIME(UFlyingVehicleMovementComponent, TargetDirection);
 }
